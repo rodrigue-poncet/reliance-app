@@ -20545,6 +20545,12 @@ function lockApp() {
   purgeRelianceSessionOnLogout();
   clearConsultantSession();
   localStorage.removeItem(SK);
+  const guideAdminTab=document.getElementById('tab-guide-admin');
+  if(guideAdminTab)guideAdminTab.style.display='none';
+  const adminBtn=document.getElementById('pwd-btn');
+  if(adminBtn)adminBtn.style.display='none';
+  const evolBtn=document.getElementById('evol-btn');
+  if(evolBtn)evolBtn.style.display='none';
   document.getElementById('app').style.display = 'none';
   document.getElementById('lock').style.display = 'flex';
   document.getElementById('lpwd').value = '';
@@ -21316,7 +21322,7 @@ window.addEventListener('load', () => {
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;flex-wrap:wrap">
       <button onclick="downloadDoc(generateCompteRendu,getNomFichier('CR_Seances'))" style="padding:7px 14px;background:var(--c3);color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif;display:flex;align-items:center;gap:6px">⬇️ Word Compte-rendu séances</button>
       <button onclick="resetCalendar()" style="padding:7px 14px;background:var(--lgrey);color:var(--muted);border:1px solid var(--border);border-radius:6px;font-size:12px;cursor:pointer;font-family:Calibri,Arial,sans-serif" title="Remet les 8 séances avec leurs objectifs et outils par défaut">🔄 Réinitialiser les séances</button>
-      <button onclick="downloadDoc(generateENR003,getNomFichier('ENR003_Calendrier'))" style="padding:7px 14px;background:var(--c3);color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif;display:flex;align-items:center;gap:6px">⬇️ Télécharger ENR003 Word</button></div>
+      <button onclick="downloadDoc(generateENR003,getNomFichier('ENR003_Calendrier'))" style="padding:7px 14px;background:var(--c3);color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif;display:flex;align-items:center;gap:6px">⬇️ Télécharger Calendrier Prévisionnel Word</button></div>
     <div class="tip green">Module Calendrier & Programme prévisionnel — reproduit le document ENR003 de votre organisme. Renseignez les séances et exportez en Word.</div>
     <div class="g2" style="margin-bottom:14px">
       <div class="fg"><div class="fl">Bénéficiaire</div><input class="fi" id="cal_benef" oninput="autoSave()"></div>
@@ -21361,6 +21367,34 @@ window.addEventListener('load', () => {
         <tr><td><strong>Durée totale du bilan de compétences</strong></td><td style="text-align:right;font-weight:700" id="recap-total">0 h 00</td></tr>
       </table>
     </div>
+
+    <!-- SIGNATURES CALENDRIER PRÉVISIONNEL -->
+    <div style="background:var(--tbl-bg);border-left:4px solid var(--c1);border-radius:7px;padding:11px 14px;margin:14px 0">
+      <div style="font-size:11px;font-weight:700;color:var(--c1);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Signatures Calendrier Prévisionnel</div>
+      <div class="g2">
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--dk2);margin-bottom:6px">Signature du consultant</div>
+          <div class="sig-pad-wrap">
+            <canvas id="sig_cal_consultant" class="sig-canvas"></canvas>
+            <div class="sig-actions">
+              <button class="sig-clear-btn" onclick="clearSig('sig_cal_consultant')">Effacer</button>
+              <span class="sig-status" id="sig_cal_consultant_status">En attente...</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--dk2);margin-bottom:6px">Signature du bénéficiaire</div>
+          <div class="sig-pad-wrap">
+            <canvas id="sig_cal_benef" class="sig-canvas"></canvas>
+            <div class="sig-actions">
+              <button class="sig-clear-btn" onclick="clearSig('sig_cal_benef')">Effacer</button>
+              <span class="sig-status" id="sig_cal_benef_status">En attente...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <button class="export-cal-btn" onclick="exportCalendrier()">📄 Exporter le Calendrier & Programme (Word)</button>
 
     <!-- AJUSTEMENT DE L'ACCOMPAGNEMENT — Ind. 9 Qualiopi -->
@@ -21371,6 +21405,33 @@ window.addEventListener('load', () => {
       </div>
       <div style="font-size:11px;color:#555;margin-bottom:8px">Co-rédaction consultant + bénéficiaire — Adaptations du parcours en fonction de l'évolution des besoins, du rythme et des objectifs.</div>
       <textarea id="cal_ajustement" oninput="autoSave()" placeholder="Décrivez ici les ajustements apportés au parcours d'accompagnement : modifications de planning, changements d'outils ou de méthodes, adaptations pédagogiques..." style="width:100%;min-height:90px;border:1px solid #C1D8E8;border-radius:6px;padding:10px;font-size:12px;font-family:Calibri,Arial,sans-serif;resize:vertical;background:white;color:#333;box-sizing:border-box"></textarea>
+    </div>
+
+    <!-- SIGNATURES COMPTE-RENDU DE SÉANCE -->
+    <div style="background:var(--tbl-bg);border-left:4px solid var(--c1);border-radius:7px;padding:11px 14px;margin:14px 0 0">
+      <div style="font-size:11px;font-weight:700;color:var(--c1);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Signatures Compte-rendu de séance</div>
+      <div class="g2">
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--dk2);margin-bottom:6px">Signature du consultant</div>
+          <div class="sig-pad-wrap">
+            <canvas id="sig_cr_consultant" class="sig-canvas"></canvas>
+            <div class="sig-actions">
+              <button class="sig-clear-btn" onclick="clearSig('sig_cr_consultant')">Effacer</button>
+              <span class="sig-status" id="sig_cr_consultant_status">En attente...</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--dk2);margin-bottom:6px">Signature du bénéficiaire</div>
+          <div class="sig-pad-wrap">
+            <canvas id="sig_cr_benef" class="sig-canvas"></canvas>
+            <div class="sig-actions">
+              <button class="sig-clear-btn" onclick="clearSig('sig_cr_benef')">Effacer</button>
+              <span class="sig-status" id="sig_cr_benef_status">En attente...</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -21467,13 +21528,13 @@ window.addEventListener('load', () => {
     <div class="charts2"><div class="chart-wrap"><div class="chart-title">Profil des valeurs</div><canvas id="chart-val" height="180"></canvas></div><div class="chart-wrap"><div class="chart-title">Toile des valeurs</div><canvas id="chart-val-radar" height="180"></canvas></div></div>
     <div style="margin-top:18px;font-size:12px;font-weight:700;color:var(--c1);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">🎯 Orientation Professionnelle</div>
     <div id="riasec-rows"></div>
-    <div class="chart-wrap"><div class="chart-title">Profil RIASEC — Toile d'araignée</div><canvas id="chart-riasec" height="250"></canvas></div>
+    <div class="chart-wrap"><div class="chart-title">Profil Orientation Professionnelle — Toile d'araignée</div><canvas id="chart-riasec" height="250"></canvas></div>
     <div style="margin-top:18px;font-size:12px;font-weight:700;color:var(--c4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">✦ Signature Comportementale — <a href="https://rodrigue-poncet.github.io/reliance-tests/" target="_blank" style="color:var(--c4);font-weight:400">Passer le test →</a></div>
     <div class="p16-grid" id="p16-grid"></div>
     <div class="p16-detail" id="p16-detail">
       <div style="display:flex;align-items:center;gap:14px">
         <div style="font-size:48px" id="p16-av"></div>
-        <div style="flex:1"><div style="font-size:16px;font-weight:700" id="p16-code"></div><div style="font-size:13px;color:var(--dk2);font-weight:700" id="p16-name"></div><div style="font-size:11px;color:var(--muted)" id="p16-grp"></div><div style="font-size:12px;line-height:1.7;margin-top:7px" id="p16-desc"></div><a id="p16-link" href="#" target="_blank" style="font-size:11px;color:var(--c4);margin-top:5px;display:inline-block;font-weight:700">→ Fiche complète sur 16personalities.com/fr</a></div>
+        <div style="flex:1"><div style="font-size:16px;font-weight:700" id="p16-code"></div><div style="font-size:13px;color:var(--dk2);font-weight:700" id="p16-name"></div><div style="font-size:11px;color:var(--muted)" id="p16-grp"></div><div style="font-size:12px;line-height:1.7;margin-top:7px" id="p16-desc"></div><a id="p16-link" href="#" target="_blank" style="font-size:11px;color:var(--c4);margin-top:5px;display:inline-block;font-weight:700">→ Fiche complète Signature Comportementale (16personalities.com)</a></div>
       </div>
     </div>
     <div style="margin-top:16px;padding:13px;background:var(--tbl-bg);border-radius:9px;border:1px solid var(--c1)">
@@ -21516,7 +21577,7 @@ window.addEventListener('load', () => {
 
   <!-- TAB 4 FICHES MÉTIERS -->
   <div class="pane" id="p10">
-    <div class="tip">Fiches métiers issus du RIASEC ou de France Travail. Le prompt IA génère résumé + liens tests + vigilance.<br>Sources : <a href="https://www.francetravail.fr/metiers.html" target="_blank">France Travail</a> · <a href="http://deporientation.free.fr/RechercheRIASEC-ROME/Recherche-ROME-RIASEC_002.php" target="_blank">Recherche RIASEC→ROME</a></div>
+    <div class="tip">Fiches métiers issues de l'Orientation Professionnelle ou de France Travail. Le prompt IA génère résumé + liens tests + vigilance.<br>Sources : <a href="https://www.francetravail.fr/metiers.html" target="_blank">France Travail</a> · <a href="http://deporientation.free.fr/RechercheRIASEC-ROME/Recherche-ROME-RIASEC_002.php" target="_blank">Recherche Orientation Professionnelle→ROME</a></div>
     <div id="fiches-container"></div>
     <button class="add-fiche" onclick="addFiche()">+ Ajouter une fiche métier</button>
   </div>
@@ -21621,7 +21682,8 @@ window.addEventListener('load', () => {
       </div>
       <div style="font-size:11px;color:#795548;margin-top:3px">L'IA est un outil d'aide à la rédaction à usage strictement informatif. Conformément aux obligations réglementaires et aux exigences Qualiopi (Indicateur 15), le document de synthèse doit obligatoirement et expressément être co-écrit avec le bénéficiaire. Aucun contenu généré par IA ne peut être intégré sans validation explicite du bénéficiaire. Le consultant reste seul responsable du contenu final. <span style="font-size:10px;background:#FFF3E0;color:#E65100;padding:2px 7px;border-radius:10px;margin-left:8px;font-weight:600">✓ Qualiopi ind.15</span></div>
     </div>
-    <div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button onclick="downloadDoc(generateENR015,getNomFichier('ENR015_Certificat'))" style="padding:7px 14px;background:var(--c3);color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif;display:flex;align-items:center;gap:6px">⬇️ Télécharger ENR015 Word</button></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;flex-wrap:wrap"><button onclick="downloadDoc(generateAttestationSignature,getNomFichier('Attestation_signatures'))" style="padding:7px 14px;background:var(--c3);color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif;display:flex;align-items:center;gap:6px;margin-right:8px">⬇️ Attestation signatures</button>
+    <button onclick="downloadDoc(generateENR015,getNomFichier('ENR015_Certificat'))" style="padding:7px 14px;background:var(--c3);color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif;display:flex;align-items:center;gap:6px">⬇️ Télécharger ENR015 Word</button></div>
     <div class="tip green" style="background:#E8F5E9;border-left-color:#196B24;color:#1B4020">
       <strong>Documents légaux de fin de bilan</strong> : Attestation de remise (ENR013) · Certificat de réalisation (ENR015) · Réseau personnes ressources (ENR014)
     </div>
@@ -21753,7 +21815,7 @@ window.addEventListener('load', () => {
 
   <!-- TAB 11 ÉVALUATIONS (ENR016 + ENR017) -->
   <div class="pane" id="p15">
-    <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px"><button onclick="downloadDoc(generateENR016,getNomFichier('ENR016_Evaluation_benef'))" style="padding:7px 14px;background:var(--c3);color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif;display:flex;align-items:center;gap:6px">⬇️ ENR016 Bénéficiaire</button><button onclick="downloadDoc(generateENR017,getNomFichier('ENR017_Evaluation_form'))" style="padding:7px 14px;background:var(--c3);color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif;display:flex;align-items:center;gap:6px">⬇️ ENR017 Formateur</button></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;flex-wrap:wrap"><button onclick="downloadDoc(generateAttestationSignature,getNomFichier('Attestation_signatures'))" style="padding:7px 14px;background:var(--c3);color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif;display:flex;align-items:center;gap:6px">⬇️ Télécharger Attestation de signature Word</button><button onclick="downloadDoc(generateENR016,getNomFichier('ENR016_Evaluation_benef'))" style="padding:7px 14px;background:var(--c3);color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif;display:flex;align-items:center;gap:6px">⬇️ ENR016 Bénéficiaire</button><button onclick="downloadDoc(generateENR017,getNomFichier('ENR017_Evaluation_form'))" style="padding:7px 14px;background:var(--c3);color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif;display:flex;align-items:center;gap:6px">⬇️ ENR017 Formateur</button></div>
     <div class="tip" style="background:var(--tbl-bg);border-left-color:var(--c2)">
       <strong>Questionnaires d'évaluation à chaud</strong> : ENR016 Bénéficiaire · ENR017 Formateur · Indicateur Qualiopi n°2 (satisfaction)
     </div>
@@ -21923,7 +21985,7 @@ window.addEventListener('load', () => {
   <!-- TAB 12 RGPD -->
   <div class="pane" id="p16">
     <div class="tip teal" style="background:var(--lt);border-left-color:var(--c4);color:#004D40">
-      <strong>🔄 Suivi à 6 mois & Évaluation à froid</strong> — Planifiez et documentez le rendez-vous de suivi post-bilan. Indicateur Qualiopi obligatoire.
+      <strong>🔄 Suivi à 6 mois</strong> — Planifiez et documentez le rendez-vous de suivi post-bilan. Indicateur Qualiopi obligatoire.
     </div>
 
     <div style="background:var(--tbl-bg);border-radius:9px;overflow:hidden;margin-bottom:16px;border:1px solid var(--border)">
@@ -21960,6 +22022,8 @@ window.addEventListener('load', () => {
           </select>
         </div>
         <div class="fg"><div class="fl">Description de la situation à 6 mois</div><textarea class="ft" id="suivi_situation" oninput="autoSave()" placeholder="Emploi retrouvé, formation démarrée, reconversion en cours..."></textarea></div>
+        <div class="fg"><div class="fl">Bilan à 6 mois</div><textarea class="ft" id="suivi_bilan_6mois" oninput="autoSave()" placeholder="Synthèse de l'évolution du projet professionnel depuis la fin du bilan..."></textarea></div>
+        <div class="fg"><div class="fl">Points positifs</div><textarea class="ft" id="suivi_points_pos" oninput="autoSave()" placeholder="Réussites, progrès, éléments favorables constatés..."></textarea></div>
         <div class="g2">
           <div class="fg"><div class="fl">Formation démarrée ?</div>
             <select class="fs" id="suivi_formation" onchange="autoSave()"><option>Oui</option><option>Non</option><option>En cours de financement</option></select>
@@ -21968,82 +22032,55 @@ window.addEventListener('load', () => {
             <select class="fs" id="suivi_plan" onchange="autoSave()"><option>Totalement</option><option>Partiellement</option><option>Non</option></select>
           </div>
         </div>
-        <div class="fg"><div class="fl">Observations du consultant</div><textarea class="ft" id="suivi_obs" oninput="autoSave()" placeholder="Difficultés rencontrées, adaptations du projet, points d'attention..."></textarea></div>
+        <div class="fg"><div class="fl">Difficultés rencontrées</div><textarea class="ft" id="suivi_obs" oninput="autoSave()" placeholder="Obstacles, freins, points d'attention..."></textarea></div>
         <div class="fg"><div class="fl">Points d'action supplémentaires identifiés</div><textarea class="ft" id="suivi_actions" oninput="autoSave()"></textarea></div>
+        <div class="fg"><div class="fl">Commentaire libre</div><textarea class="ft" id="suivi_comment" oninput="autoSave()" placeholder="Retour du bénéficiaire, remarques complémentaires..."></textarea></div>
+        <div class="g2">
+          <div class="fg"><div class="fl">Recommanderiez-vous l'organisme ?</div>
+            <div style="display:flex;gap:16px;font-size:13px;margin-top:6px;flex-wrap:wrap">
+              <label style="cursor:pointer"><input type="radio" name="suivi_reco" value="Oui" onchange="autoSave()"> Oui</label>
+              <label style="cursor:pointer"><input type="radio" name="suivi_reco" value="Non" onchange="autoSave()"> Non</label>
+              <label style="cursor:pointer"><input type="radio" name="suivi_reco" value="Peut-être" onchange="autoSave()"> Peut-être</label>
+            </div>
+          </div>
+          <div class="fg"><div class="fl">Note générale à 6 mois (1-5)</div>
+            <div style="display:flex;gap:6px;font-size:22px;margin-top:4px" id="suivi-stars">
+              <span class="sstar" data-v="1" onclick="setSuiviStar(1)" style="cursor:pointer;color:#ddd">★</span>
+              <span class="sstar" data-v="2" onclick="setSuiviStar(2)" style="cursor:pointer;color:#ddd">★</span>
+              <span class="sstar" data-v="3" onclick="setSuiviStar(3)" style="cursor:pointer;color:#ddd">★</span>
+              <span class="sstar" data-v="4" onclick="setSuiviStar(4)" style="cursor:pointer;color:#ddd">★</span>
+              <span class="sstar" data-v="5" onclick="setSuiviStar(5)" style="cursor:pointer;color:#ddd">★</span>
+            </div>
+            <input type="hidden" id="suivi_note" value="0">
+          </div>
+        </div>
+
       </div>
     </div>
 
     <div style="background:var(--tbl-bg);border-radius:9px;overflow:hidden;margin-bottom:16px;border:1px solid var(--border)">
-      <div style="background:var(--c3);padding:10px 14px;font-size:12px;font-weight:700;color:white">📊 Questionnaire évaluation à froid (6 mois)</div>
+      <div style="background:var(--c4);padding:10px 14px;font-size:12px;font-weight:700;color:white">✍️ Signatures du suivi à 6 mois</div>
       <div style="padding:13px 15px">
-        <div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-style:italic">Questionnaire de satisfaction BC — Suivi à 6 mois (Doc. 12 du processus)</div>
-        
-        <div style="font-size:11px;font-weight:700;color:var(--c3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px">Résultats à 6 mois</div>
-        <div style="display:flex;flex-wrap:wrap;gap:9px;font-size:12px;margin-bottom:12px">
-          <label><input type="checkbox" id="froid_emploi" onchange="autoSave()"> Emploi retrouvé</label>
-          <label><input type="checkbox" id="froid_form" onchange="autoSave()"> Formation démarrée</label>
-          <label><input type="checkbox" id="froid_creation" onchange="autoSave()"> Création d'entreprise</label>
-          <label><input type="checkbox" id="froid_promo" onchange="autoSave()"> Promotion / évolution interne</label>
-          <label><input type="checkbox" id="froid_encours" onchange="autoSave()"> Démarches en cours</label>
-        </div>
-
-        <div style="font-size:11px;font-weight:700;color:var(--c3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px">Le bilan a-t-il aidé à...</div>
-        <div style="overflow-x:auto;margin-bottom:12px">
-          <table style="width:100%;border-collapse:collapse;font-size:12px">
-            <thead><tr>
-              <th style="background:var(--tbl-hdr);color:white;padding:6px 9px;text-align:left;border:1px solid rgba(255,255,255,.2)">Critère</th>
-              <th style="background:var(--tbl-hdr);color:white;padding:6px 9px;text-align:center;border:1px solid rgba(255,255,255,.2)">Pas du tout</th>
-              <th style="background:var(--tbl-hdr);color:white;padding:6px 9px;text-align:center;border:1px solid rgba(255,255,255,.2)">Un peu</th>
-              <th style="background:var(--tbl-hdr);color:white;padding:6px 9px;text-align:center;border:1px solid rgba(255,255,255,.2)">Beaucoup</th>
-              <th style="background:var(--tbl-hdr);color:white;padding:6px 9px;text-align:center;border:1px solid rgba(255,255,255,.2)">Totalement</th>
-            </tr></thead>
-            <tbody>
-              <tr style="background:var(--tbl-bg)">
-                <td style="padding:6px 9px;border:1px solid var(--border)">Clarifier votre identité professionnelle</td>
-                <td style="text-align:center;padding:6px;border:1px solid var(--border)"><input type="radio" name="froid_0" value="pas_tout" onchange="autoSave()"></td>
-<td style="text-align:center;padding:6px;border:1px solid var(--border)"><input type="radio" name="froid_0" value="peu" onchange="autoSave()"></td>
-<td style="text-align:center;padding:6px;border:1px solid var(--border)"><input type="radio" name="froid_0" value="beaucoup" onchange="autoSave()"></td>
-<td style="text-align:center;padding:6px;border:1px solid var(--border)"><input type="radio" name="froid_0" value="totalement" onchange="autoSave()"></td>
-              </tr><tr style="background:white">
-                <td style="padding:6px 9px;border:1px solid var(--border)">Identifier vos compétences et forces</td>
-                <td style="text-align:center;padding:6px;border:1px solid var(--border)"><input type="radio" name="froid_1" value="pas_tout" onchange="autoSave()"></td>
-<td style="text-align:center;padding:6px;border:1px solid var(--border)"><input type="radio" name="froid_1" value="peu" onchange="autoSave()"></td>
-<td style="text-align:center;padding:6px;border:1px solid var(--border)"><input type="radio" name="froid_1" value="beaucoup" onchange="autoSave()"></td>
-<td style="text-align:center;padding:6px;border:1px solid var(--border)"><input type="radio" name="froid_1" value="totalement" onchange="autoSave()"></td>
-              </tr><tr style="background:var(--tbl-bg)">
-                <td style="padding:6px 9px;border:1px solid var(--border)">Définir un projet professionnel concret</td>
-                <td style="text-align:center;padding:6px;border:1px solid var(--border)"><input type="radio" name="froid_2" value="pas_tout" onchange="autoSave()"></td>
-<td style="text-align:center;padding:6px;border:1px solid var(--border)"><input type="radio" name="froid_2" value="peu" onchange="autoSave()"></td>
-<td style="text-align:center;padding:6px;border:1px solid var(--border)"><input type="radio" name="froid_2" value="beaucoup" onchange="autoSave()"></td>
-<td style="text-align:center;padding:6px;border:1px solid var(--border)"><input type="radio" name="froid_2" value="totalement" onchange="autoSave()"></td>
-              </tr><tr style="background:white">
-                <td style="padding:6px 9px;border:1px solid var(--border)">Mettre en œuvre votre plan d'action</td>
-                <td style="text-align:center;padding:6px;border:1px solid var(--border)"><input type="radio" name="froid_3" value="pas_tout" onchange="autoSave()"></td>
-<td style="text-align:center;padding:6px;border:1px solid var(--border)"><input type="radio" name="froid_3" value="peu" onchange="autoSave()"></td>
-<td style="text-align:center;padding:6px;border:1px solid var(--border)"><input type="radio" name="froid_3" value="beaucoup" onchange="autoSave()"></td>
-<td style="text-align:center;padding:6px;border:1px solid var(--border)"><input type="radio" name="froid_3" value="totalement" onchange="autoSave()"></td>
-              </tr><tr style="background:var(--tbl-bg)">
-                <td style="padding:6px 9px;border:1px solid var(--border)">Renforcer votre confiance en vous</td>
-                <td style="text-align:center;padding:6px;border:1px solid var(--border)"><input type="radio" name="froid_4" value="pas_tout" onchange="autoSave()"></td>
-<td style="text-align:center;padding:6px;border:1px solid var(--border)"><input type="radio" name="froid_4" value="peu" onchange="autoSave()"></td>
-<td style="text-align:center;padding:6px;border:1px solid var(--border)"><input type="radio" name="froid_4" value="beaucoup" onchange="autoSave()"></td>
-<td style="text-align:center;padding:6px;border:1px solid var(--border)"><input type="radio" name="froid_4" value="totalement" onchange="autoSave()"></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="fg"><div class="fl">Ce que vous recommanderiez à améliorer dans la méthode</div><textarea class="ft" id="froid_amelio" oninput="autoSave()"></textarea></div>
-        <div class="fg"><div class="fl">Commentaire libre</div><textarea class="ft" id="froid_comment" oninput="autoSave()"></textarea></div>
         <div class="g2">
-          <div class="fg"><div class="fl">Recommanderiez-vous l'organisme ?</div>
-            <select class="fs" id="froid_reco" onchange="autoSave()"><option>Oui</option><option>Non</option><option>Peut-être</option></select>
-          </div>
-          <div class="fg"><div class="fl">Note générale à 6 mois (1-5)</div>
-            <div style="display:flex;gap:6px;font-size:22px;margin-top:4px" id="froid-stars">
-              <span class="fstar" data-v="1" onclick="setFroidStar(1)" style="cursor:pointer;color:#ddd">★</span> <span class="fstar" data-v="2" onclick="setFroidStar(2)" style="cursor:pointer;color:#ddd">★</span> <span class="fstar" data-v="3" onclick="setFroidStar(3)" style="cursor:pointer;color:#ddd">★</span> <span class="fstar" data-v="4" onclick="setFroidStar(4)" style="cursor:pointer;color:#ddd">★</span> <span class="fstar" data-v="5" onclick="setFroidStar(5)" style="cursor:pointer;color:#ddd">★</span>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--dk2);margin-bottom:6px">Signature du consultant</div>
+            <div class="sig-pad-wrap">
+              <canvas id="sig_suivi_consultant" class="sig-canvas"></canvas>
+              <div class="sig-actions">
+                <button class="sig-clear-btn" onclick="clearSig('sig_suivi_consultant')">Effacer</button>
+                <span class="sig-status" id="sig_suivi_consultant_status">En attente...</span>
+              </div>
             </div>
-            <input type="hidden" id="froid_note" value="0">
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--dk2);margin-bottom:6px">Signature du bénéficiaire</div>
+            <div class="sig-pad-wrap">
+              <canvas id="sig_suivi_benef" class="sig-canvas"></canvas>
+              <div class="sig-actions">
+                <button class="sig-clear-btn" onclick="clearSig('sig_suivi_benef')">Effacer</button>
+                <span class="sig-status" id="sig_suivi_benef_status">En attente...</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -22060,6 +22097,7 @@ window.addEventListener('load', () => {
       <button onclick="sw(18)" style="padding:8px 16px;background:#c62828;color:white;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif">🚨 Aller à Incident qualité →</button>
     </div>
 
+    <button onclick="downloadDoc(generateRDV6Mois,getNomFichier('CR_RDV_6_mois'))" style="padding:7px 14px;background:var(--c3);color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif;display:flex;align-items:center;gap:6px;margin-right:8px">⬇️ Word RDV 6 mois</button>
     <button class="export-cal-btn" onclick="exportSuivi()">📄 Exporter Suivi 6 mois (prompt Word)</button>
   </div>
 
@@ -22070,6 +22108,7 @@ window.addEventListener('load', () => {
         <button onclick="downloadDoc(generateCONVOC,getNomFichier('Convocation'))" style="padding:8px 10px;background:white;border:1px solid #196B24;border-radius:6px;font-size:11px;font-weight:700;color:#196B24;cursor:pointer;font-family:Calibri,Arial,sans-serif;text-align:left;display:flex;align-items:center;gap:6px"><span>✉️</span><span>Convocation</span></button>
         <button onclick="downloadDoc(generateEmargement,getNomFichier('ENR034_Emargements'))" style="padding:8px 10px;background:white;border:1px solid #196B24;border-radius:6px;font-size:11px;font-weight:700;color:#196B24;cursor:pointer;font-family:Calibri,Arial,sans-serif;text-align:left;display:flex;align-items:center;gap:6px"><span>📋</span><span>ENR034 Émargements</span></button>
         <button onclick="downloadDoc(generateCompteRendu,getNomFichier('CR_Seances'))" style="padding:8px 10px;background:white;border:1px solid #196B24;border-radius:6px;font-size:11px;font-weight:700;color:#196B24;cursor:pointer;font-family:Calibri,Arial,sans-serif;text-align:left;display:flex;align-items:center;gap:6px"><span>📝</span><span>Compte-rendu séances</span></button>
+        <button onclick="downloadDoc(generateRDV6Mois,getNomFichier('CR_RDV_6_mois'))" style="padding:8px 10px;background:white;border:1px solid #196B24;border-radius:6px;font-size:11px;font-weight:700;color:#196B24;cursor:pointer;font-family:Calibri,Arial,sans-serif;text-align:left;display:flex;align-items:center;gap:6px"><span>🔄</span><span>CR RDV 6 mois</span></button>
         <button onclick="downloadDoc(generateENR002,getNomFichier('ENR002_Recueil_besoins'))" style="padding:8px 10px;background:white;border:1px solid #196B24;border-radius:6px;font-size:11px;font-weight:700;color:#196B24;cursor:pointer;font-family:Calibri,Arial,sans-serif;text-align:left;display:flex;align-items:center;gap:6px"><span>📝</span><span>ENR002 Recueil</span></button>
         <button onclick="downloadDoc(generateENR003,getNomFichier('ENR003_Calendrier'))" style="padding:8px 10px;background:white;border:1px solid #196B24;border-radius:6px;font-size:11px;font-weight:700;color:#196B24;cursor:pointer;font-family:Calibri,Arial,sans-serif;text-align:left;display:flex;align-items:center;gap:6px"><span>📅</span><span>ENR003 Calendrier</span></button>
         <button onclick="downloadDoc(generateENR015,getNomFichier('ENR015_Certificat'))" style="padding:8px 10px;background:white;border:1px solid #196B24;border-radius:6px;font-size:11px;font-weight:700;color:#196B24;cursor:pointer;font-family:Calibri,Arial,sans-serif;text-align:left;display:flex;align-items:center;gap:6px"><span>🏆</span><span>ENR015 Certificat</span></button>
@@ -22275,8 +22314,7 @@ function collectData(){
     'form17_obs1','form17_obs2','form17_engagement','form17_nb_enq','form17_type_enq','form17_handicap_desc',
     'reseau_email','reseau_tel','rgpd_lieu','rgpd_date',
     'f_dob','f_situation','f_adresse','f_email','f_tel','f_fin_autre',
-    'suivi_date_bilan','suivi_date_rdv','suivi_modal','suivi_statut','suivi_projet_statut','suivi_situation','suivi_formation','suivi_plan','suivi_obs','suivi_actions',
-    'froid_note','froid_reco','froid_comment','froid_amelio',
+    'suivi_date_bilan','suivi_date_rdv','suivi_modal','suivi_statut','suivi_projet_statut','suivi_situation','suivi_bilan_6mois','suivi_points_pos','suivi_formation','suivi_plan','suivi_obs','suivi_actions','suivi_comment','suivi_note',
     'incident_type','incident_date','incident_desc','incident_impact','incident_actions',
     'att_nom','att_remis','cert_nom','cert_debut','cert_fin','cert_duree','cert_dob',
     'conv_debut','conv_fin','conv_duree','conv_obj1','conv_obj2','conv_obj3','conv_fin_mode','conv_cheque','conv_virement','conv_especes',
@@ -22323,9 +22361,10 @@ function collectData(){
   });
   d.plan=plan;
   // Save signature data
-  ['sig_consultant','sig_benef_recueil','sig_emarg_form','sig_emarg_benef','sig_conv_org','sig_conv_benef','sig_att_cons','sig_att_benef','eval_benef','cert_rl','cert_benef'].forEach(id=>{d['sig_'+id]=saveSigData(id);});
+  ['sig_consultant','sig_benef_recueil','sig_cal_consultant','sig_cal_benef','sig_cr_consultant','sig_cr_benef','sig_suivi_consultant','sig_suivi_benef','sig_emarg_form','sig_emarg_benef','sig_conv_org','sig_conv_benef','sig_att_cons','sig_att_benef','eval_benef','cert_rl','cert_benef'].forEach(id=>{d['sig_'+id]=saveSigData(id);});
   // Save checklist
   CHECKLIST.flatMap(s=>s.items).forEach(item=>{const e=document.getElementById(item.id);if(e)d[item.id+'_chk']=e.checked;});
+  ['cl_sig_cr','cl_sig_suivi'].forEach(id=>{const e=document.getElementById(id);if(e)d[id+'_chk']=e.checked;});
   // Save emargement row data
   const emRows=document.querySelectorAll('#emarg-tbody tr');
   d.emargRows=Array.from(emRows).map(tr=>{
@@ -22346,10 +22385,10 @@ function collectData(){
   ['rb_b1','rb_b2','rb_b3','rb_b4','rb_b5','rb_b6','rb_a1','rb_a2','rb_a3','rb_a4','rb_a5','rb_h1','rb_h2','rb_h3','rb_h4','rb_info1','rb_info2','rb_info3','rb_info4','rb_info5','rb_info6'].forEach(id=>{const e=document.getElementById(id);if(e)d[id+'_checked']=e.checked;});
   const h_non=document.getElementById('rb_h_non');if(h_non)d.rb_handicap=h_non.checked?'non':'oui';
   const conc=document.getElementById('rb_conc_adapte');if(conc)d.rb_conclusion=conc.checked?'adapte':'non';
-  ['froid_creation','froid_emploi','froid_encours','froid_form','froid_promo'].forEach(id=>{const e=document.getElementById(id);if(e)d[id+'_checked']=e.checked;});
+  d.suivi_reco=getCheckRadio('suivi_reco');
+  d.suiviStars=typeof suiviStars!=='undefined'?suiviStars:0;
   const inc_oui=document.getElementById('incident_oui');d.incident_oui_checked=inc_oui?inc_oui.checked:false;
   ['conv_rgpd_ok','att_autorise','att_n_autorise','reseau_oui','reseau_non','rgpd_consent','form17_handicap'].forEach(id=>{const e=document.getElementById(id);if(e)d[id+'_checked']=e.checked;});
-  d.froidStars=typeof froidStars!=='undefined'?froidStars:0;
   d.convoc_sent=localStorage.getItem('reliance_convoc_sent')||'';
   return d;
 }
@@ -22395,7 +22434,7 @@ function restoreData(d){
   if(vchart)updValCharts();if(rchart)updRiasecChart();
   // Restore signatures (delayed to ensure pads are initialized)
   setTimeout(()=>{
-    ['sig_consultant','sig_benef_recueil','sig_emarg_form','sig_emarg_benef','eval_benef','cert_rl','cert_benef'].forEach(id=>{if(d['sig_'+id])restoreSigData(id,d['sig_'+id]);});
+    ['sig_consultant','sig_benef_recueil','sig_cal_consultant','sig_cal_benef','sig_cr_consultant','sig_cr_benef','sig_suivi_consultant','sig_suivi_benef','sig_emarg_form','sig_emarg_benef','eval_benef','cert_rl','cert_benef'].forEach(id=>{if(d['sig_'+id])restoreSigData(id,d['sig_'+id]);});
     // Restore emargement row data
     if(d.emargRows&&d.emargRows.length){
       const emRows=document.querySelectorAll('#emarg-tbody tr');
@@ -22439,12 +22478,20 @@ function restoreData(d){
         const e=document.getElementById(item.id);
         if(e&&savedChecklistData[item.id+'_chk']!==undefined){e.checked=savedChecklistData[item.id+'_chk'];}
       });
+      ['cl_sig_cr','cl_sig_suivi'].forEach(id=>{
+        const e=document.getElementById(id);
+        if(e&&savedChecklistData[id+'_chk']!==undefined)e.checked=savedChecklistData[id+'_chk'];
+      });
       updateChecklist();
     },150);
-    ['froid_creation','froid_emploi','froid_encours','froid_form','froid_promo'].forEach(id=>{const e=document.getElementById(id);if(e&&d[id+'_checked']!==undefined)e.checked=d[id+'_checked'];});
+    migrateSuiviFromLegacyFroid(d);
+    if(d.suivi_reco){const r=document.querySelector('input[name="suivi_reco"][value="'+d.suivi_reco+'"]');if(r)r.checked=true;}
+    const suiviNote=parseInt(d.suivi_note||d.froid_note||'0',10);
+    if(suiviNote>0&&typeof setSuiviStar==='function')setSuiviStar(suiviNote);
+    else if(d.suiviStars&&typeof setSuiviStar==='function')setSuiviStar(d.suiviStars);
+    else if(d.froidStars&&typeof setSuiviStar==='function')setSuiviStar(d.froidStars);
     const inc_oui2=document.getElementById('incident_oui');if(inc_oui2&&d.incident_oui_checked!==undefined){inc_oui2.checked=d.incident_oui_checked;toggleIncident();}
     ['conv_rgpd_ok','att_autorise','att_n_autorise','reseau_oui','reseau_non','rgpd_consent','form17_handicap'].forEach(id=>{const e=document.getElementById(id);if(e&&d[id+'_checked']!==undefined)e.checked=d[id+'_checked'];});
-    if(d.froidStars&&typeof setFroidStar==='function')setFroidStar(d.froidStars);
     if(d.convoc_sent)localStorage.setItem('reliance_convoc_sent',d.convoc_sent);else localStorage.removeItem('reliance_convoc_sent');
     if(typeof checkConvocAlert==='function')checkConvocAlert();
   }, 500);
@@ -22924,10 +22971,14 @@ function clearAllFields(){
   fiches=[];ficheCount=0;const fc=document.getElementById('fiches-container');if(fc)fc.innerHTML='';
   valData.forEach(v=>v.score=50);riasec.forEach(r=>r.score=50);buildValRows();buildRiasecRows();if(vchart)updValCharts();if(rchart)updRiasecChart();
   selType=null;Array.from(document.querySelectorAll('.p16-card')).forEach(c=>c.classList.remove('sel'));Array.from(document.querySelectorAll('.p16-detail')).forEach(d=>d.classList.remove('show'));
-  ['sig_consultant','sig_benef_recueil','sig_emarg_form','sig_emarg_benef','sig_conv_org','sig_conv_benef','sig_att_cons','sig_att_benef','eval_benef','cert_rl','cert_benef'].forEach(id=>clearSig(id));
+  ['sig_consultant','sig_benef_recueil','sig_cal_consultant','sig_cal_benef','sig_cr_consultant','sig_cr_benef','sig_suivi_consultant','sig_suivi_benef','sig_emarg_form','sig_emarg_benef','sig_conv_org','sig_conv_benef','sig_att_cons','sig_att_benef','eval_benef','cert_rl','cert_benef'].forEach(id=>clearSig(id));
   for(let i=1;i<=8;i++){clearSig('sig_em_b_'+i);clearSig('sig_em_c_'+i);}
-  CHECKLIST.flatMap(s=>s.items).forEach(item=>{const e=document.getElementById(item.id);if(e)e.checked=false;});updateChecklist();
-  froidStars=0;Array.from(document.querySelectorAll('.fstar')).forEach(s=>s.style.color='#ddd');
+  CHECKLIST.flatMap(s=>s.items).forEach(item=>{const e=document.getElementById(item.id);if(e)e.checked=false;});
+  ['cl_sig_cr','cl_sig_suivi'].forEach(id=>{const e=document.getElementById(id);if(e)e.checked=false;});
+  updateChecklist();
+  suiviStars=0;Array.from(document.querySelectorAll('.sstar')).forEach(s=>s.style.color='#ddd');
+  const suiviNoteEl=document.getElementById('suivi_note');if(suiviNoteEl)suiviNoteEl.value='0';
+  Array.from(document.querySelectorAll('input[name="suivi_reco"]')).forEach(r=>r.checked=false);
   localStorage.removeItem('reliance_convoc_sent');localStorage.removeItem('reliance_convoc_dismiss');upProg();
 }
 async function loadSlot(key, consultantCode, nomHint){
@@ -22988,7 +23039,7 @@ function clearData(){
     const tbody=document.getElementById('cal-tbody');
     if(tbody&&tbody.children.length===0){
       const DEFAULT_OBJ=['Rétrospective du parcours : chemin de vie, formations, expériences','Recenser les activités · Synthèse savoir-être, savoir-faire, savoirs','Formaliser les valeurs, besoins et envies','Identifier les talents et axes d\'amélioration','Identifier et clarifier les intérêts professionnels','Déterminer des voies d\'orientation · Enquêtes métiers · Marché de l\'emploi','Valider le projet professionnel prioritaire · Étude des écarts · Plan d\'actions','Synthèse finale · Facteurs favorables · Stratégie d\'action'];
-      const DEFAULT_OUTILS=['Livret phase investigation','Livret phase investigation','Livret · Test des 10 valeurs de Schwartz','Auto-évaluation · Sollicitation de tiers · Test Myers-Briggs','Test RIASEC · Investigation codes ROME','Livret phase investigation','Livret phase investigation','Validation synthèse · Questionnaire satisfaction · RDV 6 mois'];
+      const DEFAULT_OUTILS=['Livret phase investigation','Livret phase investigation','Livret · Boussole de Valeurs','Auto-évaluation · Sollicitation de tiers · Test Myers-Briggs','Orientation Professionnelle · Investigation codes ROME','Livret phase investigation','Livret phase investigation','Validation synthèse · Questionnaire satisfaction · RDV 6 mois'];
       DEFAULT_OBJ.forEach((obj,i)=>addSeanceData({date:'',horaires:'',duree:'2 h 00',obj,outils:DEFAULT_OUTILS[i]||''}));
     }
   },100);
@@ -23146,7 +23197,7 @@ function copyFichePrompt(id,btn){
   const top3R=[...riasec].sort((a,b)=>b.score-a.score).slice(0,3).map(r=>r.code).join('');
   const topVal=[...valData].sort((a,b)=>b.score-a.score).slice(0,3).map(v=>v.name).join(', ');
   const p16txt=selType?`${selType.code} - ${selType.name}`:'Non renseigné';
-  const prompt=`Tu es consultant en bilan de compétences RELIANCE®. Analyse cette fiche métier en 3 parties :\n\n1. MINI-RÉSUMÉ (2-3 phrases attractives du métier)\n2. LIENS AVEC LES TESTS : pourquoi cohérent avec RIASEC ${top3R}, valeurs ${topVal}, personnalité ${p16txt} ?\n3. POINTS DE VIGILANCE : 1-2 points d'attention (${gv('f_vig')||'non précisé'}) et comment les dépasser.\n\nMétier : ${f.titre}\nCode ROME : ${f.code_rome}\nDescription : ${f.resume||'Analyse depuis le nom du métier'}`;
+  const prompt=`Tu es consultant en bilan de compétences RELIANCE®. Analyse cette fiche métier en 3 parties :\n\n1. MINI-RÉSUMÉ (2-3 phrases attractives du métier)\n2. LIENS AVEC LES TESTS : pourquoi cohérent avec Orientation Professionnelle ${top3R}, Boussole de Valeurs ${topVal}, Signature Comportementale ${p16txt} ?\n3. POINTS DE VIGILANCE : 1-2 points d'attention (${gv('f_vig')||'non précisé'}) et comment les dépasser.\n\nMétier : ${f.titre}\nCode ROME : ${f.code_rome}\nDescription : ${f.resume||'Analyse depuis le nom du métier'}`;
   navigator.clipboard.writeText(prompt).then(()=>{btn.textContent='✅ Copié !';btn.classList.add('copied');setTimeout(()=>{btn.textContent='📋 Copier le prompt';btn.classList.remove('copied');},2000);});
 }
 
@@ -23209,9 +23260,9 @@ function resetCalendar(){
       const DEFAULT_OUTILS=[
         "Livret phase investigation",
         "Livret phase investigation",
-        "Livret · Test des 10 valeurs de Schwartz",
+        "Livret · Boussole de Valeurs",
         "Auto-évaluation · Sollicitation de tiers · Test Myers-Briggs (MBTI)",
-        "Test RIASEC · Investigation codes ROME",
+        "Orientation Professionnelle · Investigation codes ROME",
         "Livret phase investigation",
         "Livret phase investigation",
         "Validation synthèse · Questionnaire satisfaction · RDV 6 mois"
@@ -23319,8 +23370,8 @@ const promptDefs=[
    build:d=>`${charteHeader("Synthèse du Parcours Professionnel")}Tu es consultant expert en bilan de compétences Méthode RELIANCE® (RP Coaching & Formation). Rédige la SYNTHÈSE DU PARCOURS pour le document de synthèse officiel.\n\nBénéficiaire : ${d.nom||'—'}, ${d.poste}, secteur ${d.secteur}, ancienneté ${d.anc}.\nContexte de la démarche : ${d.ctx}\nObjectifs du bilan : ${[d.o1,d.o2].filter(Boolean).join(' / ')}\nÉtape SE RECENTRER — contenus : ${d.e1c}\n\nRédige 2-3 paragraphes fluides, valorisants, professionnels. Style document de synthèse officiel mais humain. Prose uniquement, sans puces ni titres.`},
   {id:'comp',label:'Analyse des compétences & profil',color:'var(--c3)',bg:'#E8F5E9',
    build:d=>`${charteHeader("Analyse des Compétences et Profil")}Tu es consultant expert en bilan de compétences RELIANCE®. Rédige l'ANALYSE DES COMPÉTENCES ET DU PROFIL.\n\nBénéficiaire : ${d.nom}\nSavoir-être : ${d.se}\nSavoir-faire : ${d.sf}\nSavoirs : ${d.sv}\nPoints forts : ${d.pts}\nAxes de vigilance : ${d.vig}\nValeurs : ${d.val} | Motivations : ${d.mot}\nÉtape SE COMPRENDRE : ${d.e2c}\n\n2-3 paragraphes analytiques et valorisants, montrant la cohérence du profil.`},
-  {id:'tests',label:'Profil valeurs, RIASEC & personnalité',color:'var(--c5)',bg:'#EDE7F6',
-   build:d=>`${charteHeader("Profil Valeurs RIASEC Personnalité")}Tu es consultant expert en bilan de compétences RELIANCE®. Rédige la partie PROFIL DE PERSONNALITÉ ET VALEURS.\n\nBénéficiaire : ${d.nom}\nTop valeurs Schwartz : ${d.topVal}\nCode RIASEC dominant : ${d.topR} (${d.topRLabels})\nProfil 16 Personalities : ${d.p16txt}\nDescription 16P : ${d.p16desc}\nRésultats SE COMPRENDRE : ${d.e2r}\n\n2-3 paragraphes synthétisant les 3 tests de façon cohérente et valorisante.`},
+  {id:'tests',label:'Profil Boussole de Valeurs, Orientation Professionnelle & Signature Comportementale',color:'var(--c5)',bg:'#EDE7F6',
+   build:d=>`${charteHeader("Profil Boussole Orientation Signature")}Tu es consultant expert en bilan de compétences RELIANCE®. Rédige le document Word des résultats de tests pour le bénéficiaire ${d.nom||'—'}. Respecte exactement la structure ci-dessous : titres de chapitres inclus, prose uniquement (pas de puces), ton professionnel et valorisant.\n\nCHAPITRE 1 — BOUSSOLE DE VALEURS\nPrésente en un paragraphe simple ce qu'est la Boussole de Valeurs et ce qu'elle mesure. Puis un paragraphe présentant le résultat de ${d.nom||'le bénéficiaire'} : ses valeurs dominantes sont ${d.topVal||'—'}.\n\nCHAPITRE 2 — ORIENTATION PROFESSIONNELLE\nPrésente en un paragraphe simple ce qu'est ce test d'orientation. Puis un paragraphe présentant le résultat de ${d.nom||'le bénéficiaire'} : son profil dominant est ${d.topR||'—'} (${d.topRLabels||'—'}).\n\nCHAPITRE 3 — SIGNATURE COMPORTEMENTALE\nPrésente en un paragraphe simple ce qu'est la Signature Comportementale. Puis un paragraphe présentant le résultat de ${d.nom||'le bénéficiaire'} : ${d.p16txt||'—'} — ${d.p16desc||'—'}.\n\nCHAPITRE SYNTHÈSE\nUn paragraphe synthétisant les 3 résultats ensemble. Puis un paragraphe « Qui est ${d.nom||'cette personne'} ? » intégrant ce qui a été renseigné dans Se comprendre : ${d.e2c||'—'} et ${d.e2r||'—'} — donnant une lecture identitaire complète de la personne.`},
   {id:'projet',label:'Argumentaire du projet professionnel',color:'var(--orange)',bg:'#FFF3E0',
    build:d=>`${charteHeader("Argumentaire Projet Professionnel")}Rédige l'ARGUMENTAIRE DU PROJET PROFESSIONNEL pour la synthèse RELIANCE®.\n\nBénéficiaire : ${d.nom} | Projet : ${d.proj}\nDescription : ${d.pdesc}\nArgumentaire : ${d.arg} | Faisabilité : ${d.fais}\nÉtape CHOISIR : ${d.e3c} | Résultats S'ENGAGER : ${d.e4r}\n\n3 paragraphes. Cohérence compétences/valeurs/aspirations. Ton : professionnel, convaincant, humain.`},
   {id:"plan",label:"Plan d'action narratif",color:"var(--c4)",bg:"#E8EAF6",
@@ -23336,8 +23387,8 @@ Données du bilan :
 - Savoir-faire : ${d.sf||'—'}
 - Savoir-être : ${d.se||'—'}
 - Plan d'action : ${d.planTxt||'—'}
-- Top 3 valeurs Schwartz : ${d.topVal||'—'}
-- Code RIASEC dominant : ${d.topR||'—'} (${d.topRLabels||'—'})
+- Top 3 valeurs Boussole de Valeurs : ${d.topVal||'—'}
+- Code Orientation Professionnelle dominant : ${d.topR||'—'} (${d.topRLabels||'—'})
 - Profil de personnalité : ${d.p16txt||'—'}
 
 Consignes STRICTES :
@@ -23345,7 +23396,7 @@ Consignes STRICTES :
 2. Aucun texte, aucun commentaire, aucun bloc markdown avant ou après le SVG
 3. viewBox="0 0 900 620", largeur 900, hauteur 620
 4. Nœud central : nom + projet retenu, fond #074F6A, texte blanc, police 14px bold
-5. 7 branches principales avec leurs sous-nœuds : Compétences (savoir-faire) · Valeurs (top 3 Schwartz) · Points forts · Savoir-être · Plan d'action · RIASEC (code + libellés) · Personnalité (profil 16P)
+5. 7 branches principales avec leurs sous-nœuds : Compétences (savoir-faire) · Valeurs (top 3 Boussole de Valeurs) · Points forts · Savoir-être · Plan d'action · Orientation Professionnelle (code + libellés) · Signature Comportementale
 6. Couleur distincte par branche, lignes courbes, sous-nœuds lisibles, style professionnel épuré
 7. Le SVG doit s'afficher directement dans un navigateur sans aucune dépendance externe`}
 ];
@@ -23436,9 +23487,9 @@ function initCharts(){
     [
     {obj:"Rétrospective du parcours : chemin de vie, formations, expériences",outils:"Livret phase investigation"},
     {obj:"Recenser les activités · Synthèse savoir-être, savoir-faire, savoirs",outils:"Livret phase investigation"},
-    {obj:"Formaliser les valeurs, besoins et envies",outils:"Livret · Test des 10 valeurs de Schwartz"},
+    {obj:"Formaliser les valeurs, besoins et envies",outils:"Livret · Boussole de Valeurs"},
     {obj:"Identifier les talents et axes d\'amélioration",outils:"Auto-évaluation · Sollicitation de tiers · Test Myers-Briggs"},
-    {obj:"Identifier et clarifier les intérêts professionnels",outils:"Test RIASEC · Investigation codes ROME"},
+    {obj:"Identifier et clarifier les intérêts professionnels",outils:"Orientation Professionnelle · Investigation codes ROME"},
     {obj:"Déterminer des voies d\'orientation · Enquêtes métiers · Marché de l\'emploi",outils:"Livret phase investigation"},
     {obj:"Valider le projet professionnel prioritaire · Étude des écarts · Plan d\'actions",outils:"Livret phase investigation"},
     {obj:"Synthèse finale · Facteurs favorables · Stratégie d\'action",outils:"Validation synthèse · Questionnaire satisfaction · RDV 6 mois"}
@@ -23460,7 +23511,7 @@ async function sendEvol(){
   const req=document.getElementById('evol-req').value.trim();
   if(!req)return;
   const out=document.getElementById('evol-out');out.style.display='block';out.textContent='Analyse en cours...';
-  const prompt=`Tu es expert de l'application RELIANCE® v7.4 (HTML/CSS/JS, sans API, mode prompt-copie).\nL'app a 9 onglets : Bénéficiaire, Étapes, Valeurs & Tests (Schwartz+RIASEC+16P), Analyse, Fiches Métiers, Calendrier ENR003, Plan d'action, Prompts IA, Prévisualisation.\nElle inclut sauvegarde localStorage + export JSON .reliance.\n\nDemande : ${req}\nContexte : ${document.getElementById('evol-ctx').value}\n\nRéponds avec : 1.FAISABILITÉ 2.IMPACT (onglets concernés) 3.INSTRUCTIONS PRÉCISES pour implémenter 4.COMPLEXITÉ (Simple/Moyenne/Complexe)`;
+  const prompt=`Tu es expert de l'application RELIANCE® v7.4 (HTML/CSS/JS, sans API, mode prompt-copie).\nL'app a 9 onglets : Bénéficiaire, Étapes, Valeurs & Tests (Boussole de Valeurs + Orientation Professionnelle + Signature Comportementale), Analyse, Fiches Métiers, Calendrier ENR003, Plan d'action, Prompts IA, Prévisualisation.\nElle inclut sauvegarde localStorage + export JSON .reliance.\n\nDemande : ${req}\nContexte : ${document.getElementById('evol-ctx').value}\n\nRéponds avec : 1.FAISABILITÉ 2.IMPACT (onglets concernés) 3.INSTRUCTIONS PRÉCISES pour implémenter 4.COMPLEXITÉ (Simple/Moyenne/Complexe)`;
   try{
     const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,messages:[{role:'user',content:prompt}]})});
     const data=await r.json();
@@ -23582,7 +23633,7 @@ function restoreSigData(canvasId, dataURL) {
 }
 
 function initAllSigPads() {
-  ['sig_consultant','sig_benef_recueil','sig_emarg_form','sig_emarg_benef','sig_conv_org','sig_conv_benef','sig_att_cons','sig_att_benef'].forEach(id => {
+  ['sig_consultant','sig_benef_recueil','sig_cal_consultant','sig_cal_benef','sig_cr_consultant','sig_cr_benef','sig_suivi_consultant','sig_suivi_benef','sig_emarg_form','sig_emarg_benef','sig_conv_org','sig_conv_benef','sig_att_cons','sig_att_benef'].forEach(id => {
     setTimeout(() => initSigPad(id), 100);
   });
   // Signature pads for each séance in émargements
@@ -24005,7 +24056,7 @@ RGPD accepté : ${document.getElementById('conv_rgpd_ok')?.checked ? 'Oui' : 'No
 Fait à ${gv('conv_fait_a')} le ${gv('conv_date_sign') || new Date().toLocaleDateString('fr-FR')}
 Signatures : Rodrigue Poncet (organisme) + ${nom} (bénéficiaire — "Lu et approuvé")
 
-Inclure les clauses : confidentialité, 3 phases légales, droits bénéficiaire, RGPD, annulation, délai rétractation 14j, annexes ENR002+ENR003.`;
+Inclure les clauses : confidentialité, 3 phases légales, droits bénéficiaire, RGPD, annulation, délai rétractation 14j. Annexes 1 Calendrier ENR003, 2 Questionnaire ENR002 (signées par le bénéficiaire), 3 à 9 sur Drive.`;
   navigator.clipboard.writeText(prompt).then(() => showToast("📋 Prompt Convention copié — Coller dans Claude.ai", "green"));
 }
 
@@ -24102,9 +24153,9 @@ const CHECKLIST = [
     { id: 'cl_email_saved', label: "Email de convocation envoyé au bénéficiaire sauvegardé dans le dossier client", enr: 'Onglet Bénéficiaire', oblig: true },
   ]},
   { cat: 'PHASE D\'INVESTIGATION', col: '#196B24', items: [
-    { id: 'cl_valeurs', label: "Test des valeurs de Schwartz réalisé et analysé", enr: 'Onglet Valeurs & Tests', oblig: true },
-    { id: 'cl_riasec', label: "Test RIASEC réalisé et restitué", enr: 'Onglet Valeurs & Tests', oblig: true },
-    { id: 'cl_16p', label: "Test de personnalité 16P réalisé", enr: 'Onglet Valeurs & Tests', oblig: false },
+    { id: 'cl_valeurs', label: "Boussole de Valeurs réalisée et analysée", enr: 'Onglet Valeurs & Tests', oblig: true },
+    { id: 'cl_riasec', label: "Orientation Professionnelle réalisée et restituée", enr: 'Onglet Valeurs & Tests', oblig: true },
+    { id: 'cl_16p', label: "Signature Comportementale réalisée", enr: 'Onglet Valeurs & Tests', oblig: false },
     { id: 'cl_fiches', label: "Enquêtes métiers / Fiches ROME réalisées", enr: 'Onglet Fiches Métiers', oblig: false },
     { id: 'cl_emarg_inv', label: "Émargements signés séances 2 à 7", enr: 'Onglet Émargements', oblig: true },
     { id: 'cl_comp', label: "Compétences identifiées et analysées", enr: 'Onglet Analyse & Projet', oblig: true },
@@ -24119,12 +24170,14 @@ const CHECKLIST = [
     { id: 'cl_eval_b', label: "Questionnaire de satisfaction bénéficiaire (ENR016) complété", enr: 'Onglet Évaluations', oblig: true },
     { id: 'cl_eval_f', label: "Questionnaire formateur (ENR017) complété", enr: 'Onglet Évaluations', oblig: true },
     { id: 'cl_emarg_fin', label: "Émargement séance 8 signé + signature globale feuille", enr: 'Onglet Émargements', oblig: true },
+    { id: 'cl_sig_cr', label: "Compte-rendu de séance(s) signé (consultant + bénéficiaire)", enr: 'Onglet Calendrier', oblig: true },
     { id: 'cl_plan_fin', label: "Plan d'action définitif validé avec le bénéficiaire", enr: 'Onglet Plan d\'action', oblig: true },
     { id: 'cl_reseau', label: "Proposition réseau personnes ressources (ENR014)", enr: 'Onglet Documents légaux', oblig: false },
   ]},
   { cat: 'SUIVI POST-BILAN', col: '#0F9ED5', items: [
     { id: 'cl_rdv6m', label: "RDV suivi 6 mois planifié et inscrit dans le planning", enr: 'Onglet Suivi 6 mois', oblig: true },
-    { id: 'cl_froid', label: "Questionnaire évaluation à froid (6 mois) complété", enr: 'Onglet Suivi 6 mois', oblig: true },
+    { id: 'cl_froid', label: "Suivi à 6 mois documenté (CR + satisfaction)", enr: 'Onglet Suivi 6 mois', oblig: true },
+    { id: 'cl_sig_suivi', label: "Compte-rendu de suivi à 6 mois signé (consultant + bénéficiaire)", enr: 'Onglet Suivi 6 mois', oblig: true },
     { id: 'cl_archivage', label: "Dossier client archivé (fichier .reliance + documents Word)", enr: 'Bouton 💾 Sauvegarder', oblig: true },
     { id: 'cl_destruction', label: "Date de destruction des données planifiée (max 1 an)", enr: 'Onglet RGPD', oblig: true },
   ]},
@@ -24177,14 +24230,23 @@ function updateChecklist() {
 }
 
 // ════════════ SUIVI 6 MOIS JS ════════════
-let froidStars = 0;
-function setFroidStar(n) {
-  froidStars = n;
-  Array.from(document.querySelectorAll('.fstar')).forEach(s => {
+let suiviStars = 0;
+function setSuiviStar(n) {
+  suiviStars = n;
+  Array.from(document.querySelectorAll('.sstar')).forEach(s => {
     s.style.color = parseInt(s.dataset.v) <= n ? '#E97132' : '#ddd';
   });
-  const inp = document.getElementById('froid_note'); if(inp) inp.value = n;
+  const inp = document.getElementById('suivi_note'); if(inp) inp.value = n;
   autoSave();
+}
+function migrateSuiviFromLegacyFroid(d) {
+  if(!d)return;
+  const commentEl = document.getElementById('suivi_comment');
+  if(commentEl && !commentEl.value){
+    const legacy = (d.froid_comment || '') + (d.froid_amelio ? (d.froid_comment ? '\n\n' : '') + d.froid_amelio : '');
+    if(legacy)commentEl.value = legacy;
+  }
+  if(!d.suivi_reco && d.froid_reco)d.suivi_reco = d.froid_reco;
 }
 
 function calcSuiviDate() {
@@ -24215,13 +24277,11 @@ Modalité : ${gv('suivi_modal')} · Statut : ${gv('suivi_statut')}
 Projet à 6 mois : ${gv('suivi_projet_statut')}
 Situation : ${gv('suivi_situation')}
 Formation démarrée : ${gv('suivi_formation')} · Plan d'action suivi : ${gv('suivi_plan')}
-Observations : ${gv('suivi_obs')}
-
-=== QUESTIONNAIRE ÉVALUATION À FROID (Doc. 12) ===
-Note générale à 6 mois : ${gv('froid_note')}/5 étoiles
-Recommandation : ${gv('froid_reco')}
-Commentaire : ${gv('froid_comment')}
-Améliorations suggérées : ${gv('froid_amelio')}
+Difficultés : ${gv('suivi_obs')}
+Points d'action : ${gv('suivi_actions')}
+Commentaire : ${gv('suivi_comment')}
+Note générale à 6 mois : ${gv('suivi_note')}/5 étoiles
+Recommandation organisme : ${getCheckRadio('suivi_reco') || '—'}
 
 === INCIDENT QUALITÉ (si applicable) ===
 Incident déclaré : ${document.getElementById('incident_oui')?.checked ? 'Oui — ' + gv('incident_type') + ' (' + gv('incident_date') + ')' : 'Non'}
@@ -25112,10 +25172,7 @@ async function generateENR003() {
     h1('SIGNATURES'),
     fieldG2(['Fait à', lieu, 'Le', today()]),
     space(400),
-    sigTable(
-      [{text:"Le / La Formateur(trice)", bold:true, color:RP_COLORS.bleuFonce}, {text:cons}, {text:'', size:800}],
-      [{text:"Le / La Bénéficiaire", bold:true, color:RP_COLORS.bleuFonce}, {text:nom||'[Nom Prénom]'}, {text:'Signature\u00a0:', size:RP_FONT_SMALL}, {text:'', size:800}]
-    ),
+    ...buildSigTableFromPads('sig_cal_consultant', 'Le / La Formateur(trice) — ' + cons, 'sig_cal_benef', 'Le / La Bénéficiaire — ' + (nom || '[Nom Prénom]')),
   ];
   
   const doc = new docx.Document({
@@ -25139,9 +25196,9 @@ const DEFAULT_SEANCE_OBJ = [
 const DEFAULT_SEANCE_OUTILS = [
   "Livret « phase investigation »",
   "Livret « phase investigation »",
-  "Livret « phase investigation » · Test des 10 valeurs de Schwartz",
+  "Livret « phase investigation » · Boussole de Valeurs",
   "Livret « phase investigation » · Auto-évaluation · Test Myers-Briggs (MBTI)",
-  "Test RIASEC · Restitution et analyse · Investigation codes ROME",
+  "Orientation Professionnelle · Restitution et analyse · Investigation codes ROME",
   "Livret « phase investigation »",
   "Livret « phase investigation »",
   "Validation de la synthèse · Questionnaire de satisfaction · Attestation · RDV à 6 mois"
@@ -25832,18 +25889,21 @@ async function generateENR023() {
     makeTable(
       ['Annexe','Contenu'],
       [
-        ['Annexe 1','Calendrier et programme prévisionnel (ENR003)'],
-        ['Annexe 2','Questionnaire recueil des besoins / objectif / handicap (ENR002)'],
+        ['Annexe 1','Calendrier ENR003'],
+        ['Annexe 2','Questionnaire ENR002'],
         ['Annexe 3','Formulaire de rétractation'],
-        ['Annexe 4','Politique et charte RGPD'],
+        ['Annexe 4','RGPD'],
         ['Annexe 5','Règlement intérieur'],
-        ['Annexe 6','Charte qualité et déontologie'],
+        ['Annexe 6','Charte qualité'],
+        ['Annexe 7','Livret accueil'],
+        ['Annexe 8','CGU'],
+        ['Annexe 9','Charte IA'],
       ],
       [1400,8238]
     ),
     space(80),
-    P([B("Annexes 1 et 2 envoyées pour signature au bénéficiaire.",{italics:true,size:RP_FONT_SMALL})]),
-    P([B("Annexes 3 à 6 consultables via : ",{italics:true,size:RP_FONT_SMALL}),B("https://drive.google.com/drive/folders/1uKL48P9YePwpy6eAk3U7xenztNc8VwXC",{color:RP_COLORS.bleu,size:RP_FONT_SMALL})]),
+    P([B("Les annexes 1 et 2 sont envoyées pour signature au bénéficiaire.",{italics:true,size:RP_FONT_SMALL})]),
+    P([B("Les annexes 3 à 9 sont consultables via ce lien : ",{italics:true,size:RP_FONT_SMALL}),B("https://drive.google.com/drive/folders/1uKL48P9YePwpy6eAk3U7xenztNc8VwXC?usp=drive_link",{color:RP_COLORS.bleu,size:RP_FONT_SMALL})]),
 
     // 13. SIGNATURES
     h1('13. SIGNATURES'),
@@ -25920,7 +25980,7 @@ function migrateSeanceFields(seances){
   }
   // Si toutes les séances ont obj vide → remplir avec les objectifs par défaut
   const DEFAULT_OBJ_FILL=['Rétrospective du parcours : chemin de vie, formations, expériences','Recenser les activités · Synthèse savoir-être, savoir-faire, savoirs','Formaliser les valeurs, besoins et envies','Identifier les talents et axes d\'amélioration','Identifier et clarifier les intérêts professionnels','Déterminer des voies d\'orientation · Enquêtes métiers · Marché de l\'emploi','Valider le projet professionnel prioritaire · Étude des écarts · Plan d\'actions','Synthèse finale · Facteurs favorables · Stratégie d\'action'];
-  const DEFAULT_OUTILS_FILL=['Livret phase investigation','Livret phase investigation','Livret · Test des 10 valeurs de Schwartz','Auto-évaluation · Sollicitation de tiers · Test Myers-Briggs','Test RIASEC · Investigation codes ROME','Livret phase investigation','Livret phase investigation','Validation synthèse · Questionnaire satisfaction · RDV 6 mois'];
+  const DEFAULT_OUTILS_FILL=['Livret phase investigation','Livret phase investigation','Livret · Boussole de Valeurs','Auto-évaluation · Sollicitation de tiers · Test Myers-Briggs','Orientation Professionnelle · Investigation codes ROME','Livret phase investigation','Livret phase investigation','Validation synthèse · Questionnaire satisfaction · RDV 6 mois'];
   const allObjEmpty=seances.every(s=>!s.obj||s.obj.trim()==='');
   if(allObjEmpty){
     return seances.map((s,i)=>({...s,obj:DEFAULT_OBJ_FILL[i]||'',outils:s.outils&&s.outils.trim()?s.outils:(DEFAULT_OUTILS_FILL[i]||'')}));
@@ -26292,30 +26352,6 @@ async function generateCompteRendu() {
     ]}))
   });
 
-  // Tableau émargements finaux
-  const half = Math.floor(CONTENT_WIDTH/2), rest = CONTENT_WIDTH - half;
-  const sigTable = new docx.Table({
-    width:{size:CONTENT_WIDTH, type:docx.WidthType.DXA},
-    columnWidths:[half, rest],
-    borders:{top:NB,bottom:NB,left:NB,right:NB,insideH:NB,insideV:NB},
-    rows:[new docx.TableRow({children:[
-      new docx.TableCell({width:{size:half,type:docx.WidthType.DXA},
-        borders:{top:NB,bottom:NB,left:NB,right:NB}, margins:M,
-        children:[
-          new docx.Paragraph({spacing:{after:60},children:[new docx.TextRun({text:'Formateur — '+cons,bold:true,font:RP_FONT,size:RP_FONT_BODY,color:RP_COLORS.bleuFonce})]}),
-          new docx.Paragraph({spacing:{after:700},children:[new docx.TextRun({text:'Signature :',font:RP_FONT,size:RP_FONT_SMALL})]}),
-        ]
-      }),
-      new docx.TableCell({width:{size:rest,type:docx.WidthType.DXA},
-        borders:{top:NB,bottom:NB,left:NB,right:NB}, margins:M,
-        children:[
-          new docx.Paragraph({spacing:{after:60},children:[new docx.TextRun({text:'Bénéficiaire — '+nom,bold:true,font:RP_FONT,size:RP_FONT_BODY,color:RP_COLORS.bleuFonce})]}),
-          new docx.Paragraph({spacing:{after:700},children:[new docx.TextRun({text:'Signature :',font:RP_FONT,size:RP_FONT_SMALL})]}),
-        ]
-      }),
-    ]})]
-  });
-
   const children = [
     titlePara('ÉDITION COMPTE-RENDU DES SÉANCES'),
     versionPara('Méthode RELIANCE® — RP Coaching & Formation'),
@@ -26339,10 +26375,10 @@ async function generateCompteRendu() {
     h1('RÉCAPITULATIF DES DURÉES'),
     recapTable,
     space(400),
-    h1('ÉMARGEMENTS'),
+    h1('SIGNATURES'),
     P([B("En signant ci-dessous, le formateur et le bénéficiaire attestent de l'exactitude des comptes-rendus ci-dessus.",{italics:true,size:RP_FONT_SMALL})]),
     space(200),
-    sigTable,
+    ...buildSigTableFromPads('sig_cr_consultant', 'Formateur — ' + cons, 'sig_cr_benef', 'Bénéficiaire — ' + nom),
   ];
 
   return new docx.Document({
@@ -26356,6 +26392,155 @@ async function generateCompteRendu() {
   });
 }
 
+
+
+// ═══════════════════════════════════════════════════════════════════
+// RDV SUIVI 6 MOIS — Compte-rendu Word
+// ═══════════════════════════════════════════════════════════════════
+async function generateRDV6Mois() {
+  if(!checkDocxLoaded()){showToast('Bibliothèque Word non chargée','orange');return null;}
+  const nom = gv('f_nom') || '[Nom Prénom]';
+  const cons = gv('f_cons') || 'Rodrigue Poncet';
+  const dateBilan = fmtDate(gv('suivi_date_bilan') || gv('f_date_fin')) || '—';
+  const dateRdv = fmtDate(gv('suivi_date_rdv')) || '—';
+  const modal = gv('suivi_modal') || '—';
+  const statut = gv('suivi_statut') || '—';
+  const projetStatut = gv('suivi_projet_statut') || '—';
+  const situation = gv('suivi_situation') || '—';
+  const bilan = gv('suivi_bilan_6mois') || '—';
+  const pointsPos = gv('suivi_points_pos') || '—';
+  const formation = gv('suivi_formation') || '—';
+  const plan = gv('suivi_plan') || '—';
+  const difficultes = gv('suivi_obs') || '—';
+  const actions = gv('suivi_actions') || '—';
+  const commentaire = gv('suivi_comment') || '—';
+  const reco = getCheckRadio('suivi_reco') || '—';
+  const note = gv('suivi_note') || '0';
+
+  const children = [
+    titlePara('COMPTE-RENDU — RENDEZ-VOUS DE SUIVI À 6 MOIS'),
+    versionPara('Méthode RELIANCE® — RP Coaching & Formation'),
+    space(80),
+    fieldRow('Bénéficiaire', nom),
+    fieldRow('Consultant(e)', cons),
+    fieldRow('Date fin du bilan', dateBilan),
+    fieldRow('Date du rendez-vous', dateRdv),
+    fieldRow('Modalité', modal),
+    fieldRow('Statut du suivi', statut),
+    fieldRow('Évolution du projet', projetStatut),
+    space(120),
+    h1('SITUATION ACTUELLE'),
+    P(situation),
+    space(80),
+    h1('BILAN À 6 MOIS'),
+    P(bilan),
+    space(80),
+    h1('POINTS POSITIFS'),
+    P(pointsPos),
+    space(80),
+    h1('FORMATION ET PLAN D\'ACTION'),
+    fieldRow('Formation démarrée', formation),
+    fieldRow('Plan d\'action suivi', plan),
+    space(80),
+    h1('DIFFICULTÉS RENCONTRÉES'),
+    P(difficultes),
+    space(80),
+    h1('POINTS D\'ACTION IDENTIFIÉS'),
+    P(actions),
+    space(80),
+    h1('SATISFACTION ET COMMENTAIRES'),
+    fieldRow('Recommandation organisme', reco),
+    fieldRow('Note générale (1-5)', note + ' / 5'),
+    P(commentaire),
+    space(200),
+    h1('SIGNATURES'),
+    P([B("Le consultant et le bénéficiaire attestent de l'exactitude de ce compte-rendu.",{italics:true,size:RP_FONT_SMALL})]),
+    space(200),
+    ...buildSigTableFromPads('sig_suivi_consultant', 'Consultant(e) — ' + cons, 'sig_suivi_benef', 'Bénéficiaire — ' + nom),
+  ];
+
+  return new docx.Document({
+    styles: DOC_STYLES,
+    sections: [{
+      properties: { page: PAGE_PROPS },
+      headers: { default: makeHeader('Suivi à 6 mois') },
+      footers: { default: makeFooter('CR RDV 6 mois — ' + new Date().getFullYear()) },
+      children
+    }]
+  });
+}
+
+function getRelianceSignedDocumentsList() {
+  const groups = [
+    { keys: ['sig_benef_recueil', 'sig_consultant'], label: 'Recueil des besoins (ENR002)' },
+    { keys: ['sig_conv_benef', 'sig_conv_org'], label: 'Convention de bilan de compétences (ENR023)' },
+    { keys: ['sig_emarg_benef', 'sig_emarg_form'], label: "Feuille d'émargements (ENR034)" },
+    { keys: ['sig_att_benef', 'sig_att_cons'], label: 'Attestation de remise de synthèse (ENR013)' },
+    { keys: ['sig_eval_benef'], label: "Questionnaire d'évaluation bénéficiaire (ENR016)" },
+    { keys: ['sig_cert_benef', 'sig_cert_rl'], label: 'Certificat de réalisation (ENR015)' },
+  ];
+  const signed = [];
+  groups.forEach(g => {
+    if (g.keys.some(k => getSigDataURL(k))) signed.push(g.label);
+  });
+  for (let i = 1; i <= 8; i++) {
+    if (getSigDataURL('sig_em_b_' + i) || getSigDataURL('sig_em_c_' + i)) {
+      signed.push('Émargement séance ' + i + ' (ENR034)');
+    }
+  }
+  return [...new Set(signed)];
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ATTESTATION DE SIGNATURE ÉLECTRONIQUE — Word
+// ═══════════════════════════════════════════════════════════════════
+async function generateAttestationSignature() {
+  if(!checkDocxLoaded()){showToast('Bibliothèque Word non chargée','orange');return null;}
+  const nom = gv('f_nom') || '[Nom Prénom]';
+  const cons = gv('f_cons') || 'Rodrigue Poncet';
+  const orga = gv('f_orga') || 'RP Coaching & Formation';
+  const dateAtt = fmtDate(gv('att_date')) || today();
+  const lieu = gv('att_lieu') || 'Val Suran';
+  const docsListe = [
+    'Convention de bilan de compétences',
+    'Calendrier et programme prévisionnel',
+    'Questionnaire recueil des besoins',
+    'Compte-rendu de séance(s)',
+    'Compte-rendu de suivi à 6 mois'
+  ];
+  const listeTxt = docsListe.map((s, i) => (i + 1) + '. ' + s).join('\n');
+  const attestationTxt = "Je soussigné(e) " + nom + " atteste avoir pris connaissance et signé électroniquement via l'application RELIANCE® les documents listés ci-dessous, cette liste étant non exhaustive :";
+
+  const children = [
+    titlePara('ATTESTATION DE SIGNATURE ÉLECTRONIQUE'),
+    versionPara('Méthode RELIANCE® — RP Coaching & Formation'),
+    space(100),
+    fieldRow('Bénéficiaire', nom),
+    fieldRow('Consultant(e)', cons),
+    fieldRow('Organisme', orga),
+    fieldRow('Date', dateAtt),
+    space(120),
+    P(attestationTxt),
+    space(80),
+    P(listeTxt),
+    space(80),
+    P([B("Cette liste est non exhaustive : d'autres documents peuvent avoir été signés hors application ou après édition de la présente attestation.", { italics: true, size: RP_FONT_SMALL })]),
+    space(200),
+    P([B('Fait à ' + lieu + ', le ' + dateAtt + '.', { italics: true, size: RP_FONT_SMALL })]),
+    space(200),
+    ...buildSigTableFromPads('sig_att_cons', 'Le consultant', 'sig_att_benef', 'Le / La bénéficiaire'),
+  ];
+
+  return new docx.Document({
+    styles: DOC_STYLES,
+    sections: [{
+      properties: { page: PAGE_PROPS },
+      headers: { default: makeHeader('Attestation signatures') },
+      footers: { default: makeFooter('Attestation signatures — ' + new Date().getFullYear()) },
+      children
+    }]
+  });
+}
 
 // ═══════════════════════════════════════════════════════════════════
 // GUIDES UTILISATEUR & ADMINISTRATEUR
@@ -26400,6 +26585,7 @@ function guideLi(items){return `<ul style="margin:6px 0 6px 18px">${items.map(i=
 function guideInfo(t){return `<div style="background:#EBF4FF;border-left:4px solid #074F6A;padding:8px 12px;margin:8px 0;font-size:11px">${t}</div>`;}
 function guideWarning(t){return `<div style="background:#FFF3E0;border-left:4px solid #E97132;padding:8px 12px;margin:8px 0;font-size:11px">${t}</div>`;}
 function guideSuccess(t){return `<div style="background:#E8F5E9;border-left:4px solid #196B24;padding:8px 12px;margin:8px 0;font-size:11px">${t}</div>`;}
+function guideCapture(desc){return `<div style="background:#f9f9f9;border:2px dashed #ccc;border-radius:8px;padding:20px 16px;margin:12px 0;text-align:center;font-size:11px;color:#777;font-style:italic">📷 [capture d'écran à insérer — ${desc}]</div>`;}
 
 // ── GUIDE UTILISATEUR ──────────────────────────────────────────────
 function renderGuideUser(){
@@ -26408,290 +26594,198 @@ function renderGuideUser(){
   el.innerHTML=`
   <div style="max-width:860px">
     <div style="background:linear-gradient(135deg,#074F6A,#156082);color:white;padding:20px 24px;border-radius:12px;margin-bottom:20px">
-      <div style="font-size:22px;font-weight:700;margin-bottom:4px">📖 Guide Utilisateur — RELIANCE® v7.4</div>
-      <div style="font-size:12px;opacity:.85">Méthode RELIANCE® · RP Coaching & Formation · Rodrigue Poncet</div>
-      <div style="font-size:11px;opacity:.7;margin-top:6px">Guide détaillé — niveau débutant · Pas d'expérience requise</div>
+      <div style="font-size:22px;font-weight:700;margin-bottom:4px">📖 Guide utilisateur — RELIANCE® v7.4</div>
+      <div style="font-size:12px;opacity:.85">Méthode RELIANCE® · RP Coaching & Formation</div>
+      <div style="font-size:11px;opacity:.7;margin-top:6px">Pour les consultants — langage simple, pas à pas</div>
     </div>
 
     ${guideSection('🧭','Comment lire ce guide',`
-      ${guidePara('Ce guide vous accompagne pas à pas dans l\'utilisation de l\'application RELIANCE®. Chaque section correspond à une partie de l\'application. Lisez-le de haut en bas lors de votre première utilisation, puis revenez-y comme référence au besoin.')}
-      ${guideInfo('💡 <strong>Aucune installation requise.</strong> RELIANCE® fonctionne directement dans votre navigateur web (Chrome ou Edge), exactement comme un site internet — mais sans connexion internet nécessaire une fois le fichier ouvert.')}
-      ${guideH2('Les symboles utilisés dans ce guide')}
+      ${guidePara('Ce guide décrit l\'application telle qu\'elle fonctionne aujourd\'hui. Lisez-le une première fois de haut en bas, puis revenez à la section qui vous concerne.')}
+      ${guideInfo('💡 <strong>Astuce :</strong> les encadrés gris 📷 indiquent où insérer une capture d\'écran dans votre version imprimée ou partagée.')}
       ${guideLi([
-        '💡 <strong>Astuce</strong> : conseil pour aller plus vite ou mieux utiliser une fonction',
-        '⚠️ <strong>Attention</strong> : point important à ne pas manquer',
-        '✅ <strong>Bonne pratique</strong> : ce que les utilisateurs expérimentés font systématiquement',
-        '📌 <strong>À retenir</strong> : information clé à mémoriser'
+        '💡 <strong>Astuce</strong> — pour aller plus vite',
+        '⚠️ <strong>Attention</strong> — point important',
+        '✅ <strong>Bonne pratique</strong> — recommandé en routine'
       ])}
     `)}
 
-    ${guideSection('🚀','Démarrage — Ouvrir l\'application',`
-      ${guideH2('Étape 1 — Trouver le fichier')}
-      ${guidePara('L\'application est un fichier unique nommé <strong>RELIANCE_App_v7_4_.html</strong>. Il se trouve là où votre formateur ou responsable vous l\'a transmis (email, clé USB, dossier partagé, etc.).')}
-      ${guideH2('Étape 2 — Ouvrir le fichier')}
+    ${guideSection('1️⃣','Avant de commencer',`
+      ${guideH2('Navigateur et accès')}
+      ${guidePara('Utilisez <strong>Google Chrome</strong> ou <strong>Microsoft Edge</strong>. Ouvrez l\'application depuis le site ou le fichier fourni par RP Coaching (version déployée <strong>v7.4</strong>).')}
+      ${guideCapture('Écran de connexion avec code consultant et mot de passe')}
+      ${guideH2('Votre connexion')}
       ${guideLi([
-        'Double-cliquez sur le fichier <strong>RELIANCE_App_v7_4_.html</strong>',
-        'Si une fenêtre vous demande "Avec quel programme ?", choisissez <strong>Google Chrome</strong> ou <strong>Microsoft Edge</strong>',
-        'L\'application s\'ouvre dans votre navigateur, comme un site web'
+        'Saisissez votre <strong>code consultant</strong> (ex. CONS-0003) et votre <strong>mot de passe</strong>',
+        'Après connexion, votre nom apparaît en haut de l\'écran',
+        'Cliquez sur 🔒 pour vous déconnecter en fin de session'
       ])}
-      ${guideWarning('⚠️ <strong>N\'utilisez pas Internet Explorer ni Firefox.</strong> L\'application fonctionne uniquement avec Chrome ou Edge pour garantir la génération correcte des documents Word.')}
-      ${guideH2('Étape 3 — Comprendre l\'écran')}
-      ${guidePara('Voici ce que vous voyez une fois l\'application ouverte :')}
+      ${guideH2('Les zones de l\'écran')}
       ${guideLi([
-        '📌 <strong>Barre latérale gauche</strong> : la liste de tous les onglets, dans l\'ordre du déroulement du bilan. Cliquez sur un onglet pour y accéder.',
-        '📌 <strong>Zone centrale</strong> : c\'est ici que vous saisissez les informations et travaillez.',
-        '📌 <strong>Barre du haut</strong> : affiche la progression du dossier (%) et les boutons de sauvegarde.',
-        '📌 <strong>Bouton "Générer Word"</strong> (en haut à droite) : permet de télécharger les documents officiels au format Word.'
+        '<strong>Menu à gauche</strong> — les onglets du bilan, dans l\'ordre conseillé',
+        '<strong>Zone centrale</strong> — les formulaires à remplir',
+        '<strong>Barre du haut</strong> — progression %, sauvegarde, documents Word'
       ])}
-      ${guideInfo('💡 <strong>La progression en %</strong> en haut à gauche indique combien de champs importants ont été remplis dans le dossier. Elle augmente automatiquement au fur et à mesure que vous saisissez les informations.')}
-      ${guideH2('Étape 4 — Premier démarrage')}
-      ${guideLi([
-        'Au premier lancement, tous les champs sont vides : c\'est normal.',
-        'Commencez <strong>toujours</strong> par l\'onglet 👤 <strong>Bénéficiaire</strong> — c\'est le point d\'entrée de tout dossier.',
-        'Une fois les informations du bénéficiaire saisies, tous les autres onglets s\'en souviennent automatiquement.'
-      ])}
+      ${guideCapture('Vue d\'ensemble : menu latéral, barre du haut, badge dossier actif')}
+      ${guideWarning('⚠️ L\'onglet <strong>Guide admin</strong> n\'est visible que pour le dirigeant. Vous disposez de l\'onglet <strong>Guide utilisateur</strong> (📖).')}
     `)}
 
-    ${guideSection('💾','Sauvegarde — Ne perdez jamais votre travail',`
-      ${guidePara('C\'est la section la plus importante pour débuter. Comprendre comment sauvegarder vous évitera toute mauvaise surprise.')}
-      ${guideH2('Comment fonctionne la sauvegarde automatique ?')}
-      ${guidePara('RELIANCE® sauvegarde automatiquement votre travail toutes les 10 secondes dans votre navigateur. Vous le voyez grâce à un <strong>petit indicateur vert</strong> en haut à droite qui indique "Sauvegardé". Vous n\'avez rien à faire pour que cela se déclenche.')}
-      ${guideWarning('⚠️ <strong>Limite importante :</strong> cette sauvegarde automatique est liée à votre navigateur sur votre ordinateur. Si vous ouvrez le fichier sur un <em>autre ordinateur</em>, ou si vous <em>videz l\'historique de Chrome/Edge</em>, vous ne retrouverez pas vos données. C\'est pourquoi il faut aussi exporter régulièrement.')}
-
-      ${guideH2('Les 3 façons de sauvegarder')}
-      ${guideLi([
-        '🟢 <strong>Auto-save (automatique)</strong> — Toutes les 10 secondes, sans action de votre part. Pratique pour ne rien perdre en cas de coupure.',
-        '🔵 <strong>Bouton "Sauvegarder"</strong> (bouton violet en haut) — Enregistre le dossier sous un nom dans le navigateur. Utile quand vous gérez plusieurs bénéficiaires : chaque dossier a son propre nom.',
-        '📁 <strong>Bouton "Exporter fichier"</strong> — Télécharge un fichier <em>.reliance</em> sur votre ordinateur. C\'est votre <strong>sauvegarde de sécurité</strong> à conserver précieusement.'
-      ])}
-      ${guideSuccess('✅ <strong>Bonne pratique :</strong> à la fin de chaque séance de travail, cliquez sur "Exporter fichier" et enregistrez le fichier .reliance dans le dossier du bénéficiaire sur votre ordinateur ou cloud.')}
-
-      ${guideH2('Reprendre un dossier existant')}
-      ${guidePara('Vous avez fermé l\'application et voulez reprendre là où vous en étiez ? Deux méthodes :')}
-      ${guideLi([
-        '<strong>Méthode 1 — Depuis le navigateur</strong> : cliquez sur "Sauvegarder" puis "Charger". Une liste de vos dossiers enregistrés apparaît. Cliquez sur le nom du bénéficiaire pour le rouvrir.',
-        '<strong>Méthode 2 — Depuis un fichier</strong> : cliquez sur "Importer fichier", puis sélectionnez le fichier <em>.reliance</em> correspondant au bénéficiaire. Toutes les données se rechargent instantanément.'
-      ])}
-
-      ${guideH2('Commencer un nouveau dossier')}
-      ${guidePara('Pour créer un nouveau bilan pour un autre bénéficiaire :')}
-      ${guideLi([
-        '<strong>1.</strong> Exportez d\'abord le dossier actuel (bouton "Exporter fichier") pour ne pas le perdre',
-        '<strong>2.</strong> Cliquez sur "Sauvegarder" puis "Nouveau bilan"',
-        '<strong>3.</strong> Tous les champs sont effacés — vous repartez de zéro pour le nouveau bénéficiaire'
-      ])}
-      ${guideWarning('⚠️ Le bouton "Nouveau bilan" efface TOUT le contenu affiché. Assurez-vous d\'avoir exporté le dossier précédent avant de cliquer.')}
+    ${guideSection('2️⃣','Votre dossier = un fichier sur votre ordinateur',`
+      ${guidePara('Chaque bénéficiaire possède <strong>un fichier dossier</strong> (extension <strong>.reliance</strong>). C\'est lui qui contient tout : textes, signatures, checklist, calendrier.')}
+      ${guidePara('L\'<strong>annuaire en ligne</strong> (visible quand vous sauvegardez) ne stocke <em>pas</em> le détail du bilan. Il indique seulement : nom du bénéficiaire, consultant, pourcentage d\'avancement, dates de mise à jour. Le dirigeant s\'en sert pour suivre l\'activité.')}
+      ${guideInfo('📌 <strong>À retenir :</strong> sans fichier .reliance sur votre PC (ou cloud personnel), vous ne pouvez pas reconstituer le dossier complet depuis l\'annuaire seul.')}
+      ${guideCapture('Fenêtre Sauvegarder : liste « Index cloud » et bouton Ouvrir un dossier')}
     `)}
 
-    ${guideSection('👤','Onglet Bénéficiaire — Le cœur du dossier',`
-      ${guidePara('<strong>Commencez toujours ici.</strong> Cet onglet est le point d\'entrée unique : tout ce que vous saisissez ici se retrouve automatiquement dans tous les autres onglets et dans tous les documents Word générés. Vous n\'avez donc à saisir le nom, la date, ou les objectifs qu\'une seule fois.')}
-      ${guideH2('Les champs à remplir en priorité')}
+    ${guideSection('3️⃣','Sauvegarder sans perdre votre travail',`
+      ${guideH2('Trois niveaux de sécurité')}
       ${guideLi([
-        '👤 <strong>Nom et Prénom</strong> du bénéficiaire — apparaîtront sur tous les documents officiels',
-        '📧 <strong>Email et téléphone</strong> — utilisés pour les convocations',
-        '🏠 <strong>Adresse</strong> — reprise dans la convention et le certificat',
-        '📅 <strong>Date de début et date de fin</strong> du bilan — structurent automatiquement le calendrier et les convocations',
-        '💳 <strong>Mode de financement</strong> — choisissez parmi : CPF (Mon Compte Formation), OPCO (financement employeur), Plan de formation, ou Autofinancement',
-        '🎯 <strong>Objectifs 1, 2 et 3</strong> — les grandes orientations du bilan, reprises dans le recueil des besoins et le calendrier',
-        '🖥️ <strong>Modalité</strong> — Présentiel (en salle), Distanciel (visioconférence), ou Mixte'
+        '<strong>Auto-save</strong> (point vert en haut) — brouillon automatique dans le navigateur, environ toutes les secondes. Utile si l\'onglet se ferme par erreur.',
+        '<strong>💾 Sauvegarder</strong> — enregistre le <strong>fichier dossier</strong> sur votre ordinateur et met à jour l\'annuaire en ligne.',
+        '<strong>Enregistrer sous…</strong> — même action, mais vous choisissez un nouvel emplacement ou un nouveau nom de fichier'
       ])}
-      ${guideInfo('💡 <strong>Astuce :</strong> prenez le temps de remplir soigneusement cet onglet avant de passer aux suivants. Plus il est complet, moins vous aurez de corrections à faire dans les documents générés.')}
-      ${guideH2('Que se passe-t-il dans les autres onglets ?')}
-      ${guidePara('Dès que vous saisissez une information ici, elle se propage automatiquement. Par exemple : saisissez le nom du bénéficiaire → il apparaît instantanément dans l\'onglet Calendrier, dans la Convocation, dans le Certificat, etc. Vous n\'avez jamais à le ressaisir.')}
+      ${guideCapture('Bouton Sauvegarder en haut à droite et fenêtre modale des options')}
+      ${guideH2('Ouvrir un dossier existant')}
+      ${guideLi([
+        'Cliquez sur <strong>💾 Sauvegarder</strong> puis <strong>Ouvrir un dossier</strong>',
+        'Sélectionnez le fichier .reliance du bénéficiaire sur votre PC',
+        'Vous pouvez aussi cliquer <strong>Ouvrir fichier</strong> depuis la liste de l\'annuaire (le fichier doit être au même endroit)'
+      ])}
+      ${guideH2('Nouveau bilan')}
+      ${guidePara('Utilisez <strong>Nouveau bilan</strong> seulement après avoir sauvegardé le dossier en cours. Tous les champs affichés seront effacés.')}
+      ${guideSuccess('✅ En fin de chaque séance de travail : Sauvegarder + vérifier que le fichier .reliance est bien dans le dossier du bénéficiaire (OneDrive, clé USB, etc.).')}
     `)}
 
-    ${guideSection('☑️','Checklist Qualité — Votre feuille de route',`
-      ${guidePara('La Checklist Qualité est votre guide de progression tout au long du bilan. Elle liste toutes les étapes réglementaires dans l\'ordre, réparties en 3 phases officielles. Cochez chaque étape au fur et à mesure que vous l\'accomplissez.')}
-      ${guideH2('Pourquoi c\'est important ?')}
-      ${guidePara('Le bilan de compétences est encadré par la loi (Code du travail Art. R6313-4 à R6313-8). Chaque étape doit être réalisée dans un ordre précis. La checklist vous assure de ne rien oublier et constitue une preuve de votre suivi en cas d\'audit Qualiopi.')}
-      ${guideH2('Les 3 phases du bilan')}
+    ${guideSection('4️⃣','Checklist Qualiopi — votre feuille de route',`
+      ${guidePara('L\'onglet <strong>Checklist</strong> liste <strong>32 étapes</strong> en <strong>4 phases</strong>. Cochez chaque case quand l\'action est réellement faite.')}
       ${guideLi([
-        '🟡 <strong>Phase préliminaire</strong> — Les premiers contacts : accueil du bénéficiaire, information sur ses droits (RGPD), signature de la convention, envoi de la convocation, recueil de ses besoins et attentes.',
-        '🔵 <strong>Phase d\'investigation</strong> — Le cœur du bilan : exploration des valeurs, passation des tests (RIASEC, etc.), analyse des compétences, exploration des fiches métiers, construction du plan d\'action.',
-        '🟢 <strong>Phase de conclusion</strong> — La finalisation : rédaction de la synthèse, recueil des évaluations (bénéficiaire et formateur), remise du certificat de réalisation, programmation du suivi à 6 mois.'
+        '<strong>Phase préliminaire</strong> — accueil, RGPD, recueil, convention, convocation, calendrier, première émargement…',
+        '<strong>Phase d\'investigation</strong> — tests, compétences, fiches métiers, émargements séances 2 à 7…',
+        '<strong>Phase de conclusion</strong> — synthèse, évaluations, certificat, émargement final, plan d\'action, <strong>compte-rendu de séance(s) signé</strong>…',
+        '<strong>Suivi post-bilan</strong> — RDV 6 mois planifié, suivi documenté, <strong>CR suivi 6 mois signé</strong>, archivage, date de destruction RGPD'
       ])}
-      ${guideH2('Comment utiliser la checklist ?')}
-      ${guideLi([
-        'Cochez chaque case au moment où vous accomplissez l\'étape correspondante',
-        'La barre de progression globale du dossier se met à jour automatiquement',
-        'Les cases cochées sont sauvegardées dans le dossier — vous les retrouvez telles quelles à chaque réouverture',
-        'Une case non cochée = une étape à faire. C\'est votre rappel automatique.'
-      ])}
-      ${guideInfo('💡 En cas d\'audit Qualiopi, l\'auditeur peut vous demander de justifier chaque étape cochée. Assurez-vous que le document correspondant existe bien (convention signée, émargement, etc.) avant de cocher.')}
+      ${guideCapture('Onglet Checklist avec les 4 bandeaux de phase et barre de progression')}
+      ${guideInfo('💡 Les liens → à droite de chaque ligne vous amènent directement au bon onglet.')}
     `)}
 
-    ${guideSection('📅','Calendrier & Séances — Planifier le bilan',`
-      ${guidePara('L\'onglet Calendrier vous permet de saisir toutes les séances du bilan : date, horaire, durée, objectifs travaillés et compte-rendu. Ces informations alimentent directement les documents officiels (ENR003 Calendrier prévisionnel et compte-rendu de séances).')}
-      ${guideH2('Saisir une séance — étape par étape')}
+    ${guideSection('5️⃣','Démarrer le bilan — ordre conseillé',`
       ${guideLi([
-        '📅 <strong>Date</strong> : tapez la date au format <strong>jj/mm/aaaa</strong> (exemple : 15/04/2026). Les slashes s\'ajoutent automatiquement pendant la saisie.',
-        '🕐 <strong>Horaires</strong> : saisissez l\'heure de début et de fin au format <strong>09h00 — 11h00</strong>',
-        '⏱️ <strong>Durée</strong> : renseignée automatiquement à <strong>2h00</strong> par défaut. Modifiez-la si la séance a une durée différente.',
-        '🎯 <strong>Objectifs</strong> : déjà pré-remplis avec les objectifs des 8 séances types RELIANCE®. Vous pouvez les personnaliser.',
-        '🔧 <strong>Outils</strong> : les outils pédagogiques prévus pour la séance (tests, exercices, etc.), également pré-remplis.',
-        '🖊️ <strong>Bouton "G"</strong> : cliquez sur ce bouton à côté d\'un champ pour le passer en <strong>gras</strong> dans le document Word généré — utile pour mettre en valeur un point important.'
+        '<strong>Bénéficiaire</strong> — nom, coordonnées, dates, financement, objectifs (tout part d\'ici)',
+        '<strong>Checklist</strong> — repérez les étapes à venir',
+        '<strong>RGPD</strong> — information et consentement',
+        '<strong>Recueil des besoins</strong> — ENR002 + signatures',
+        '<strong>Convention</strong> — ENR023 + signatures',
+        '<strong>Convocation</strong> — email au bénéficiaire',
+        '<strong>Calendrier</strong> — séances, calendrier prévisionnel, signatures calendrier'
       ])}
-      ${guideH2('Les comptes-rendus de séance')}
-      ${guidePara('Chaque séance dispose d\'une colonne <strong>Compte-rendu</strong> (fond jaune). C\'est votre espace de notes privées après chaque séance : observations, points abordés, éléments à reprendre. Cochez la case <strong>✓</strong> pour indiquer que le compte-rendu a été rédigé et validé.')}
-      ${guideInfo('💡 Rédigez le compte-rendu dans les 24h après la séance pendant que les éléments sont encore frais. Ces notes alimentent le document de synthèse final.')}
-      ${guideH2('Documents générés depuis cet onglet')}
-      ${guideLi([
-        '📅 <strong>ENR003 — Calendrier prévisionnel</strong> : document Word officiel listant toutes les séances avec objectifs et outils. À remettre au bénéficiaire.',
-        '📝 <strong>Compte-rendu de séances</strong> : document Word avec le détail des échanges et un espace pour les émargements.'
-      ])}
+      ${guideCapture('Onglet Bénéficiaire rempli (nom, dates, objectifs)')}
     `)}
 
-    ${guideSection('✍️','Émargements — Les signatures de présence',`
-      ${guidePara('L\'onglet Émargements permet de recueillir les <strong>signatures numériques</strong> de présence pour chaque séance. Ces signatures sont intégrées directement dans la feuille d\'émargement officielle (document ENR034) téléchargeable en Word.')}
-      ${guideH2('Pourquoi signer numériquement ?')}
-      ${guidePara('La feuille d\'émargement est une preuve légale de présence aux séances. Elle est exigée par les organismes financeurs (CPF/EDOF, OPCO, France Travail) et par les auditeurs Qualiopi. La signature numérique intégrée dans le document Word a la même valeur qu\'une signature papier.')}
-      ${guideH2('Comment ça fonctionne ?')}
-      ${guideLi([
-        '<strong>Ouverture automatique</strong> : quand vous ouvrez cet onglet, les dates et horaires des séances saisies dans le Calendrier sont importés automatiquement. Vous n\'avez rien à ressaisir.',
-        '<strong>Durées</strong> : chaque séance affiche deux colonnes — "Face-à-face" (temps en présence du consultant) et "Recherche personnelle" (travail autonome). Ajustez les durées si nécessaire.',
-        '<strong>Signature</strong> : dans le pavé de signature de chaque séance, signez avec la souris (ou un stylet sur tablette) en maintenant le clic enfoncé. Un bouton "Effacer" permet de recommencer si la signature n\'est pas satisfaisante.',
-        '<strong>Télécharger</strong> : cliquez sur le bouton <strong>⬇️ Télécharger Word</strong> pour générer la feuille ENR034 avec toutes les signatures intégrées.'
-      ])}
-      ${guideSuccess('✅ <strong>Conseil pratique :</strong> faites signer le bénéficiaire à chaque fin de séance, directement sur l\'écran avec la souris ou un stylet. Téléchargez ensuite immédiatement le document Word et sauvegardez-le dans le dossier du bénéficiaire.')}
+    ${guideSection('6️⃣','Pendant le bilan — onglets utiles',`
+      ${guideTableOngletsInner()}
+      ${guidePara('Remplissez les onglets au fil des séances. La <strong>progression %</strong> en haut augmente quand les champs importants sont renseignés.')}
+      ${guideCapture('Exemple : onglet Valeurs & Tests avec scores et graphiques')}
     `)}
 
-    ${guideSection('📊','Tests & Résultats — RIASEC et Valeurs',`
-      ${guidePara('Ces onglets permettent de saisir les résultats des tests passés par le bénéficiaire pendant la phase d\'investigation.')}
-      ${guideH2('Le test RIASEC')}
-      ${guidePara('Le RIASEC est un test d\'orientation professionnelle qui mesure 6 types d\'intérêts (Réaliste, Investigateur, Artistique, Social, Entreprenant, Conventionnel). Saisissez les scores obtenus pour chaque dimension — l\'application génère automatiquement le graphique radar qui sera intégré dans la synthèse.')}
-      ${guideH2('Le test des Valeurs')}
-      ${guidePara('Ce test (inspiré du modèle Schwartz) identifie les valeurs professionnelles prioritaires du bénéficiaire. Saisissez les notes attribuées à chaque valeur — le graphique se génère automatiquement.')}
-      ${guideInfo('💡 Les graphiques générés ici s\'intègrent automatiquement dans le document de synthèse finale lors de sa génération.')}
+    ${guideSection('7️⃣','Signatures numériques — où signer ?',`
+      ${guidePara('Plusieurs zones de signature existent. Signez avec la souris (ou un stylet), puis générez le Word correspondant.')}
+      ${guideLi([
+        '<strong>Recueil des besoins</strong> — signatures consultant et bénéficiaire',
+        '<strong>Calendrier</strong> — bloc « Signatures Calendrier Prévisionnel » (consultant + bénéficiaire)',
+        '<strong>Calendrier</strong> — bloc « Signatures Compte-rendu de séance » (document CR global)',
+        '<strong>Émargements</strong> — par séance + feuille globale',
+        '<strong>Convention, documents légaux, évaluations, suivi 6 mois</strong> — selon les blocs prévus dans chaque onglet'
+      ])}
+      ${guideCapture('Pads de signature côte à côte (consultant / bénéficiaire)')}
+      ${guideSuccess('✅ Bonne habitude : faire signer le bénéficiaire à l\'écran en fin de séance, puis télécharger le Word tout de suite.')}
     `)}
 
-    ${guideSection('📄','Génération des documents Word — Les documents officiels',`
-      ${guidePara('C\'est ici que vous créez tous les documents officiels du bilan, au format Word (.docx), prêts à imprimer ou envoyer par email. Tous les champs sont pré-remplis avec les données du dossier actif.')}
-      ${guideH2('Comment accéder à la génération ?')}
+    ${guideSection('8️⃣','Documents Word — sans passer par l\'IA',`
+      ${guideH2('Deux façons de télécharger')}
       ${guideLi([
-        'Cliquez sur le bouton <strong>"Générer Word"</strong> en haut à droite de l\'application',
-        'Un panneau s\'ouvre avec la liste des 9 documents disponibles',
-        'Cliquez sur le document souhaité pour le télécharger instantanément'
+        '<strong>📄 Générer Word</strong> (barre du haut) — panneau avec les documents principaux + bouton « Télécharger TOUS »',
+        '<strong>Boutons dans chaque onglet</strong> — ex. ENR002 dans Recueil, ENR003 dans Calendrier, CR séances, RDV 6 mois…'
       ])}
-      ${guideH2('Les 9 documents disponibles')}
+      ${guideCapture('Panneau Générer Word avec la grille de documents')}
+      ${guideH2('Documents disponibles (principaux)')}
       ${guideLi([
-        '📧 <strong>Convocation</strong> (MOD004/005) — Lettre de convocation à envoyer au bénéficiaire avant chaque séance ou avant le démarrage du bilan',
-        '📝 <strong>Recueil des besoins</strong> (ENR002) — Formulaire d\'analyse des attentes, objectifs et situation du bénéficiaire. À faire signer en phase préliminaire.',
-        '📅 <strong>Calendrier prévisionnel</strong> (ENR003) — Programme complet des séances avec objectifs et outils. Document de référence pour le bénéficiaire.',
-        '🏆 <strong>Certificat de réalisation</strong> (ENR015) — Document officiel attestant que le bilan a été réalisé dans sa totalité. Obligatoire pour les financements CPF.',
-        '⭐ <strong>Évaluation bénéficiaire</strong> (ENR016) — Questionnaire de satisfaction à faire remplir par le bénéficiaire en fin de bilan.',
-        '📋 <strong>Évaluation formateur</strong> (ENR017) — Auto-évaluation du consultant sur la prestation réalisée. Exigée par Qualiopi.',
-        '📋 <strong>Convention de bilan</strong> (ENR023) — Contrat officiel entre RP Coaching & Formation et le bénéficiaire. À signer impérativement avant le démarrage.',
-        '✍️ <strong>Feuille d\'émargements</strong> (ENR034) — Tableau de présence avec signatures intégrées depuis l\'onglet Émargements.',
-        '📝 <strong>Compte-rendu de séances</strong> — Synthèse des notes de séances avec émargements.'
+        'Convocation · ENR002 Recueil · ENR003 Calendrier · ENR023 Convention',
+        'ENR034 Émargements · Compte-rendu de séances · CR RDV 6 mois',
+        'ENR015 Certificat · ENR016 / ENR017 Évaluations · Attestation de signature électronique',
+        'Documents légaux (ENR013 attestation de remise, ENR014 réseau…)'
       ])}
-      ${guideInfo('💡 <strong>Astuce :</strong> tous les documents sont générés avec le logo RP Coaching & Formation, les couleurs de la charte graphique, et les coordonnées du bénéficiaire déjà insérées. Il ne vous reste plus qu\'à les relire, les imprimer ou les envoyer.')}
-      ${guideSuccess('✅ Le bouton <strong>"Télécharger TOUS"</strong> génère les 9 documents en une seule action — pratique en fin de bilan pour constituer le dossier complet.')}
-      ${guideH2('Où se trouvent les fichiers téléchargés ?')}
-      ${guidePara('Les fichiers Word se téléchargent dans votre dossier <strong>Téléchargements</strong> (le dossier "Downloads" de votre ordinateur). Pensez à les déplacer ensuite dans le dossier du bénéficiaire pour les retrouver facilement.')}
+      ${guidePara('Les fichiers se téléchargent dans votre dossier <strong>Téléchargements</strong>. Déplacez-les ensuite dans le dossier du bénéficiaire.')}
     `)}
 
-    ${guideSection('✉️','Convocation & Email — Contacter le bénéficiaire',`
-      ${guidePara('L\'onglet Convocation génère automatiquement un email de convocation au bénéficiaire, pré-rempli avec ses coordonnées, les dates de séance, et les informations pratiques. Vous avez deux façons de l\'envoyer.')}
-      ${guideH2('Méthode 1 — Copier dans Gmail ou Outlook (recommandé)')}
+    ${guideSection('9️⃣','Fin de bilan',`
       ${guideLi([
-        'Cliquez sur <strong>📋 Copier (avec mise en forme)</strong>',
-        'Ouvrez Gmail ou Outlook et créez un nouveau message',
-        'Cliquez dans le corps du message et faites <strong>Ctrl+V</strong> (coller)',
-        'L\'email s\'insère avec toute sa mise en forme : titres, paragraphes, retours à la ligne'
+        '<strong>Synthèse</strong> — document remis au bénéficiaire (textes via Prompts IA ou saisie manuelle)',
+        '<strong>Documents légaux</strong> — attestation de remise ENR013, certificat ENR015',
+        '<strong>Évaluations</strong> — ENR016 bénéficiaire, ENR017 formateur, <strong>Attestation de signature Word</strong>',
+        '<strong>Émargements</strong> — séance 8 + signature globale',
+        '<strong>Plan d\'action</strong> — version définitive validée'
       ])}
-      ${guideH2('Méthode 2 — Ouvrir directement dans votre messagerie')}
-      ${guideLi([
-        'Cliquez sur <strong>✉️ Ouvrir dans la messagerie</strong>',
-        'Votre logiciel de messagerie s\'ouvre automatiquement avec le destinataire, l\'objet et le corps pré-remplis',
-        'Vérifiez le contenu et cliquez "Envoyer"'
-      ])}
-      ${guideWarning('⚠️ <strong>Ne pas utiliser</strong> le bouton "Copier le texte brut" pour envoyer par email : la mise en forme sera perdue et le message apparaîtra comme un bloc de texte sans structure.')}
-      ${guideInfo('💡 Conservez une copie des emails de convocation envoyés dans votre messagerie. En cas d\'audit, ces emails constituent une preuve de l\'information préalable donnée au bénéficiaire.')}
+      ${guideWarning('⚠️ La synthèse est confidentielle : ne la transmettez pas à un tiers sans accord écrit du bénéficiaire.')}
+      ${guideCapture('Onglet Évaluations avec boutons Word et attestation de signature')}
     `)}
 
-    ${guideSection('🤖','Prompts IA — Générer la synthèse avec Claude',`
-      ${guidePara('L\'onglet Prompts IA est un outil puissant qui génère automatiquement les textes de la synthèse finale grâce à l\'intelligence artificielle (Claude d\'Anthropic). Il n\'est pas obligatoire, mais il vous fait gagner un temps considérable dans la rédaction.')}
-      ${guideH2('Comment ça fonctionne ?')}
-      ${guidePara('L\'application prépare pour vous un <strong>prompt</strong> (une demande rédigée) intégrant toutes les données du dossier. Vous copiez ce prompt, vous le collez dans Claude.ai, et l\'IA vous génère un texte de synthèse professionnel que vous pouvez ensuite ajuster.')}
-      ${guideH2('Étapes détaillées')}
+    ${guideSection('🔟','Suivi à 6 mois',`
+      ${guidePara('Onglet <strong>Suivi 6 mois</strong> : planifiez le RDV, rédigez le compte rendu, recueillez la satisfaction (commentaire, recommandation organisme, note 1 à 5), signez avec les pads dédiés, exportez le <strong>Word RDV 6 mois</strong>.')}
       ${guideLi([
-        '<strong>1.</strong> Dans l\'onglet Prompts IA, cliquez sur le bouton de la section à rédiger (ex. : "Synthèse des compétences")',
-        '<strong>2.</strong> Le prompt s\'affiche dans la zone de texte — cliquez sur <strong>"Copier le prompt"</strong>',
-        '<strong>3.</strong> Ouvrez un nouvel onglet dans votre navigateur et allez sur <a href="https://claude.ai" target="_blank" style="color:#074F6A"><strong>claude.ai</strong></a> (créez un compte gratuit si vous n\'en avez pas)',
-        '<strong>4.</strong> Collez le prompt dans la zone de discussion (Ctrl+V) et appuyez sur Entrée',
-        '<strong>5.</strong> Claude génère un texte en quelques secondes — lisez-le, copiez-le (Ctrl+A puis Ctrl+C)',
-        '<strong>6.</strong> Revenez dans RELIANCE®, collez le texte dans la zone de saisie correspondante (Ctrl+V)',
-        '<strong>7.</strong> Relisez et personnalisez le texte selon votre ressenti du bénéficiaire'
+        'Date de suivi prévue (environ 6 mois après la fin du bilan)',
+        'Statut : à planifier, planifié, réalisé…',
+        'Cochez dans la checklist : RDV planifié + suivi documenté + CR signé'
       ])}
-      ${guideInfo('💡 <strong>Pas de clé API requise.</strong> Vous utilisez simplement le site Claude.ai comme un outil en ligne — c\'est gratuit pour un usage courant. Le texte généré est un point de départ : votre expertise de consultant reste indispensable pour le valider et le personnaliser.')}
-      ${guideSuccess('✅ Une fois vos textes saisis dans les zones de l\'onglet Prompts IA, ils se transfèrent automatiquement dans l\'onglet Synthèse finale et alimentent le document Word de synthèse.')}
-      ${guideH2('🗺️ Mind Map visuelle — Annexe Word')}
-      ${guidePara('Un prompt spécial <strong>🗺️ Mind Map</strong> est disponible en bas de l\'onglet Prompts IA. Il demande à Claude.ai de générer une carte mentale visuelle (code SVG) centrée sur le projet et les compétences du bénéficiaire, à insérer en annexe de la synthèse Word.')}
-      ${guideLi([
-        '<strong>1.</strong> Cliquez sur le bouton <strong>🗺️ Mind Map</strong> pour copier le prompt',
-        '<strong>2.</strong> Collez-le dans <a href="https://claude.ai" target="_blank" style="color:#074F6A">claude.ai</a> — Claude génère un code SVG',
-        '<strong>3.</strong> Copiez intégralement le code SVG retourné par Claude',
-        '<strong>4.</strong> Rendez-vous sur <a href="https://svgviewer.dev" target="_blank" style="color:#074F6A">svgviewer.dev</a> → collez le code → cliquez <strong>Télécharger PNG</strong>',
-        '<strong>5.</strong> Dans Word : <strong>Insertion → Image</strong> → sélectionnez le PNG → placez-le en Annexe de votre synthèse'
-      ])}
-      ${guideInfo('💡 Le prompt d\'export de synthèse inclut désormais une mention <strong>Annexe Mind Map</strong> pour vous rappeler d\'y insérer ce visuel au moment de la constitution du document final.')}
+      ${guideCapture('Onglet Suivi 6 mois : formulaire, étoiles de note, signatures')}
     `)}
 
-    ${guideSection('📋','Synthèse finale — Le document clé du bilan',`
-      ${guidePara('La synthèse finale est le document le plus important du bilan de compétences. C\'est le document que vous remettez au bénéficiaire à la fin du parcours — il récapitule tout le travail effectué, les compétences identifiées, les pistes envisagées et le plan d\'action.')}
-      ${guideH2('Comment est-elle construite ?')}
+    ${guideSection('1️⃣1️⃣','Aide à la rédaction — Prompts IA (optionnel)',`
+      ${guidePara('L\'onglet <strong>Prompts IA</strong> prépare des textes pour <a href="https://claude.ai" target="_blank" style="color:#074F6A">Claude.ai</a>. Vous copiez le prompt, vous collez la réponse dans la zone jaune de l\'application.')}
       ${guideLi([
-        'Elle est composée des textes rédigés dans l\'onglet <strong>Prompts IA</strong> (ou saisis manuellement)',
-        'Les données du bénéficiaire (identité, objectifs, dates) sont intégrées automatiquement',
-        'Les graphiques RIASEC et Valeurs générés dans leurs onglets respectifs y sont insérés'
+        'Parcours · Compétences · Tests · Projet · Plan d\'action · Conclusion',
+        '<strong>Mind Map</strong> — visuel optionnel à insérer en annexe de la synthèse'
       ])}
-      ${guideH2('Générer et télécharger')}
-      ${guidePara('Cliquez sur le bouton <strong>"Générer la synthèse Word"</strong> pour télécharger le document complet. Relisez-le, complétez les parties nécessaires, puis remettez-le au bénéficiaire en main propre ou par email sécurisé.')}
-      ${guideWarning('⚠️ La synthèse appartient au bénéficiaire. Elle est <strong>confidentielle</strong> et ne peut être transmise à un tiers (employeur, OPCO, etc.) sans l\'accord écrit exprès du bénéficiaire.')}
+      ${guideInfo('💡 L\'IA aide à rédiger ; vous restez responsable du contenu final (Qualiopi indicateur 15 — co-écriture avec le bénéficiaire pour la synthèse).')}
+      ${guideCapture('Onglet Prompts IA avec bouton Copier le prompt')}
     `)}
 
-    ${guideSection('🔒','RGPD — Protection des données personnelles',`
-      ${guidePara('Le RGPD (Règlement Général sur la Protection des Données) encadre la collecte et l\'utilisation des données personnelles de vos bénéficiaires. L\'onglet RGPD vous aide à respecter ces obligations légales.')}
-      ${guideH2('Ce que vous devez faire')}
-      ${guideLi([
-        '<strong>Informer</strong> le bénéficiaire dès le premier contact : qui collecte ses données, pourquoi, combien de temps elles sont conservées',
-        '<strong>Recueillir son consentement</strong> : le questionnaire RGPD de l\'application est prévu à cet effet — faites-le signer en début de bilan',
-        '<strong>Conserver les données</strong> uniquement le temps nécessaire (5 ans après la fin du suivi pour les dossiers bénéficiaires)',
-        '<strong>Supprimer les données</strong> à l\'issue du délai légal — l\'onglet RGPD vous alerte automatiquement'
-      ])}
-      ${guideInfo('💡 Les données du bénéficiaire sont stockées <strong>uniquement sur votre ordinateur</strong> (dans le navigateur et dans vos fichiers .reliance). Rien n\'est envoyé sur internet. C\'est un avantage majeur de RELIANCE® en matière de confidentialité.')}
+    ${guideSection('1️⃣2️⃣','Incident qualité et RGPD',`
+      ${guideH2('Incident qualité')}
+      ${guidePara('Si un problème survient (réclamation, abandon, dysfonctionnement…), renseignez l\'onglet <strong>Incident qualité</strong>. Un voyant 🚨 apparaît dans le menu.')}
+      ${guideH2('RGPD')}
+      ${guidePara('Onglet <strong>RGPD</strong> : consentement, durée de conservation, alerte pour planifier la destruction des données (max 1 an après le bilan pour les documents de suivi, 5 ans pour le dossier selon votre procédure).')}
+      ${guideCapture('Onglet RGPD avec date de destruction')}
     `)}
 
-    ${guideSection('❓','Questions fréquentes des débutants',`
-      ${guideH2('L\'application ne s\'ouvre pas — que faire ?')}
+    ${guideSection('❓','Questions fréquentes',`
+      ${guideH2('J\'ai perdu mes données')}
       ${guideLi([
-        'Vérifiez que vous double-cliquez bien sur un fichier .html (et non un raccourci ou un autre type de fichier)',
-        'Faites un clic droit sur le fichier → "Ouvrir avec" → choisissez Chrome ou Edge',
-        'Si Chrome ou Edge n\'apparaît pas dans la liste, téléchargez-les sur google.com/chrome ou microsoft.com/edge'
+        'Ouvrez le dernier fichier .reliance du bénéficiaire via <strong>Ouvrir un dossier</strong>',
+        'Si vous n\'avez pas de fichier : le brouillon auto-save peut aider sur le <em>même</em> PC et le <em>même</em> navigateur',
+        'Sinon les données ne sont pas récupérables — d\'où l\'importance de sauvegarder le fichier dossier'
       ])}
-      ${guideH2('Mes données ont disparu — que faire ?')}
-      ${guideLi([
-        'Si vous avez exporté un fichier .reliance : cliquez sur "Importer fichier" et sélectionnez-le — toutes vos données reviennent',
-        'Si vous n\'avez pas exporté : vérifiez que vous êtes sur le même ordinateur et le même navigateur que lors de la dernière utilisation, puis cliquez sur "Sauvegarder" → "Charger" pour chercher dans les sauvegardes du navigateur',
-        'Si le navigateur a été vidé sans export préalable : les données ne sont malheureusement pas récupérables. C\'est pour cela qu\'il faut exporter régulièrement !'
-      ])}
-      ${guideH2('Le document Word téléchargé s\'ouvre avec des erreurs ?')}
-      ${guideLi([
-        'Ouvrez-le avec <strong>Microsoft Word</strong> (pas LibreOffice ni Word Online)',
-        'Si Word affiche un message "Mode protégé", cliquez sur "Activer la modification"',
-        'Si le document semble vide ou corrompu, essayez de le regénérer depuis l\'application'
-      ])}
-      ${guideH2('Puis-je utiliser l\'application sur une tablette ou un téléphone ?')}
-      ${guidePara('L\'application est conçue pour un écran d\'ordinateur (minimum 1280 pixels de large). Sur tablette, elle peut fonctionner en mode paysage avec Chrome. Sur téléphone, l\'affichage ne sera pas optimal.')}
-      ${guideH2('Combien de bénéficiaires puis-je gérer en même temps ?')}
-      ${guidePara('Autant que vous voulez. Utilisez le bouton "Sauvegarder" pour enregistrer chaque dossier sous le nom du bénéficiaire. Vous pouvez basculer d\'un dossier à l\'autre via "Charger". Chaque dossier est indépendant.')}
+      ${guideH2('Je travaille sur un autre ordinateur')}
+      ${guidePara('Copiez le fichier .reliance (clé USB, OneDrive…). Ouvrez-le sur le nouvel ordinateur. L\'annuaire en ligne vous rappelle quels dossiers existent, mais c\'est le fichier qui contient le bilan.')}
+      ${guideH2('Le Word ne s\'ouvre pas correctement')}
+      ${guidePara('Utilisez Microsoft Word. Cliquez « Activer la modification » si le mode protégé s\'affiche. Regénérez le document depuis l\'application si besoin.')}
     `)}
 
     <div style="background:#f5f5f5;border-radius:8px;padding:12px 16px;font-size:11px;color:#666;margin-top:20px;text-align:center">
-      RELIANCE® v7.4 · RP Coaching & Formation · Rodrigue Poncet · contact@rodrigueponcet.fr · 06 74 03 59 37<br>
-      Guide Utilisateur — niveau débutant · Généré le ${new Date().toLocaleDateString('fr-FR')}
+      RELIANCE® v7.4 · RP Coaching & Formation · contact@rodrigueponcet.fr · 06 74 03 59 37<br>
+      Guide utilisateur · Généré le ${new Date().toLocaleDateString('fr-FR')}
     </div>
   </div>`;
+}
+
+function guideTableOngletsInner(){
+  return `<table style="width:100%;border-collapse:collapse;font-size:11px;margin:10px 0">
+    <tr style="background:#074F6A;color:white"><th style="padding:6px 8px;text-align:left">Onglet</th><th style="padding:6px 8px;text-align:left">Usage</th></tr>
+    <tr><td style="padding:6px 8px;border:1px solid #ddd">Valeurs & Tests</td><td style="padding:6px 8px;border:1px solid #ddd">Boussole, orientation pro., personnalité</td></tr>
+    <tr style="background:#f9f9f9"><td style="padding:6px 8px;border:1px solid #ddd">Analyse & Projet</td><td style="padding:6px 8px;border:1px solid #ddd">Compétences, projet, vigilances</td></tr>
+    <tr><td style="padding:6px 8px;border:1px solid #ddd">Fiches métiers</td><td style="padding:6px 8px;border:1px solid #ddd">Enquêtes / ROME</td></tr>
+    <tr style="background:#f9f9f9"><td style="padding:6px 8px;border:1px solid #ddd">Étapes RELIANCE®</td><td style="padding:6px 8px;border:1px solid #ddd">Contenus des 4 étapes</td></tr>
+    <tr><td style="padding:6px 8px;border:1px solid #ddd">Plan d'action</td><td style="padding:6px 8px;border:1px solid #ddd">Actions, priorités, échéances</td></tr>
+    <tr style="background:#f9f9f9"><td style="padding:6px 8px;border:1px solid #ddd">Émargements</td><td style="padding:6px 8px;border:1px solid #ddd">Présence et signatures par séance</td></tr>
+  </table>`;
 }
 
 // ── GUIDE ADMINISTRATEUR ───────────────────────────────────────────
@@ -26699,213 +26793,122 @@ function renderGuideAdmin(){
   const el=document.getElementById('admin-guide-content');
   if(!el)return;
   el.innerHTML=`
-  <div>
+  <div style="max-width:860px">
     <div style="background:linear-gradient(135deg,#2d1b69,#4a2c8f);color:white;padding:16px 20px;border-radius:10px;margin-bottom:20px">
-      <div style="font-size:18px;font-weight:700;margin-bottom:4px">🔐 Guide Administrateur — RELIANCE® v7.4</div>
-      <div style="font-size:11px;opacity:.8">Procédures internes · Audits · RGPD · Traçabilité · Tarification<br><strong>CONFIDENTIEL — Usage exclusif de l'administrateur RP Coaching & Formation</strong></div>
+      <div style="font-size:18px;font-weight:700;margin-bottom:4px">🔐 Guide dirigeant — RELIANCE® v7.4</div>
+      <div style="font-size:11px;opacity:.85">RP Coaching & Formation · Usage réservé au code <strong>DIRIGEANT</strong><br><strong>CONFIDENTIEL</strong></div>
     </div>
 
-    ${guideSection('⚙️','Architecture & Déploiement',`
-      ${guideH2('Structure du fichier')}
-      ${guideLi([
-        'Fichier HTML autonome (~6 Mo) — aucun serveur requis pour l\'usage local',
-        'Bibliothèque docx.js v8.5.0 intégrée — génération Word côté navigateur',
-        'Chart.js intégré — graphiques RIASEC, valeurs',
-        'LocalStorage — persistance des données dans le navigateur',
-        'Format d\'export : fichier .reliance (JSON structuré, version RELIANCE_v4)'
-      ])}
-      ${guideH2('Mise à jour')}
-      ${guideLi([
-        'Remplacer le fichier HTML par la nouvelle version',
-        'Les données sont dans localStorage — elles persistent entre versions',
-        'Tester l\'import d\'un fichier .reliance existant après mise à jour'
-      ])}
-      ${guideH2('Sécurité des données')}
-      ${guideLi([
-        'Données stockées <strong>uniquement sur le poste local</strong> du consultant',
-        'Aucun envoi vers un serveur externe (sauf appels API Claude optionnels)',
-        'Fichiers .reliance chiffrables avec 7-Zip AES-256 pour archivage sécurisé',
-        'Recommandation : stocker les .reliance dans un dossier OneDrive/SharePoint chiffré'
-      ])}
+    ${guideSection('1️⃣','Votre rôle de dirigeant',`
+      ${guidePara('Vous pilotez l\'activité des bilans : consultants sur le terrain, vous sur la vision et les contrôles (Qualiopi, financeurs, RGPD).')}
+      ${guidePara('L\'application ne remplace pas votre dossier papier ou comptable. Elle centralise le <strong>suivi des dossiers</strong> et la <strong>production des documents</strong> par chaque consultant.')}
+      ${guideInfo('📌 Connectez-vous avec le code <strong>DIRIGEANT</strong>. L\'onglet <strong>Guide admin</strong> (🔐) n\'apparaît que pour ce profil.')}
+      ${guideCapture('Connexion DIRIGEANT et onglet Guide admin visible dans le menu')}
     `)}
 
-    ${guideSection('🛡️','RGPD — Procédures détaillées',`
-      ${guideH2('Base légale du traitement')}
-      <p>Le traitement des données personnelles dans le cadre du bilan de compétences repose sur <strong>l\'exécution d\'un contrat</strong> (Art. 6.1.b RGPD) — la convention de bilan — et le <strong>consentement explicite</strong> (Art. 6.1.a RGPD) recueilli via le questionnaire RGPD signé (onglet RGPD).</p>
-      
-      ${guideH2('Données collectées et finalités')}
+    ${guideSection('2️⃣','Deux lieux de données — à comprendre absolument',`
+      ${guideH2('Le fichier dossier — chez le consultant')}
+      ${guidePara('Le <strong>fichier dossier</strong> contient <strong>tout le bilan</strong> : formulaires, signatures, checklist, calendrier, textes. Il reste sur le <strong>poste du consultant</strong> (disque, OneDrive, clé USB). Vous ne le voyez pas automatiquement dans l\'annuaire.')}
+      ${guideH2('L\'annuaire en ligne — vue dirigeant')}
+      ${guidePara('Enregistre une <strong>fiche légère</strong> par dossier : nom du bénéficiaire, code consultant, <strong>% d\'avancement</strong>, dates. C\'est l\'outil de suivi pour vous. <strong>Aucun détail</strong> du contenu du bilan (pas de textes, pas de signatures) n\'y est stocké.')}
+      ${guideCapture('Schéma ou capture : fichier dossier sur PC consultant vs liste index cloud')}
+      ${guideWarning('⚠️ <strong>RGPD :</strong> les données sensibles du bilan sont chez le consultant, dans le fichier dossier. L\'annuaire en ligne est un registre d\'activité, pas une copie du dossier client.')}
+    `)}
+
+    ${guideSection('3️⃣','Voir tous les dossiers dans l\'application',`
+      ${guideH2('Connexion dirigeant')}
       ${guideLi([
-        '<strong>Identité et coordonnées</strong> (nom, prénom, email, tél, adresse) → Gestion du dossier, émission des documents réglementaires',
-        '<strong>Données professionnelles</strong> (parcours, compétences, motivations) → Réalisation du bilan — finalité principale',
-        '<strong>Données de santé / handicap</strong> (si applicable) → Adaptation des modalités — catégorie sensible Art. 9 RGPD',
-        '<strong>Données financières</strong> (mode de financement) → Facturation et suivi CPF/OPCO',
-        '<strong>Signatures numériques</strong> → Traçabilité et preuve de réalisation'
+        'Connectez-vous avec <strong>DIRIGEANT</strong>',
+        'Cliquez sur <strong>💾 Sauvegarder</strong> en haut à droite',
+        'La liste affiche les dossiers de <strong>tous les consultants</strong> (annuaire en ligne)',
+        'Chaque ligne indique : nom, code consultant, % d\'avancement, date de mise à jour'
       ])}
-      
-      ${guideH2('Durées de conservation obligatoires')}
+      ${guideCapture('Liste index cloud avec plusieurs consultants et pourcentages')}
+      ${guideH2('Ouvrir le détail d\'un dossier')}
+      ${guidePara('Le bouton <strong>Ouvrir fichier</strong> demande de sélectionner le <strong>fichier dossier</strong> sur un PC. En pratique, seul le consultant (ou vous si il vous l\'envoie) possède ce fichier.')}
+      ${guidePara('<strong>Supprimer index</strong> retire la ligne de l\'annuaire en ligne, pas le fichier sur le PC du consultant.')}
+    `)}
+
+    ${guideSection('4️⃣','Comprendre le pourcentage d\'avancement',`
+      ${guidePara('Le % affiché est calculé à partir de champs clés du dossier (identité, objectifs, étapes de contenu, etc.). C\'est un <strong>indicateur de remplissage</strong>, pas une note Qualiopi ni un avis sur la qualité du travail.')}
       ${guideLi([
-        '<strong>Dossier bénéficiaire complet</strong> : jusqu\'au suivi 6 mois + <strong>5 ans</strong> (prescription commerciale)',
-        '<strong>Données comptables / facturation</strong> : <strong>10 ans</strong> (Code de commerce L123-22)',
-        '<strong>Certificats de réalisation (ENR015)</strong> : <strong>3 ans</strong> minimum (Qualiopi)',
-        '<strong>Feuilles d\'émargement</strong> : <strong>3 ans</strong> après la fin du bilan',
-        '<strong>Données CPF (EDOF)</strong> : <strong>5 ans</strong> après la clôture du dossier',
-        '<strong>Évaluations à chaud</strong> : <strong>3 ans</strong> (indicateur Qualiopi)'
+        '0–30 % — dossier démarré',
+        '30–70 % — bilan en cours',
+        '70–100 % — dossier bien alimenté (vérifiez aussi la checklist côté consultant)'
       ])}
-      
-      ${guideH2('Procédure de destruction')}
+      ${guideInfo('💡 Pour un audit, exigez le <strong>fichier dossier</strong> + les Word signés, pas seulement la ligne de l\'annuaire.')}
+    `)}
+
+    ${guideSection('5️⃣','Application Admin Consultants (fichier séparé)',`
+      ${guidePara('La gestion des <strong>comptes consultants</strong> (codes, mots de passe, archivage) et l\'<strong>audit des dossiers</strong> (liste, %, export CSV) se font dans l\'application <strong>RELIANCE_Admin_Consultants.html</strong>, distincte de l\'app bilan.')}
       ${guideLi([
-        'Identifier la date de destruction dans l\'onglet RGPD (alerte automatique à J-30)',
-        'Supprimer le fichier .reliance du stockage local et des sauvegardes',
-        'Supprimer les emails contenant des données personnelles (convocations, documents signés)',
-        'Tracer la destruction dans un registre (date, nature des données, méthode)',
-        'Informer le bénéficiaire si demandé (droit à l\'effacement Art. 17 RGPD)'
+        '<strong>Consultants</strong> — créer, archiver, réinitialiser un mot de passe',
+        '<strong>Audit dossiers</strong> — vue par consultant, export Excel/CSV pour le dirigeant',
+        'Même annuaire en ligne que l\'app bilan (base partagée)'
       ])}
-      
-      ${guideH2('Registre des traitements (Art. 30 RGPD)')}
-      ${guideInfo('Vous devez tenir un registre des activités de traitement. L\'application RELIANCE® constitue un traitement à documenter :<br><br><strong>Responsable :</strong> RP Coaching & Formation — Rodrigue Poncet<br><strong>Finalité :</strong> Réalisation de bilans de compétences<br><strong>Catégories :</strong> Identité, données professionnelles, données sensibles (handicap)<br><strong>Destinataires :</strong> Bénéficiaire uniquement (pas de transmission tiers sans accord)<br><strong>Durée :</strong> 5 ans après fin du suivi<br><strong>Sécurité :</strong> Stockage local chiffré, accès nominatif')}
-      
+      ${guideCapture('Écran Admin Consultants — onglet Audit avec liste des dossiers')}
+      ${guidePara('Cette application ne permet pas de lire le contenu détaillé d\'un bilan : elle complète l\'annuaire, elle ne le remplace pas.')}
+    `)}
+
+    ${guideSection('6️⃣','Ce que vous ne pouvez pas faire depuis l\'annuaire seul',`
+      ${guideLi([
+        'Lire les signatures, comptes-rendus ou synthèse sans recevoir le fichier dossier',
+        'Modifier le travail du consultant à sa place',
+        'Restaurer un dossier effacé sur le PC du consultant',
+        'Prouver un audit Qualiopi avec seulement la liste des noms et des %'
+      ])}
+      ${guideSuccess('✅ Bonne pratique : demander périodiquement une copie du fichier dossier + les Word finaux pour vos archives dirigeant.')}
+    `)}
+
+    ${guideSection('7️⃣','Qualiopi et audits — documents à exiger',`
+      ${guidePara('Pour chaque bénéficiaire contrôlé, le consultant doit pouvoir présenter :')}
+      ${guideLi([
+        'Convention ENR023 signée · Recueil ENR002 · Calendrier ENR003',
+        'Feuilles d\'émargement ENR034 · Certificat ENR015',
+        'Évaluations ENR016 et ENR017 · Synthèse remise',
+        'CR séances et CR suivi 6 mois signés · Attestation de signature si utilisée',
+        'Checklist cochée dans l\'app · Fichier dossier daté'
+      ])}
+      ${guideH2('Indicateurs Qualiopi couverts par RELIANCE®')}
+      ${guideLi([
+        'Ind. 2 — objectifs (recueil, convention)',
+        'Ind. 6 / 7 — accompagnement et résultats (émargements, évaluations, certificat)',
+        'Ind. 9 — satisfaction (ENR016, ENR017)',
+        'Ind. 13 — traçabilité (émargements signés)',
+        'Ind. 15 — accessibilité / co-écriture synthèse (processus Prompts IA)'
+      ])}
+      ${guideCapture('Dossier type : fichier dossier + PDF/Word archivés par bénéficiaire')}
+    `)}
+
+    ${guideSection('8️⃣','RGPD — responsable de traitement',`
+      ${guideH2('Qui est responsable ?')}
+      ${guidePara('<strong>RP Coaching & Formation</strong> est responsable du traitement. Les consultants agissent sur instruction, dans le cadre du bilan.')}
+      ${guideH2('Durées de conservation (rappel)')}
+      ${guideLi([
+        'Dossier bénéficiaire (fichier dossier + Word) — jusqu\'à 5 ans après fin du suivi selon votre procédure interne',
+        'Données comptables — 10 ans',
+        'Certificats, émargements, évaluations — 3 ans minimum (Qualiopi)',
+        'Documents suivi 6 mois — destruction planifiée (max 1 an après le bilan pour les pièces de suivi détaillé)'
+      ])}
       ${guideH2('Droits des personnes')}
+      ${guidePara('Accès, rectification, effacement après délais légaux : fournir une copie du fichier dossier ou des exports Word sur demande.')}
+      ${guideH2('Registre des traitements')}
+      ${guideInfo('Documentez deux traitements distincts : (1) fichier dossier local consultant (2) annuaire en ligne pour pilotage. Finalités et durées différentes.')}
+    `)}
+
+    ${guideSection('📎','Annexe — Financeurs (EDOF, OPCO, France Travail)',`
+      ${guidePara('Les sections détaillées EDOF, OPCO et France Travail restent valides. Points communs : convention avant démarrage, émargements, certificat ENR015, évaluation ENR016, conservation 3 à 5 ans selon le financeur.')}
       ${guideLi([
-        '<strong>Droit d\'accès</strong> (Art. 15) : fournir une copie des données dans les 30 jours',
-        '<strong>Droit de rectification</strong> (Art. 16) : corriger les données inexactes',
-        '<strong>Droit à l\'effacement</strong> (Art. 17) : applicable après la fin de la période de conservation légale',
-        '<strong>Droit à la portabilité</strong> (Art. 20) : fournir le dossier en format lisible (export .reliance ou PDF)',
-        '<strong>Droit d\'opposition</strong> (Art. 21) : traiter la demande sous 30 jours'
+        '<strong>EDOF / CPF</strong> — dossier Mon Compte Formation avant début, résultats sous 60 jours, preuves 5 ans',
+        '<strong>OPCO</strong> — convention tripartite possible, facturation après réalisation',
+        '<strong>France Travail</strong> — accord du conseiller, transmission CR avec accord du bénéficiaire'
       ])}
     `)}
 
-    ${guideSection('🏆','Audit Qualiopi — Procédures',`
-      ${guideH2('Indicateurs concernés par RELIANCE®')}
-      ${guideLi([
-        '<strong>Indicateur 2</strong> : Identification des objectifs — ENR002 (recueil besoins) + objectifs dans convention ENR023',
-        '<strong>Indicateur 5</strong> : Adéquation des ressources — Calendrier ENR003 + outils utilisés',
-        '<strong>Indicateur 6</strong> : Accompagnement des bénéficiaires — Émargements ENR034 + comptes-rendus',
-        '<strong>Indicateur 7</strong> : Évaluation de l\'atteinte des objectifs — ENR016 bénéficiaire + ENR015 certificat',
-        '<strong>Indicateur 9</strong> : Satisfaction des bénéficiaires — ENR016 + ENR017',
-        '<strong>Indicateur 13</strong> : Traçabilité — Feuilles d\'émargement signées',
-        '<strong>Indicateur 15</strong> : Accessibilité handicap — Section handicap ENR002'
-      ])}
-      
-      ${guideH2('Documents à présenter lors de l\'audit')}
-      ${guideLi([
-        'Convention de bilan signée (ENR023) — Art. R6313-4 à R6313-8',
-        'Recueil des besoins signé (ENR002)',
-        'Calendrier prévisionnel (ENR003)',
-        'Feuilles d\'émargement signées (ENR034)',
-        'Certificat de réalisation (ENR015)',
-        'Évaluations à chaud bénéficiaire ET formateur (ENR016 + ENR017)',
-        'Questionnaire RGPD signé',
-        'Preuve d\'envoi de la convocation (email conservé en messagerie)',
-        'Rapport de suivi à 6 mois'
-      ])}
-      
-      ${guideH2('Traçabilité numérique — preuves acceptées')}
-      ${guideLi([
-        'Feuilles d\'émargement avec <strong>signatures numériques</strong> intégrées (ENR034)',
-        'Emails de convocation conservés dans la messagerie (date + destinataire)',
-        'Fichiers .reliance horodatés en nom de fichier',
-        'Rapport de suivi à 6 mois signé'
-      ])}
-      ${guideWarning('⚠️ Un auditeur Qualiopi peut demander à vérifier les dossiers des 2 dernières années. Conservez les .reliance + documents Word signés dans un dossier structuré par bénéficiaire.')}
-    `)}
-
-    ${guideSection('💰','Audit EDOF / CPF — Mon Compte Formation',`
-      ${guideH2('Obligations EDOF (Education et Formation)')}
-      ${guideLi([
-        'Dossier EDOF créé sur Mon Compte Formation <strong>avant le début du bilan</strong>',
-        'Présence du bénéficiaire confirmée à chaque séance (émargement signé)',
-        'Résultats saisis sur EDOF dans les <strong>60 jours</strong> après la fin du bilan',
-        'Conservation des preuves de réalisation pendant <strong>5 ans</strong>'
-      ])}
-      
-      ${guideH2('Documents requis par EDOF')}
-      ${guideLi([
-        'Convention signée avant le démarrage (ENR023)',
-        'Programme pédagogique détaillé (ENR003)',
-        'Feuilles d\'émargement pour chaque séance (ENR034)',
-        'Certificat de réalisation (ENR015)',
-        'Document de synthèse remis au bénéficiaire',
-        'Évaluation de la satisfaction (ENR016)'
-      ])}
-      
-      ${guideH2('Contrôle EDOF — réponse type')}
-      ${guideInfo('En cas de contrôle EDOF, transmettez :<br>1. La convention ENR023 (preuve d\'accord préalable)<br>2. L\'ENR003 calendrier (programme effectif)<br>3. Les ENR034 émargements séance par séance<br>4. L\'ENR015 certificat (preuve de réalisation)<br>5. L\'ENR016 satisfaction bénéficiaire<br><br>Délai de réponse : <strong>10 jours ouvrés</strong> maximum.')}
-    `)}
-
-    ${guideSection('🏛️','Audit OPCO / Financement employeur',`
-      ${guideH2('Convention tripartite')}
-      <p>Pour tout financement OPCO ou employeur, une convention <strong>tripartite</strong> est obligatoire (Organisme + Bénéficiaire + Employeur/OPCO). Adaptez l\'ENR023 en ajoutant la partie employeur.</p>
-      
-      ${guideH2('Documents attendus par l\'OPCO')}
-      ${guideLi([
-        'Convention tripartite signée par les 3 parties',
-        'Programme de formation (ENR003)',
-        'Feuilles de présence (ENR034)',
-        'Facture à l\'employeur (émise après réalisation)',
-        'Certificat de réalisation (ENR015)',
-        'Évaluation satisfaction (ENR016)'
-      ])}
-      
-      ${guideH2('Facturation OPCO')}
-      ${guideLi([
-        'Facturer <strong>après</strong> réalisation complète du bilan (ou selon convention)',
-        'Mention obligatoire sur facture : N° déclaration OF 27390135539, référence OPCO',
-        'Délai de paiement OPCO : 30 à 60 jours selon convention',
-        'En cas de rupture : facturer les séances réalisées au prorata'
-      ])}
-    `)}
-
-    ${guideSection('📊','Audit France Travail (ex-Pôle Emploi)',`
-      ${guideH2('Spécificités')}
-      ${guideLi([
-        'Accord écrit du conseiller France Travail requis avant démarrage',
-        'Convention spécifique France Travail (avec numéro de dossier)',
-        'Reporting de fin de bilan dans les 30 jours',
-        'Transmission du compte-rendu au conseiller référent (avec accord bénéficiaire)'
-      ])}
-      
-      ${guideH2('Documents France Travail')}
-      ${guideLi([
-        'Attestation de présence signée (ENR034)',
-        'Compte-rendu de fin de bilan (synthèse)',
-        'Plan d\'action validé par le bénéficiaire',
-        'Rapport de suivi à 6 mois si demandé'
-      ])}
-    `)}
-
-    ${guideSection('🔧','Administration technique de l\'application',`
-      ${guideH2('Changer le mot de passe admin')}
-      <p>Dans le fichier HTML, rechercher la ligne :<br>
-      <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:11px">const ADMIN_PWD_HASH = 'System01370@';</code><br>
-      Remplacer <strong>System01370@</strong> par le nouveau mot de passe souhaité.</p>
-      
-      ${guideH2('Personnaliser les données RP Coaching')}
-      ${guideLi([
-        'SIRET, NDA, adresse, email, téléphone : chercher <strong>851 939 322 00042</strong> dans le HTML',
-        'Logo : remplacer RELIANCE_IMG_0000 dans src/reliance_images.js si le logo change',
-        'Couleurs charte : modifier les constantes RP_COLORS dans le script'
-      ])}
-      
-      ${guideH2('Mise à jour des documents Word')}
-      <p>Chaque générateur Word (generateENR002, generateENR003, etc.) est une fonction autonome dans le script. Modifier les contenus textuels directement dans ces fonctions.</p>
-      
-      ${guideH2('Sauvegarde des dossiers bénéficiaires')}
-      ${guideLi([
-        'Recommandation : <strong>un dossier par bénéficiaire</strong> sur le disque (prénom_nom/)',
-        'Y stocker : fichier .reliance + tous les Word générés signés',
-        'Archiver sur NAS ou cloud chiffré après 1 an d\'inactivité',
-        'Destruction selon calendrier RGPD : vérifier l\'onglet RGPD régulièrement'
-      ])}
-      
-      ${guideH2('Incidents qualité')}
-      <p>L\'onglet <strong>🚨 Incident qualité</strong> trace les non-conformités. En cas d\'audit Qualiopi, le registre des incidents est examiné — il doit montrer que les incidents sont traités et clôturés.</p>
-    `)}
-
-    <div style="background:#1a0a3a;color:rgba(255,255,255,.7);border-radius:8px;padding:12px 16px;font-size:10px;margin-top:20px;text-align:center">
-      🔐 CONFIDENTIEL — Guide Administrateur RELIANCE® v7.4<br>
-      RP Coaching & Formation · Rodrigue Poncet · NDA 27390135539<br>
-      Ne pas partager · Accès réservé à l'administrateur
-     <span style="font-size:10px;background:#F3E5F5;color:#6A1B9A;padding:2px 7px;border-radius:10px;margin-left:8px;font-weight:600">✓ Qualiopi ind.9</span></div>
+    <div style="background:#1a0a3a;color:rgba(255,255,255,.75);border-radius:8px;padding:12px 16px;font-size:10px;margin-top:20px;text-align:center">
+      🔐 CONFIDENTIEL — Guide dirigeant RELIANCE® v7.4 · RP Coaching & Formation · NDA 27390135539<br>
+      Ne pas diffuser · Généré le ${new Date().toLocaleDateString('fr-FR')}
+    </div>
   </div>`;
 }
 
@@ -27049,7 +27052,7 @@ function drawMindmap() {
   const branches = [
     // [angle_deg, label, couleur, feuilles]
     [215, 'Profil & Valeurs',   COL.valeurs,  topVals],
-    [155, 'RIASEC',             COL.riasec,   topRia],
+    [155, 'Orientation Pro.',     COL.riasec,   topRia],
     [250, 'Compétences Clés',   COL.attentes, compLines],
     [350, 'Personnalité',       COL.perso,    perso],
     [ 50, 'Attentes & Besoins', COL.attentes, objs.length?objs:['Non renseigné']],
