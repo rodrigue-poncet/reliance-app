@@ -21535,7 +21535,7 @@ window.addEventListener('load', () => {
       <div style="font-size:12px;font-weight:700;color:var(--c1);margin-bottom:7px">📋 Copier le prompt — Synthèse des 3 tests</div>
       <button class="copy-btn" style="background:var(--c5);color:white" onclick="copyPrompt('tests',this)">📋 Copier ce prompt</button>
       <a class="open-claude-btn" href="https://claude.ai" target="_blank">Ouvrir Claude.ai →</a>
-      <div class="ia-out empty" id="out-tests" contenteditable="true" style="margin-top:10px;border-radius:7px" onclick="this.classList.remove('empty')">Collez ici le texte généré par Claude...</div>
+      <div class="ia-out empty" id="out-tests-valeurs" contenteditable="true" style="margin-top:10px;border-radius:7px" oninput="onIaOutInput(this)">Collez ici le texte généré par Claude...</div>
     </div>
   </div>
 
@@ -22366,6 +22366,65 @@ function updateActiveDossierBadge(nom){
 
 // ════════════ SAVE/LOAD ════════════
 
+const IA_OUT_PROMPT_IDS=['parcours','comp','tests','projet','plan','concl','mindmap'];
+const IA_OUT_PLACEHOLDER_RE=/^Collez ici/i;
+let iaOutCache={};
+let promptsBuilt=false;
+
+function isIaOutMeaningfulText(txt){
+  const t=(txt||'').trim();
+  return t.length>0&&!IA_OUT_PLACEHOLDER_RE.test(t);
+}
+
+function syncIaOutEmpty(el){
+  if(!el)return;
+  if(isIaOutMeaningfulText(el.textContent))el.classList.remove('empty');
+  else el.classList.add('empty');
+}
+
+function readIaOutEl(el){
+  if(!el)return null;
+  syncIaOutEmpty(el);
+  return isIaOutMeaningfulText(el.textContent)?el.textContent:null;
+}
+
+function onIaOutInput(el){
+  syncIaOutEmpty(el);
+  if(el&&el.id){
+    const key=el.id.replace(/^out-/,'');
+    if(key)iaOutCache[key]=readIaOutEl(el)||'';
+  }
+  autoSave();
+}
+
+function snapshotIaOutCacheFromDom(){
+  IA_OUT_PROMPT_IDS.forEach(k=>{
+    const txt=readIaOutEl(document.getElementById('out-'+k));
+    if(txt)iaOutCache[k]=txt;
+    else delete iaOutCache[k];
+  });
+  const tv=readIaOutEl(document.getElementById('out-tests-valeurs'));
+  if(tv)iaOutCache['tests-valeurs']=tv;
+  else delete iaOutCache['tests-valeurs'];
+}
+
+function applyIaOutCacheToDom(){
+  IA_OUT_PROMPT_IDS.forEach(k=>{
+    const e=document.getElementById('out-'+k);
+    if(e&&iaOutCache[k]){e.textContent=iaOutCache[k];e.classList.remove('empty');}
+  });
+  const ev=document.getElementById('out-tests-valeurs');
+  if(ev&&iaOutCache['tests-valeurs']){ev.textContent=iaOutCache['tests-valeurs'];ev.classList.remove('empty');}
+}
+
+function collectIaOutputs(d){
+  snapshotIaOutCacheFromDom();
+  IA_OUT_PROMPT_IDS.forEach(k=>{
+    if(iaOutCache[k])d['ia_'+k]=iaOutCache[k];
+  });
+  if(iaOutCache['tests-valeurs'])d.ia_tests_valeurs=iaOutCache['tests-valeurs'];
+}
+
 function collectData(){
   const fields=['f_nom','f_poste','f_secteur','f_anc','f_cons','f_orga','f_date_debut','f_date_fin','f_fin','f_mod','f_lieu','f_ctx','f_o1','f_o2','f_o3',
     'e1c','e1r','e1o','e1d','e2c','e2r','e2o','e2d','e3c','e3r','e3o','e3d','e4c','e4r','e4o','e4d',
@@ -22397,11 +22456,8 @@ function collectData(){
   d.riasecScores=riasec.map(r=>r.score);
   // 16P selection
   d.p16sel=selType?selType.code:null;
-  // IA outputs
-  ['parcours','comp','tests','projet','plan','concl'].forEach(k=>{
-    const e=document.getElementById('out-'+k);
-    if(e&&!e.classList.contains('empty'))d['ia_'+k]=e.textContent;
-  });
+  // IA outputs (zones ia-out + cache)
+  collectIaOutputs(d);
   // Fiches
   d.fiches=fiches.map(f=>({...f}));
   // Calendar
@@ -22467,10 +22523,11 @@ function restoreData(d){
   if(d.valScores)d.valScores.forEach((s,i)=>{valData[i].score=s;const b=document.getElementById('vbar-'+i);if(b)b.style.width=s+'%';const t=document.getElementById('vscore-'+i);if(t)t.textContent=s;const inp=document.querySelector(`#val-rows input[oninput*="updVal(${i}"]`);});
   if(d.riasecScores)d.riasecScores.forEach((s,i)=>{riasec[i].score=s;const b=document.getElementById('rbar-'+i);if(b)b.style.width=s+'%';const t=document.getElementById('rscore-'+i);if(t)t.textContent=s;});
   if(d.p16sel)setTimeout(()=>sel16(d.p16sel),100);
-  ['parcours','comp','tests','projet','plan','concl'].forEach(k=>{
-    const e=document.getElementById('out-'+k);
-    if(e&&d['ia_'+k]){e.textContent=d['ia_'+k];e.classList.remove('empty');}
-  });
+  iaOutCache={};
+  IA_OUT_PROMPT_IDS.forEach(k=>{if(d['ia_'+k])iaOutCache[k]=d['ia_'+k];});
+  if(d.ia_tests_valeurs)iaOutCache['tests-valeurs']=d.ia_tests_valeurs;
+  applyIaOutCacheToDom();
+  promptsBuilt=false;
   if(d.fiches){fiches=d.fiches.map(f=>({...f}));ficheCount=fiches.length;renderFiches();}
   // Calendar
   if(d.seances&&d.seances.length>0){
@@ -23030,7 +23087,13 @@ function clearAllFields(){
   Array.from(document.querySelectorAll('input:not([type=checkbox]):not([type=radio]),textarea')).forEach(el=>{if(!el.readOnly)el.value='';});
   Array.from(document.querySelectorAll('select')).forEach(el=>el.selectedIndex=0);
   Array.from(document.querySelectorAll('input[type=checkbox],input[type=radio]')).forEach(el=>el.checked=false);
-  ['parcours','comp','tests','projet','plan','concl'].forEach(k=>{const e=document.getElementById('out-'+k);if(e){e.textContent='Résultat IA ici...';e.classList.add('empty');}});
+  iaOutCache={};
+  promptsBuilt=false;
+  const pc=document.getElementById('prompts-container');
+  if(pc)pc.innerHTML='';
+  IA_OUT_PROMPT_IDS.forEach(k=>{const e=document.getElementById('out-'+k);if(e){e.textContent='Collez ici le texte généré par Claude...';e.classList.add('empty');}});
+  const etv=document.getElementById('out-tests-valeurs');
+  if(etv){etv.textContent='Collez ici le texte généré par Claude...';etv.classList.add('empty');}
   const ct=document.getElementById('cal-tbody');if(ct)ct.innerHTML='';seanceCount=0;
   const pt=document.getElementById('plan-tbody');if(pt)pt.innerHTML='';
   fiches=[];ficheCount=0;const fc=document.getElementById('fiches-container');if(fc)fc.innerHTML='';
@@ -23229,7 +23292,7 @@ function sel16(code){
   document.getElementById('p16-desc').textContent=p.desc;
   document.getElementById('p16-link').href=p.url;
   document.getElementById('p16-link').style.color=p.col;
-  autoSave();buildPrompts();
+  autoSave();buildPrompts(true);
 }
 
 // ════════════ FICHES MÉTIERS ════════════
@@ -23485,12 +23548,16 @@ function getCtx(){
     planTxt:getPlan().map(a=>`${a.a} (${a.p})`).join(' | ')};
 }
 
-function buildPrompts(){
+function buildPrompts(forceRebuild){
+  const container=document.getElementById('prompts-container');
+  if(!container)return;
+  if(promptsBuilt&&!forceRebuild&&document.getElementById('out-parcours'))return;
+  snapshotIaOutCacheFromDom();
   const d=getCtx();
-  document.getElementById('prompts-container').innerHTML=promptDefs.map(pd=>{
+  container.innerHTML=promptDefs.map(pd=>{
     const promptText=pd.build(d);
-    const existing=document.getElementById('out-'+pd.id);
-    const existingTxt=existing&&!existing.classList.contains('empty')?existing.textContent:'';
+    const cachedTxt=iaOutCache[pd.id]||'';
+    const existingTxt=isIaOutMeaningfulText(cachedTxt)?cachedTxt:'';
     return `<div class="prompt-card">
       <div class="prompt-hdr" style="background:${pd.bg}">
         <span class="prompt-title" style="color:${pd.color}">${pd.label}</span>
@@ -23500,9 +23567,11 @@ function buildPrompts(){
         </div>
       </div>
       <div class="prompt-text">${promptText.replace(/\n/g,'<br>').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
-      <div class="ia-out ${existingTxt?'':'empty'}" id="out-${pd.id}" contenteditable="true" oninput="autoSave()">${existingTxt||'Collez ici le texte généré par Claude...'}\</div>
+      <div class="ia-out ${existingTxt?'':'empty'}" id="out-${pd.id}" contenteditable="true" oninput="onIaOutInput(this)">${existingTxt||'Collez ici le texte généré par Claude...'}</div>
     </div>`;
   }).join('');
+  promptsBuilt=true;
+  applyIaOutCacheToDom();
 }
 
 function copyPrompt(id,btn){
@@ -23517,7 +23586,10 @@ function copyPrompt(id,btn){
 }
 
 // ════════════ PREVIEW ════════════
-function getIAT(id){const e=document.getElementById('out-'+id);return(e&&!e.classList.contains('empty'))?e.textContent:null;}
+function getIAT(id){
+  if(iaOutCache[id]&&isIaOutMeaningfulText(iaOutCache[id]))return iaOutCache[id];
+  return readIaOutEl(document.getElementById('out-'+id));
+}
 function setP(id,v,ph){const e=document.getElementById(id);if(!e)return;if(v){e.textContent=v;e.className='';}else if(ph){e.textContent=ph;e.className='ep';}}
 function buildPreview(){
   const d=getCtx();
