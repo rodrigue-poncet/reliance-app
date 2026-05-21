@@ -20471,6 +20471,16 @@ function isDirigeant() {
   return c && c.code === 'DIRIGEANT';
 }
 
+function updateDirigeantUi() {
+  const show = !!getCurrentConsultant() && isDirigeant();
+  const guideAdminTab = document.getElementById('tab-guide-admin');
+  if (guideAdminTab) guideAdminTab.style.display = show ? '' : 'none';
+  const adminBtn = document.getElementById('pwd-btn');
+  if (adminBtn) adminBtn.style.display = show ? '' : 'none';
+  const evolBtn = document.getElementById('evol-btn');
+  if (evolBtn) evolBtn.style.display = show ? '' : 'none';
+}
+
 // ─── CONNEXION ────────────────────────────────────────────────────────────────
 async function tryUnlock() {
   const code = (document.getElementById('lcode')?.value || '').trim().toUpperCase();
@@ -20518,13 +20528,7 @@ async function tryUnlock() {
       badge.style.display = 'block';
     }
 
-    // Afficher bouton admin si dirigeant
-    const adminBtn = document.getElementById('pwd-btn');
-    if (adminBtn && isDirigeant()) adminBtn.style.display = '';
-    const evolBtn = document.getElementById('evol-btn');
-    if (evolBtn && isDirigeant()) evolBtn.style.display = '';
-    const guideAdminTab = document.getElementById('tab-guide-admin');
-    if (guideAdminTab && isDirigeant()) guideAdminTab.style.display = '';
+    updateDirigeantUi();
 
     migrateStorage();
     initAll();
@@ -20545,12 +20549,8 @@ function lockApp() {
   purgeRelianceSessionOnLogout();
   clearConsultantSession();
   localStorage.removeItem(SK);
-  const guideAdminTab=document.getElementById('tab-guide-admin');
-  if(guideAdminTab)guideAdminTab.style.display='none';
-  const adminBtn=document.getElementById('pwd-btn');
-  if(adminBtn)adminBtn.style.display='none';
-  const evolBtn=document.getElementById('evol-btn');
-  if(evolBtn)evolBtn.style.display='none';
+  localStorage.removeItem('reliance_admin');
+  updateDirigeantUi();
   document.getElementById('app').style.display = 'none';
   document.getElementById('lock').style.display = 'flex';
   document.getElementById('lpwd').value = '';
@@ -20566,20 +20566,14 @@ window.addEventListener('load', () => {
     localStorage.setItem('reliance_admin', isDirigeant() ? '1' : '0');
     document.getElementById('lock').style.display = 'none';
     document.getElementById('app').style.display = 'block';
-    if (isDirigeant()) {
-      const adminBtn = document.getElementById('pwd-btn');
-      if (adminBtn) adminBtn.style.display = '';
-      const evolBtn = document.getElementById('evol-btn');
-      if (evolBtn) evolBtn.style.display = '';
-      const guideAdminTab = document.getElementById('tab-guide-admin');
-      if (guideAdminTab) guideAdminTab.style.display = '';
-    }
+    updateDirigeantUi();
     migrateStorage();
     initAll();
     loadAutoSave();
   } else {
     document.getElementById('lock').style.display = 'flex';
     document.getElementById('app').style.display = 'none';
+    updateDirigeantUi();
   }
 });
 </script>
@@ -20711,7 +20705,7 @@ window.addEventListener('load', () => {
       <div class="sb-nav">
     <div class="tab active" onclick="sw(0)"><span class="tab-ic">📋</span><span class="tab-lb">Bénéficiaire</span></div>
     <div class="tab" onclick="sw(1)"><span class="tab-ic">☑️</span><span class="tab-lb">Checklist</span></div>
-    <div class="tab" onclick="sw(2)" id="tab-rgpd" style="position:relative"><span class="tab-ic">🛡️</span><span class="tab-lb">RGPD</span><span id="rgpd-alert-dot" style="position:absolute;top:7px;right:8px;width:8px;height:8px;border-radius:50%;background:#c62828;display:none;box-shadow:0 0 0 2px white;animation:pulse 2s infinite" title="Données à supprimer !"></span></div>
+    <div class="tab" onclick="sw(2)" id="tab-rgpd" style="display:none;position:relative"><span class="tab-ic">🛡️</span><span class="tab-lb">RGPD</span><span id="rgpd-alert-dot" style="position:absolute;top:7px;right:8px;width:8px;height:8px;border-radius:50%;background:#c62828;display:none;box-shadow:0 0 0 2px white;animation:pulse 2s infinite" title="Données à supprimer !"></span></div>
     <div class="tab" onclick="sw(3)"><span class="tab-ic">📝</span><span class="tab-lb">Recueil besoins</span></div>
     <div class="tab" onclick="sw(4)"><span class="tab-ic">📄</span><span class="tab-lb">Convention</span></div>
     <div class="tab" onclick="sw(5)" id="tab-convoc" style="position:relative"><span class="tab-ic">✉️</span><span class="tab-lb">Convocation</span><span id="convoc-alert-dot" style="position:absolute;top:7px;right:8px;width:8px;height:8px;border-radius:50%;background:#E97132;display:none;box-shadow:0 0 0 2px white;animation:pulse 2s infinite"></span></div>
@@ -21815,6 +21809,9 @@ window.addEventListener('load', () => {
 
   <!-- TAB 11 ÉVALUATIONS (ENR016 + ENR017) -->
   <div class="pane" id="p15">
+    <div class="tip orange" style="background:#FFF3E0;border-left:4px solid #E97132;color:#7A3000;margin-bottom:12px;padding:12px 14px;font-size:12px;line-height:1.6">
+      <strong>ATTESTATION DE SIGNATURE</strong> — Veuillez générer le document Word pour que votre bénéficiaire atteste avoir signé sur l'application.
+    </div>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;flex-wrap:wrap"><button onclick="downloadDoc(generateAttestationSignature,getNomFichier('Attestation_signatures'))" style="padding:7px 14px;background:var(--c3);color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif;display:flex;align-items:center;gap:6px">⬇️ Télécharger Attestation de signature Word</button><button onclick="downloadDoc(generateENR016,getNomFichier('ENR016_Evaluation_benef'))" style="padding:7px 14px;background:var(--c3);color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif;display:flex;align-items:center;gap:6px">⬇️ ENR016 Bénéficiaire</button><button onclick="downloadDoc(generateENR017,getNomFichier('ENR017_Evaluation_form'))" style="padding:7px 14px;background:var(--c3);color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif;display:flex;align-items:center;gap:6px">⬇️ ENR017 Formateur</button></div>
     <div class="tip" style="background:var(--tbl-bg);border-left-color:var(--c2)">
       <strong>Questionnaires d'évaluation à chaud</strong> : ENR016 Bénéficiaire · ENR017 Formateur · Indicateur Qualiopi n°2 (satisfaction)
@@ -22173,7 +22170,78 @@ const PK='reliance_pwd',SK='reliance_sess',AK='reliance_admin',DK='reliance_data
 const APP_VERSION='7.4';
 
 const KNOWN_DK_PREFIXES=['reliance_data','reliance_v1','reliance_v2','reliance_v3','reliance_v4','reliance_v5','reliance_v6','reliance_v7'];
+const LS_CLEAN_LIMIT_KB=2000;
+const LS_MAX_DOSSIERS=10;
+const LS_PROTECTED_KEYS=new Set([PK,SK,AK,DK+'_autosave','reliance_admin_set','reliance_formateur_nom','reliance_convoc_sent','reliance_convoc_dismiss','reliance_consultant_session','reliance_admin']);
 const DEF='RELIANCE2026';
+
+function isProtectedStorageKey(key){
+  if(LS_PROTECTED_KEYS.has(key))return true;
+  if(key.endsWith('_supabase_id'))return true;
+  return false;
+}
+
+function getLocalStorageSize(){
+  let total=0;
+  Array.from(Object.keys(localStorage)).forEach(key=>{
+    const val=localStorage.getItem(key);
+    if(val!==null)total+=key.length+val.length;
+  });
+  const limit=5*1024*1024;
+  return{
+    bytes:total,
+    KB:(total/1024).toFixed(2),
+    percent:((total/limit)*100).toFixed(1)
+  };
+}
+
+function cleanOldDossiers(){
+  const dossiers=[];
+  const clientPrefix=DK+'_client_';
+  Array.from(Object.keys(localStorage)).forEach(key=>{
+    if(!key.startsWith(clientPrefix)||key.includes('_supabase_id')||isProtectedStorageKey(key))return;
+    try{
+      const raw=JSON.parse(localStorage.getItem(key));
+      const dateMs=raw&&(raw.lastModified||raw.dateCreation||raw.saved_at||raw.ts)||0;
+      const label=(raw&&(raw.nom||raw.f_nom||(raw.data&&raw.data.f_nom)||'')).trim()||key.replace(clientPrefix,'').replace(/_/g,' ');
+      dossiers.push({key:key,date:new Date(dateMs),nom:label});
+    }catch(e){
+      console.warn('⚠️ Dossier corrompu:',key);
+    }
+  });
+  dossiers.sort((a,b)=>b.date-a.date);
+  if(dossiers.length<=LS_MAX_DOSSIERS){
+    console.log('✅ Aucun nettoyage nécessaire ('+dossiers.length+' dossier(s) cache)');
+    return 0;
+  }
+  const toDelete=dossiers.slice(LS_MAX_DOSSIERS);
+  toDelete.forEach(d=>{
+    localStorage.removeItem(d.key);
+    console.log('🗑️ Supprimé: '+d.nom+' ('+(d.date.getTime()?d.date.toLocaleDateString('fr-FR'):'date inconnue')+')');
+  });
+  return toDelete.length;
+}
+
+function autoCleanLocalStorage(){
+  const size=getLocalStorageSize();
+  console.log('📊 localStorage: '+size.KB+' KB ('+size.percent+'%)');
+  if(parseFloat(size.KB)<=LS_CLEAN_LIMIT_KB){
+    console.log('✅ Aucun nettoyage nécessaire');
+    return;
+  }
+  console.log('🧹 Nettoyage automatique déclenché...');
+  const cleaned=cleanOldDossiers();
+  const newSize=getLocalStorageSize();
+  if(cleaned>0){
+    console.log('✅ '+cleaned+' dossier(s) nettoyé(s). Nouveau total: '+newSize.KB+' KB');
+  }else if(parseFloat(newSize.KB)>LS_CLEAN_LIMIT_KB){
+    console.log('⚠️ Seuil dépassé mais aucun cache dossier supplémentaire à retirer — enregistrez en fichier .reliance');
+  }
+}
+
+document.addEventListener('DOMContentLoaded',function(){
+  autoCleanLocalStorage();
+});
 const CHARTE_RP={page:{width:11906,height:16838,margins:{top:1134,right:1134,bottom:1134,left:1134}},font:{family:'Arial',body:11,small:9,h1:20,h2:16,title:26},colors:{title:'#074F6A',h1:'#0F4761',h2:'#2E74B5',body:'#444444',tblHeader:'#2C5282',tblRow1:'#D6E8FF',tblRow2:'#EBF4FF',tblBorder:'#AAAAAA'},organisme:{nom:'RP Coaching & Formation',adresse:'174 hameau de la chapelle — St Julien 39320 Val Suran',email:'contact@rodrigueponcet.fr',tel:'06 74 03 59 37',siret:'851 939 322 00042',nda:'27390135539',representant:'Rodrigue Poncet'}};
 function charteHeader(t){return '[CHARTE RP COACHING]\nArial | A4 | marges 2cm | Titre 26pt gras #074F6A | H1 20pt #0F4761 | H2 16pt #2E74B5 | corps 11pt #444444\nTableaux: en-tête #2C5282 blanc | lignes #D6E8FF/#EBF4FF | bordures #AAAAAA\nEn-tête: logo RP gauche + "'+t+'" droite | Pied: coordonnées gauche + page droite\n[FIN CHARTE]\n\n';}
 function hash(s){let h=0;for(let i=0;i<s.length;i++)h=(Math.imul(31,h)+s.charCodeAt(i))|0;return'rh'+Math.abs(h).toString(36)+s.length}
@@ -22225,10 +22293,7 @@ function tryUnlock(){
       document.getElementById('app').style.display = 'block';
       document.getElementById('lerr').style.display = 'none';
 
-      if (isDir) {
-        const adminBtn = document.getElementById('pwd-btn');
-        if (adminBtn) adminBtn.style.display = '';
-      }
+      updateDirigeantUi();
 
       mkSess(stored());
       migrateStorage();
@@ -24159,7 +24224,6 @@ const CHECKLIST = [
     { id: 'cl_fiches', label: "Enquêtes métiers / Fiches ROME réalisées", enr: 'Onglet Fiches Métiers', oblig: false },
     { id: 'cl_emarg_inv', label: "Émargements signés séances 2 à 7", enr: 'Onglet Émargements', oblig: true },
     { id: 'cl_comp', label: "Compétences identifiées et analysées", enr: 'Onglet Analyse & Projet', oblig: true },
-    { id: 'cl_cahier', label: "Cahier d'exercices bénéficiaire scanné et archivé", enr: 'Bouton 💾 Sauvegarder', oblig: true },
     { id: 'cl_plan_inv', label: "Plan d'action ébauché", enr: 'Onglet Plan d\'action', oblig: false },
   ]},
   { cat: 'PHASE DE CONCLUSION', col: '#E97132', items: [
@@ -24169,6 +24233,7 @@ const CHECKLIST = [
     { id: 'cl_certificat', label: "Certificat de réalisation établi (ENR015)", enr: 'Onglet Documents légaux', oblig: true },
     { id: 'cl_eval_b', label: "Questionnaire de satisfaction bénéficiaire (ENR016) complété", enr: 'Onglet Évaluations', oblig: true },
     { id: 'cl_eval_f', label: "Questionnaire formateur (ENR017) complété", enr: 'Onglet Évaluations', oblig: true },
+    { id: 'cl_attestation_sig', label: "Attestation de signature électronique générée et signée", enr: 'Onglet Évaluations', oblig: true },
     { id: 'cl_emarg_fin', label: "Émargement séance 8 signé + signature globale feuille", enr: 'Onglet Émargements', oblig: true },
     { id: 'cl_sig_cr', label: "Compte-rendu de séance(s) signé (consultant + bénéficiaire)", enr: 'Onglet Calendrier', oblig: true },
     { id: 'cl_plan_fin', label: "Plan d'action définitif validé avec le bénéficiaire", enr: 'Onglet Plan d\'action', oblig: true },
