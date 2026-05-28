@@ -22363,7 +22363,7 @@ function updateActiveDossierBadge(nom){
 
 // ════════════ SAVE/LOAD ════════════
 
-const IA_OUT_PROMPT_IDS=['parcours','comp','tests','projet','plan','concl','mindmap'];
+const IA_OUT_PROMPT_IDS=['parcours','comp','tests','projet','plan','concl','synthese','mindmap'];
 const IA_OUT_PLACEHOLDER_TEXT='Collez ici le texte généré par Claude...';
 const IA_OUT_PLACEHOLDER_RE=/^Collez ici/i;
 let iaOutCache={};
@@ -23517,6 +23517,33 @@ function exportCalendrier(){
 function addR(){const t=document.getElementById('plan-tbody');const tr=document.createElement('tr');tr.innerHTML=`<td><input oninput="autoSave()"></td><td><select onchange="autoSave()"><option>🔴 Urgent</option><option selected>🟠 Important</option><option>🔵 Utile</option></select></td><td><input oninput="autoSave()"></td><td><input oninput="autoSave()"></td><td><input oninput="autoSave()"></td><td><select onchange="autoSave()"><option>À faire</option><option>En cours</option><option>Réalisée</option></select></td><td><button onclick="delR(this)" style="background:none;border:none;cursor:pointer;color:#ccc">×</button></td>`;t.appendChild(tr);}
 function delR(b){b.closest('tr').remove();}
 function getPlan(){const r=[];Array.from(document.querySelectorAll('#plan-tbody tr')).forEach(tr=>{const i=tr.querySelectorAll('input,select');if(i[0]&&i[0].value.trim())r.push({a:i[0].value,p:i[1]?.value||''});});return r;}
+function getPlanFull(){const r=[];Array.from(document.querySelectorAll('#plan-tbody tr')).forEach(tr=>{const i=tr.querySelectorAll('input,select');const action=(i[0]?.value||'').trim();if(!action)return;r.push({action,priorite:i[1]?.value||'',delai:i[2]?.value||'',commentaire:i[3]?.value||'',cout:i[4]?.value||'',realiseLe:i[5]?.value||''});});return r;}
+function getSeancesForPrompt(){const rows=[];Array.from(document.querySelectorAll('#cal-tbody tr')).forEach((tr,idx)=>{const inp=tr.querySelectorAll('input,textarea,select');if(inp.length<5)return;rows.push({n:idx+1,date:inp[0]?.value||'',horaires:inp[1]?.value||'',duree:inp[2]?.value||'',objectifs:inp[3]?.value||'',outils:inp[4]?.value||''});});return rows;}
+function formatPlanTableTxt(rows){if(!rows.length)return '—';return rows.map((r,i)=>`${i+1}. Action : ${r.action} | Commentaire (ressources app) : ${r.commentaire||'—'} | Importance : ${r.priorite||'—'} | Délai : ${r.delai||'—'} | Réalisé le (statut app) : ${r.realiseLe||'—'}${r.cout?` | Coût : ${r.cout}`:''}`).join('\n');}
+function formatPhasesParcoursTxt(d){
+  const ses=getSeancesForPrompt();
+  const fmtSes=(list)=>list.length?list.map(s=>`  • Séance ${s.n} — ${s.date||'date à préciser'} · ${s.horaires} · ${s.duree}\n    Programme / objectifs : ${s.objectifs||'—'}\n    Outils : ${s.outils||'—'}`).join('\n'):'  (aucune séance calendrier)';
+  const inv=ses.length>2?ses.slice(0,ses.length-2):ses.slice(0,Math.max(0,ses.length-1));
+  const concl=ses.length>1?ses.slice(-2):ses.slice(-1);
+  return `PHASE PRÉLIMINAIRE
+Programme / contenus (Se recentrer — e1c) : ${d.e1c||'—'}
+Outils (e1o) : ${d.e1o||'—'} · Durée indicative (e1d) : ${d.e1d||'—'}
+Résultats (e1r) : ${d.e1r||'—'}
+
+PHASE INVESTIGATION
+Programme / contenus Se comprendre (e2c) : ${d.e2c||'—'}
+Résultats (e2r) : ${d.e2r||'—'} · Outils (e2o) : ${d.e2o||'—'} · Durée (e2d) : ${d.e2d||'—'}
+Programme / contenus Choisir (e3c) : ${d.e3c||'—'}
+Résultats (e3r) : ${d.e3r||'—'} · Outils (e3o) : ${d.e3o||'—'} · Durée (e3d) : ${d.e3d||'—'}
+Séances calendrier (investigation) :
+${fmtSes(inv)}
+
+PHASE CONCLUSION
+Programme / contenus S'engager (e4c) : ${d.e4c||'—'}
+Résultats (e4r) : ${d.e4r||'—'} · Outils (e4o) : ${d.e4o||'—'} · Durée (e4d) : ${d.e4d||'—'}
+Séances calendrier (conclusion) :
+${fmtSes(concl)}`;
+}
 
 // ════════════ PROMPTS ════════════
 const promptDefs=[
@@ -23532,6 +23559,8 @@ const promptDefs=[
    build:d=>`${charteHeader("Plan Action")}Rédige la partie PLAN D'ACTION de la synthèse RELIANCE®.\n\nActions prévues : ${d.planTxt}\nFormations : ${d.form}\nBesoins complémentaires : ${d.acc}\nÉtape S'ENGAGER : ${d.e4c}\n\n2 paragraphes narratifs, structurés, motivants.\n\nAvant de générer ta réponse, pose-moi cette question : Préfères-tu une réponse dans le chat (à coller dans l'application RELIANCE) ou un document Word formaté à télécharger ?`},
   {id:'concl',label:'Conclusion & perspectives',color:'var(--dk2)',bg:'var(--lgrey)',
    build:d=>`${charteHeader("Conclusion et Perspectives")}Rédige la CONCLUSION du bilan de compétences RELIANCE®.\n\nBénéficiaire : ${d.nom} | Consultant : ${d.cons} | Projet : ${d.proj}\nPoints forts : ${d.pts} | Valeurs : ${d.val}\nContexte initial : ${d.ctx}\n\n2-3 paragraphes. Chaleureux, professionnel, encourageant. Reconnaître le chemin parcouru.\n\nAvant de générer ta réponse, pose-moi cette question : Préfères-tu une réponse dans le chat (à coller dans l'application RELIANCE) ou un document Word formaté à télécharger ?`},
+  {id:'synthese',label:'Synthèse BC complète (document Word)',color:'#074F6A',bg:'#E3F2FD',
+   build:d=>buildSynthesePrompt(d)},
   {id:'mindmap',label:'🗺️ Mind Map — Visuel SVG (à coller dans Word)',color:'#196B24',bg:'#E8F5E9',
    build:d=>`Tu es expert en visualisation. Génère une MIND MAP en SVG du bilan de ${d.nom||'ce bénéficiaire'}.
 
@@ -23563,15 +23592,26 @@ function getCtx(){
   const topR=[...riasec].sort((a,b)=>b.score-a.score).slice(0,3).map(r=>r.code).join('');
   const topRLabels=[...riasec].sort((a,b)=>b.score-a.score).slice(0,3).map(r=>r.label).join(', ');
   const p16txt=selType?`${selType.code} - ${selType.name}`:'Non renseigné';
+  const finMode=gv('f_fin');
   return{nom:gv('f_nom'),poste:gv('f_poste'),secteur:gv('f_secteur'),anc:gv('f_anc'),
-    cons:gv('f_cons'),ctx:gv('f_ctx'),o1:gv('f_o1'),o2:gv('f_o2'),
-    e1c:gv('e1c'),e2c:gv('e2c'),e2r:gv('e2r'),e3c:gv('e3c'),e3r:gv('e3r'),e4c:gv('e4c'),e4r:gv('e4r'),
+    cons:gv('f_cons'),orga:gv('f_orga'),ctx:gv('f_ctx'),o1:gv('f_o1'),o2:gv('f_o2'),
+    lieu:gv('f_lieu'),dateDebut:gv('f_date_debut'),dateFin:gv('f_date_fin'),
+    mod:gv('f_mod'),fin:finMode,finDetail:finMode==='Autre'?gv('f_fin_autre'):finMode,
+    dureeFace:document.getElementById('recap-entretiens')?.textContent||'',
+    dureeTp:document.getElementById('recap-tp')?.value||'',
+    dureeTotal:document.getElementById('recap-total')?.textContent||'',
+    e1c:gv('e1c'),e1r:gv('e1r'),e1o:gv('e1o'),e1d:gv('e1d'),
+    e2c:gv('e2c'),e2r:gv('e2r'),e2o:gv('e2o'),e2d:gv('e2d'),
+    e3c:gv('e3c'),e3r:gv('e3r'),e3o:gv('e3o'),e3d:gv('e3d'),
+    e4c:gv('e4c'),e4r:gv('e4r'),e4o:gv('e4o'),e4d:gv('e4d'),
     se,sf,sv,pts:gv('f_pts'),vig:gv('f_vig'),val:gv('f_val'),mot:gv('f_mot'),
     topVal,topR,topRLabels,p16txt,p16desc:selType?selType.desc:'',
     proj:gv('f_proj'),pdesc:gv('f_pdesc'),arg:gv('f_arg'),fais:gv('f_fais'),
     proj_nr:gv('f_proj_nr'),proj_nr_raison:gv('f_proj_nr_raison'),
     form:gv('f_form'),acc:gv('f_acc'),
-    planTxt:getPlan().map(a=>`${a.a} (${a.p})`).join(' | ')};
+    planTxt:getPlan().map(a=>`${a.a} (${a.p})`).join(' | '),
+    planRows:getPlanFull(),planTableTxt:formatPlanTableTxt(getPlanFull()),
+    phasesParcoursTxt:formatPhasesParcoursTxt({e1c:gv('e1c'),e1r:gv('e1r'),e1o:gv('e1o'),e1d:gv('e1d'),e2c:gv('e2c'),e2r:gv('e2r'),e2o:gv('e2o'),e2d:gv('e2d'),e3c:gv('e3c'),e3r:gv('e3r'),e3o:gv('e3o'),e3d:gv('e3d'),e4c:gv('e4c'),e4r:gv('e4r'),e4o:gv('e4o'),e4d:gv('e4d')})};
 }
 
 function buildPrompts(forceRebuild){
@@ -23619,6 +23659,85 @@ function getIAT(id){
   if(iaOutCache[id]&&isIaOutMeaningfulText(iaOutCache[id]))return iaOutCache[id];
   return readIaOutEl(document.getElementById('out-'+id));
 }
+
+function buildSynthesePrompt(d){
+  d=d||getCtx();
+  const ia=id=>getIAT(id)||'';
+  const finLabel=d.finDetail||d.fin||'—';
+  return `Tu es consultant expert en bilan de compétences Méthode RELIANCE® (RP Coaching & Formation). Génère un DOCUMENT WORD COMPLET — synthèse officielle du bilan de compétences — prêt à télécharger (.docx), structuré, professionnel et conforme Qualiopi.
+
+CHARTE GRAPHIQUE OBLIGATOIRE
+• Police : Calibri (corps 11 pt, interligne 1,15)
+• Titres principaux : #074F6A
+• Sous-titres / accents : #E97132
+• Fond des en-têtes de tableaux : #C1E4F5
+• Format A4, marges 2 cm
+• En-tête de page : « RP Coaching & Formation » à gauche — « SYNTHÈSE DU BILAN DE COMPÉTENCES » à droite
+• Pied de page : coordonnées organisme (SIRET 851 939 322 00042 · N° OF 27390135539 · contact@rpcoaching.fr · 06 74 03 59 37) + numéro de page
+
+STRUCTURE DU DOCUMENT (respecter l'ordre et la numérotation)
+
+1. PAGE DE GARDE
+Nom bénéficiaire : ${d.nom||'—'} · Consultant : ${d.cons||'—'} · Organisme : ${d.orga||'—'}
+Lieu : ${d.lieu||'—'} · Dates : du ${d.dateDebut||'—'} au ${d.dateFin||'—'}
+Durée totale : ${d.dureeTotal||'—'} (face-à-face : ${d.dureeFace||'—'} · travail individuel : ${d.dureeTp||'—'})
+Modalité : ${d.mod||'—'} · Financement : ${finLabel}
+
+2. SOMMAIRE NUMÉROTÉ (avec numéros de page)
+
+3. TABLEAU PARCOURS SÉANCES — 3 phases (Préliminaire / Investigation / Conclusion)
+Pour chaque phase : programme, contenu, outils utilisés (et séances du calendrier le cas échéant).
+Données RELIANCE® :
+${d.phasesParcoursTxt||'—'}
+Texte IA parcours (si disponible) : ${ia('parcours')||'—'}
+
+4. ANALYSE DES COMPÉTENCES
+Savoir-faire : ${d.sf||'—'}
+Savoirs : ${d.sv||'—'}
+Savoir-être : ${d.se||'—'}
+Points forts : ${d.pts||'—'} · Axes de vigilance : ${d.vig||'—'}
+Valeurs : ${d.val||'—'} · Motivations : ${d.mot||'—'}
+Tests : Boussole ${d.topVal||'—'} · Orientation ${d.topR||'—'} (${d.topRLabels||'—'}) · Signature ${d.p16txt||'—'} — ${d.p16desc||'—'}
+Texte IA compétences : ${ia('comp')||'—'} · Texte IA tests : ${ia('tests')||'—'}
+
+5. ÉTUDE DES ÉCARTS
+Tableau à 5 colonnes : Compétences requises | Acquis | Non acquis | Avantages | Axes d'amélioration
+Construire à partir du projet (${d.proj||'—'}), de la faisabilité (${d.fais||'—'}), des compétences ci-dessus et des fiches métiers. Minimum 4 lignes pertinentes.
+
+6. VALIDATION DU PROJET
+Tableau : Vous (motivations, formations, expériences, contraintes) | Votre projet | Actions à engager
+Projet retenu : ${d.proj||'—'} — ${d.pdesc||'—'}
+Argumentaire : ${d.arg||'—'}
+Projet(s) non retenu(s) : ${d.proj_nr||'—'}${d.proj_nr_raison?' — '+d.proj_nr_raison:''}
+Étapes Choisir / S'engager : ${d.e3c||'—'} / ${d.e4c||'—'} · Résultats : ${d.e3r||'—'} / ${d.e4r||'—'}
+Texte IA projet : ${ia('projet')||'—'}
+
+7. PLAN D'ACTION
+Tableau : Action | Commentaire | Niveau d'importance | Délai | Réalisé le
+(Note app : colonne Commentaire = ressources ; Réalisé le = statut — pas de date dédiée)
+${d.planTableTxt||'—'}
+Formations envisagées : ${d.form||'—'} · Besoins : ${d.acc||'—'}
+Texte IA plan : ${ia('plan')||'—'}
+
+8. CLAUSE DE CONFIDENTIALITÉ
+Rappeler que le document est strictement confidentiel et remis au seul bénéficiaire. Citer l'article L.900-4-1 du code du travail.
+
+9. ESPACES DE SIGNATURE
+« Fait à ${d.lieu||'………………'}, le ${d.dateFin||'………………'} »
+Deux blocs : Signature du consultant · Signature du bénéficiaire
+
+CONTEXTE MÉTIER
+Bénéficiaire : ${d.nom||'—'}, ${d.poste||'—'}, secteur ${d.secteur||'—'}, ancienneté ${d.anc||'—'}
+Contexte de la démarche : ${d.ctx||'—'} · Objectifs : ${[d.o1,d.o2].filter(Boolean).join(' / ')||'—'}
+
+CONCLUSION (section finale avant signatures)
+${ia('concl')||'Rédiger une conclusion chaleureuse et professionnelle.'}
+
+ANNEXE OPTIONNELLE
+Mind Map : générer séparément via le prompt Mind Map et l'insérer en annexe si l'utilisateur le souhaite.
+
+Avant de générer, dis-moi : préfères-tu une réponse dans le chat ou un document Word formaté ?`;
+}
 function setP(id,v,ph){const e=document.getElementById(id);if(!e)return;if(v){e.textContent=v;e.className='';}else if(ph){e.textContent=ph;e.className='ep';}}
 function buildPreview(){
   const d=getCtx();
@@ -23639,9 +23758,7 @@ function buildPreview(){
 }
 
 function exportSynthese(){
-  const d=getCtx();
-  const prompt=`Génère le document de synthèse RELIANCE® complet et professionnel pour ${d.nom||'le bénéficiaire'}.\n\nMise en forme : Police Calibri · Couleur principale #074F6A · Fond tableaux #C1E4F5 · Titres #0E2841 · Accents #E97132\nCharte graphique : reproduction de la charte RP Coaching & Formation (ENR003).\n\nContenu à inclure :\n- Bénéficiaire : ${d.nom} | Consultant : ${d.cons}\n- Contexte : ${d.ctx}\n- Synthèse parcours : ${getIAT('parcours')||'À rédiger'}\n- Compétences : ${getIAT('comp')||'À rédiger'}\n- Profil tests : ${getIAT('tests')||'À rédiger'}\n- Projet retenu : ${d.proj} — ${getIAT('projet')||'À rédiger'}\n- Projet(s) non retenu(s) : ${d.proj_nr||'—'}${d.proj_nr_raison?' | Raison : '+d.proj_nr_raison:''}\n- Plan d'action : ${getIAT('plan')||'À rédiger'}\n- Conclusion : ${getIAT('concl')||'À rédiger'}\n\nANNEXE — Mind Map visuelle :\nGénérer séparément via le prompt “Mind Map” de l'onglet Prompts IA. Coller le visuel SVG en annexe du document Word.`;
-  navigator.clipboard.writeText(prompt).then(()=>showToast('📋 Prompt export copié — Collez dans Claude.ai','green'));
+  navigator.clipboard.writeText(buildSynthesePrompt()).then(()=>showToast('📋 Prompt synthèse BC copié — Collez dans Claude.ai','green'));
 }
 
 // ════════════ CHARTS ════════════
