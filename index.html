@@ -20297,9 +20297,12 @@ body{font-family:Calibri,'Calibri',Arial,sans-serif;background:var(--cream);colo
 .prompt-hint{padding:5px 14px;font-size:11px;color:var(--muted);background:var(--lgrey);border-bottom:1px solid var(--border)}
 .prompt-text{padding:12px 14px;font-size:12px;background:#F9F7F4;line-height:1.7;font-style:italic;color:var(--muted);border-bottom:1px solid var(--border);white-space:pre-wrap;max-height:120px;overflow:hidden;position:relative}
 .prompt-text::after{content:'';position:absolute;bottom:0;left:0;right:0;height:30px;background:linear-gradient(transparent,#F9F7F4)}
-.ia-out{padding:13px 14px;min-height:72px;background:#FFFDE7;font-size:13px;line-height:1.75;white-space:pre-wrap;outline:none}
-.ia-out.empty{color:var(--muted);font-style:italic;font-size:12px}
-.ia-out[contenteditable=true]:focus{box-shadow:inset 0 0 0 1px var(--c1)}
+.ia-out{padding:13px 14px;min-height:72px;background:#FFFDE7;font-size:13px;line-height:1.75;white-space:pre-wrap;outline:none;position:relative}
+.ia-out.empty{color:inherit;font-style:normal;font-size:13px}
+.ia-out .ia-ph{display:none;color:var(--muted);font-style:italic;font-size:12px;line-height:1.6;pointer-events:none}
+.ia-out.empty .ia-ph{display:block}
+.ia-out .ia-user{min-height:56px;white-space:pre-wrap;outline:none}
+.ia-out .ia-user:focus{box-shadow:inset 0 0 0 1px var(--c1)}
 .open-claude-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--dk2);color:white;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;margin-top:8px;font-family:Calibri,Arial,sans-serif;text-decoration:none}
 .open-claude-btn:hover{background:var(--c1)}
 
@@ -21531,12 +21534,6 @@ window.addEventListener('load', () => {
         <div style="flex:1"><div style="font-size:16px;font-weight:700" id="p16-code"></div><div style="font-size:13px;color:var(--dk2);font-weight:700" id="p16-name"></div><div style="font-size:11px;color:var(--muted)" id="p16-grp"></div><div style="font-size:12px;line-height:1.7;margin-top:7px" id="p16-desc"></div><a id="p16-link" href="#" target="_blank" style="font-size:11px;color:var(--c4);margin-top:5px;display:inline-block;font-weight:700">→ Fiche complète Signature Comportementale (16personalities.com)</a></div>
       </div>
     </div>
-    <div style="margin-top:16px;padding:13px;background:var(--tbl-bg);border-radius:9px;border:1px solid var(--c1)">
-      <div style="font-size:12px;font-weight:700;color:var(--c1);margin-bottom:7px">📋 Copier le prompt — Synthèse des 3 tests</div>
-      <button class="copy-btn" style="background:var(--c5);color:white" onclick="copyPrompt('tests',this)">📋 Copier ce prompt</button>
-      <a class="open-claude-btn" href="https://claude.ai" target="_blank">Ouvrir Claude.ai →</a>
-      <div class="ia-out empty" id="out-tests-valeurs" contenteditable="true" style="margin-top:10px;border-radius:7px" oninput="onIaOutInput(this)">Collez ici le texte généré par Claude...</div>
-    </div>
   </div>
 
   <!-- TAB 3 ANALYSE -->
@@ -22367,25 +22364,50 @@ function updateActiveDossierBadge(nom){
 // ════════════ SAVE/LOAD ════════════
 
 const IA_OUT_PROMPT_IDS=['parcours','comp','tests','projet','plan','concl','mindmap'];
+const IA_OUT_PLACEHOLDER_TEXT='Collez ici le texte généré par Claude...';
 const IA_OUT_PLACEHOLDER_RE=/^Collez ici/i;
 let iaOutCache={};
 let promptsBuilt=false;
 
 function isIaOutMeaningfulText(txt){
   const t=(txt||'').trim();
-  return t.length>0&&!IA_OUT_PLACEHOLDER_RE.test(t);
+  return t.length>0;
+}
+
+function ensureIaOutStructure(el){
+  if(!el)return null;
+  let ph=el.querySelector('.ia-ph');
+  let user=el.querySelector('.ia-user');
+  if(ph&&user)return{ph,user};
+  const legacyRaw=(el.textContent||'').trim();
+  const legacyTxt=(legacyRaw&&!IA_OUT_PLACEHOLDER_RE.test(legacyRaw))?legacyRaw:'';
+  el.innerHTML='';
+  ph=document.createElement('span');
+  ph.className='ia-ph';
+  ph.textContent=IA_OUT_PLACEHOLDER_TEXT;
+  user=document.createElement('div');
+  user.className='ia-user';
+  user.contentEditable='true';
+  user.spellcheck=true;
+  if(legacyTxt)user.textContent=legacyTxt;
+  user.oninput=function(){onIaOutInput(el);};
+  el.appendChild(ph);
+  el.appendChild(user);
+  return{ph,user};
 }
 
 function syncIaOutEmpty(el){
-  if(!el)return;
-  if(isIaOutMeaningfulText(el.textContent))el.classList.remove('empty');
+  const s=ensureIaOutStructure(el);
+  if(!s)return;
+  if(isIaOutMeaningfulText(s.user.textContent))el.classList.remove('empty');
   else el.classList.add('empty');
 }
 
 function readIaOutEl(el){
-  if(!el)return null;
+  const s=ensureIaOutStructure(el);
+  if(!s)return null;
   syncIaOutEmpty(el);
-  return isIaOutMeaningfulText(el.textContent)?el.textContent:null;
+  return isIaOutMeaningfulText(s.user.textContent)?s.user.textContent.trim():null;
 }
 
 function onIaOutInput(el){
@@ -22403,18 +22425,19 @@ function snapshotIaOutCacheFromDom(){
     if(txt)iaOutCache[k]=txt;
     else delete iaOutCache[k];
   });
-  const tv=readIaOutEl(document.getElementById('out-tests-valeurs'));
-  if(tv)iaOutCache['tests-valeurs']=tv;
-  else delete iaOutCache['tests-valeurs'];
 }
 
 function applyIaOutCacheToDom(){
   IA_OUT_PROMPT_IDS.forEach(k=>{
     const e=document.getElementById('out-'+k);
-    if(e&&iaOutCache[k]){e.textContent=iaOutCache[k];e.classList.remove('empty');}
+    if(e){
+      const s=ensureIaOutStructure(e);
+      if(s){
+        s.user.textContent=iaOutCache[k]||'';
+        syncIaOutEmpty(e);
+      }
+    }
   });
-  const ev=document.getElementById('out-tests-valeurs');
-  if(ev&&iaOutCache['tests-valeurs']){ev.textContent=iaOutCache['tests-valeurs'];ev.classList.remove('empty');}
 }
 
 function collectIaOutputs(d){
@@ -22422,7 +22445,6 @@ function collectIaOutputs(d){
   IA_OUT_PROMPT_IDS.forEach(k=>{
     if(iaOutCache[k])d['ia_'+k]=iaOutCache[k];
   });
-  if(iaOutCache['tests-valeurs'])d.ia_tests_valeurs=iaOutCache['tests-valeurs'];
 }
 
 function collectData(){
@@ -22525,7 +22547,6 @@ function restoreData(d){
   if(d.p16sel)setTimeout(()=>sel16(d.p16sel),100);
   iaOutCache={};
   IA_OUT_PROMPT_IDS.forEach(k=>{if(d['ia_'+k])iaOutCache[k]=d['ia_'+k];});
-  if(d.ia_tests_valeurs)iaOutCache['tests-valeurs']=d.ia_tests_valeurs;
   applyIaOutCacheToDom();
   promptsBuilt=false;
   if(d.fiches){fiches=d.fiches.map(f=>({...f}));ficheCount=fiches.length;renderFiches();}
@@ -23091,9 +23112,7 @@ function clearAllFields(){
   promptsBuilt=false;
   const pc=document.getElementById('prompts-container');
   if(pc)pc.innerHTML='';
-  IA_OUT_PROMPT_IDS.forEach(k=>{const e=document.getElementById('out-'+k);if(e){e.textContent='Collez ici le texte généré par Claude...';e.classList.add('empty');}});
-  const etv=document.getElementById('out-tests-valeurs');
-  if(etv){etv.textContent='Collez ici le texte généré par Claude...';etv.classList.add('empty');}
+  IA_OUT_PROMPT_IDS.forEach(k=>{const e=document.getElementById('out-'+k);if(e){const s=ensureIaOutStructure(e);if(s)s.user.textContent='';syncIaOutEmpty(e);}});
   const ct=document.getElementById('cal-tbody');if(ct)ct.innerHTML='';seanceCount=0;
   const pt=document.getElementById('plan-tbody');if(pt)pt.innerHTML='';
   fiches=[];ficheCount=0;const fc=document.getElementById('fiches-container');if(fc)fc.innerHTML='';
@@ -23495,17 +23514,17 @@ function getPlan(){const r=[];Array.from(document.querySelectorAll('#plan-tbody 
 // ════════════ PROMPTS ════════════
 const promptDefs=[
   {id:'parcours',label:'Synthèse du parcours professionnel',color:'var(--c1)',bg:'var(--tbl-bg)',
-   build:d=>`${charteHeader("Synthèse du Parcours Professionnel")}Tu es consultant expert en bilan de compétences Méthode RELIANCE® (RP Coaching & Formation). Rédige la SYNTHÈSE DU PARCOURS pour le document de synthèse officiel.\n\nBénéficiaire : ${d.nom||'—'}, ${d.poste}, secteur ${d.secteur}, ancienneté ${d.anc}.\nContexte de la démarche : ${d.ctx}\nObjectifs du bilan : ${[d.o1,d.o2].filter(Boolean).join(' / ')}\nÉtape SE RECENTRER — contenus : ${d.e1c}\n\nRédige 2-3 paragraphes fluides, valorisants, professionnels. Style document de synthèse officiel mais humain. Prose uniquement, sans puces ni titres.`},
+   build:d=>`${charteHeader("Synthèse du Parcours Professionnel")}Tu es consultant expert en bilan de compétences Méthode RELIANCE® (RP Coaching & Formation). Rédige la SYNTHÈSE DU PARCOURS pour le document de synthèse officiel.\n\nBénéficiaire : ${d.nom||'—'}, ${d.poste}, secteur ${d.secteur}, ancienneté ${d.anc}.\nContexte de la démarche : ${d.ctx}\nObjectifs du bilan : ${[d.o1,d.o2].filter(Boolean).join(' / ')}\nÉtape SE RECENTRER — contenus : ${d.e1c}\n\nRédige 2-3 paragraphes fluides, valorisants, professionnels. Style document de synthèse officiel mais humain. Prose uniquement, sans puces ni titres.\n\nAvant de générer ta réponse, pose-moi cette question : Préfères-tu une réponse dans le chat (à coller dans l'application RELIANCE) ou un document Word formaté à télécharger ?`},
   {id:'comp',label:'Analyse des compétences & profil',color:'var(--c3)',bg:'#E8F5E9',
-   build:d=>`${charteHeader("Analyse des Compétences et Profil")}Tu es consultant expert en bilan de compétences RELIANCE®. Rédige l'ANALYSE DES COMPÉTENCES ET DU PROFIL.\n\nBénéficiaire : ${d.nom}\nSavoir-être : ${d.se}\nSavoir-faire : ${d.sf}\nSavoirs : ${d.sv}\nPoints forts : ${d.pts}\nAxes de vigilance : ${d.vig}\nValeurs : ${d.val} | Motivations : ${d.mot}\nÉtape SE COMPRENDRE : ${d.e2c}\n\n2-3 paragraphes analytiques et valorisants, montrant la cohérence du profil.`},
+   build:d=>`${charteHeader("Analyse des Compétences et Profil")}Tu es consultant expert en bilan de compétences RELIANCE®. Rédige l'ANALYSE DES COMPÉTENCES ET DU PROFIL.\n\nBénéficiaire : ${d.nom}\nSavoir-être : ${d.se}\nSavoir-faire : ${d.sf}\nSavoirs : ${d.sv}\nPoints forts : ${d.pts}\nAxes de vigilance : ${d.vig}\nValeurs : ${d.val} | Motivations : ${d.mot}\nÉtape SE COMPRENDRE : ${d.e2c}\n\n2-3 paragraphes analytiques et valorisants, montrant la cohérence du profil.\n\nAvant de générer ta réponse, pose-moi cette question : Préfères-tu une réponse dans le chat (à coller dans l'application RELIANCE) ou un document Word formaté à télécharger ?`},
   {id:'tests',label:'Profil Boussole de Valeurs, Orientation Professionnelle & Signature Comportementale',color:'var(--c5)',bg:'#EDE7F6',
-   build:d=>`${charteHeader("Profil Boussole Orientation Signature")}Tu es consultant expert en bilan de compétences RELIANCE®. Rédige le document Word des résultats de tests pour le bénéficiaire ${d.nom||'—'}. Respecte exactement la structure ci-dessous : titres de chapitres inclus, prose uniquement (pas de puces), ton professionnel et valorisant.\n\nCHAPITRE 1 — BOUSSOLE DE VALEURS\nPrésente en un paragraphe simple ce qu'est la Boussole de Valeurs et ce qu'elle mesure. Puis un paragraphe présentant le résultat de ${d.nom||'le bénéficiaire'} : ses valeurs dominantes sont ${d.topVal||'—'}.\n\nCHAPITRE 2 — ORIENTATION PROFESSIONNELLE\nPrésente en un paragraphe simple ce qu'est ce test d'orientation. Puis un paragraphe présentant le résultat de ${d.nom||'le bénéficiaire'} : son profil dominant est ${d.topR||'—'} (${d.topRLabels||'—'}).\n\nCHAPITRE 3 — SIGNATURE COMPORTEMENTALE\nPrésente en un paragraphe simple ce qu'est la Signature Comportementale. Puis un paragraphe présentant le résultat de ${d.nom||'le bénéficiaire'} : ${d.p16txt||'—'} — ${d.p16desc||'—'}.\n\nCHAPITRE SYNTHÈSE\nUn paragraphe synthétisant les 3 résultats ensemble. Puis un paragraphe « Qui est ${d.nom||'cette personne'} ? » intégrant ce qui a été renseigné dans Se comprendre : ${d.e2c||'—'} et ${d.e2r||'—'} — donnant une lecture identitaire complète de la personne.`},
+   build:d=>`${charteHeader("Profil Boussole Orientation Signature")}Tu es consultant expert en bilan de compétences RELIANCE®. Rédige le document Word des résultats de tests pour le bénéficiaire ${d.nom||'—'}. Respecte exactement la structure ci-dessous : titres de chapitres inclus, prose uniquement (pas de puces), ton professionnel et valorisant.\n\nCHAPITRE 1 — BOUSSOLE DE VALEURS\nPrésente en un paragraphe simple ce qu'est la Boussole de Valeurs et ce qu'elle mesure. Puis un paragraphe présentant le résultat de ${d.nom||'le bénéficiaire'} : ses valeurs dominantes sont ${d.topVal||'—'}.\n\nCHAPITRE 2 — ORIENTATION PROFESSIONNELLE\nPrésente en un paragraphe simple ce qu'est ce test d'orientation. Puis un paragraphe présentant le résultat de ${d.nom||'le bénéficiaire'} : son profil dominant est ${d.topR||'—'} (${d.topRLabels||'—'}).\n\nCHAPITRE 3 — SIGNATURE COMPORTEMENTALE\nPrésente en un paragraphe simple ce qu'est la Signature Comportementale. Puis un paragraphe présentant le résultat de ${d.nom||'le bénéficiaire'} : ${d.p16txt||'—'} — ${d.p16desc||'—'}.\n\nCHAPITRE SYNTHÈSE\nUn paragraphe synthétisant les 3 résultats ensemble. Puis un paragraphe « Qui est ${d.nom||'cette personne'} ? » intégrant ce qui a été renseigné dans Se comprendre : ${d.e2c||'—'} et ${d.e2r||'—'} — donnant une lecture identitaire complète de la personne.\n\nAvant de générer ta réponse, pose-moi cette question : Préfères-tu une réponse dans le chat (à coller dans l'application RELIANCE) ou un document Word formaté à télécharger ?`},
   {id:'projet',label:'Argumentaire du projet professionnel',color:'var(--orange)',bg:'#FFF3E0',
-   build:d=>`${charteHeader("Argumentaire Projet Professionnel")}Rédige l'ARGUMENTAIRE DU PROJET PROFESSIONNEL pour la synthèse RELIANCE®.\n\nBénéficiaire : ${d.nom} | Projet : ${d.proj}\nDescription : ${d.pdesc}\nArgumentaire : ${d.arg} | Faisabilité : ${d.fais}\nÉtape CHOISIR : ${d.e3c} | Résultats S'ENGAGER : ${d.e4r}\n\n3 paragraphes. Cohérence compétences/valeurs/aspirations. Ton : professionnel, convaincant, humain.`},
+   build:d=>`${charteHeader("Argumentaire Projet Professionnel")}Rédige l'ARGUMENTAIRE DU PROJET PROFESSIONNEL pour la synthèse RELIANCE®.\n\nBénéficiaire : ${d.nom} | Projet : ${d.proj}\nDescription : ${d.pdesc}\nArgumentaire : ${d.arg} | Faisabilité : ${d.fais}\nÉtape CHOISIR : ${d.e3c} | Résultats S'ENGAGER : ${d.e4r}\n\n3 paragraphes. Cohérence compétences/valeurs/aspirations. Ton : professionnel, convaincant, humain.\n\nAvant de générer ta réponse, pose-moi cette question : Préfères-tu une réponse dans le chat (à coller dans l'application RELIANCE) ou un document Word formaté à télécharger ?`},
   {id:"plan",label:"Plan d'action narratif",color:"var(--c4)",bg:"#E8EAF6",
-   build:d=>`${charteHeader("Plan Action")}Rédige la partie PLAN D'ACTION de la synthèse RELIANCE®.\n\nActions prévues : ${d.planTxt}\nFormations : ${d.form}\nBesoins complémentaires : ${d.acc}\nÉtape S'ENGAGER : ${d.e4c}\n\n2 paragraphes narratifs, structurés, motivants.`},
+   build:d=>`${charteHeader("Plan Action")}Rédige la partie PLAN D'ACTION de la synthèse RELIANCE®.\n\nActions prévues : ${d.planTxt}\nFormations : ${d.form}\nBesoins complémentaires : ${d.acc}\nÉtape S'ENGAGER : ${d.e4c}\n\n2 paragraphes narratifs, structurés, motivants.\n\nAvant de générer ta réponse, pose-moi cette question : Préfères-tu une réponse dans le chat (à coller dans l'application RELIANCE) ou un document Word formaté à télécharger ?`},
   {id:'concl',label:'Conclusion & perspectives',color:'var(--dk2)',bg:'var(--lgrey)',
-   build:d=>`${charteHeader("Conclusion et Perspectives")}Rédige la CONCLUSION du bilan de compétences RELIANCE®.\n\nBénéficiaire : ${d.nom} | Consultant : ${d.cons} | Projet : ${d.proj}\nPoints forts : ${d.pts} | Valeurs : ${d.val}\nContexte initial : ${d.ctx}\n\n2-3 paragraphes. Chaleureux, professionnel, encourageant. Reconnaître le chemin parcouru.`},
+   build:d=>`${charteHeader("Conclusion et Perspectives")}Rédige la CONCLUSION du bilan de compétences RELIANCE®.\n\nBénéficiaire : ${d.nom} | Consultant : ${d.cons} | Projet : ${d.proj}\nPoints forts : ${d.pts} | Valeurs : ${d.val}\nContexte initial : ${d.ctx}\n\n2-3 paragraphes. Chaleureux, professionnel, encourageant. Reconnaître le chemin parcouru.\n\nAvant de générer ta réponse, pose-moi cette question : Préfères-tu une réponse dans le chat (à coller dans l'application RELIANCE) ou un document Word formaté à télécharger ?`},
   {id:'mindmap',label:'🗺️ Mind Map — Visuel SVG (à coller dans Word)',color:'#196B24',bg:'#E8F5E9',
    build:d=>`Tu es expert en visualisation. Génère une MIND MAP en SVG du bilan de ${d.nom||'ce bénéficiaire'}.
 
@@ -23567,7 +23586,10 @@ function buildPrompts(forceRebuild){
         </div>
       </div>
       <div class="prompt-text">${promptText.replace(/\n/g,'<br>').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
-      <div class="ia-out ${existingTxt?'':'empty'}" id="out-${pd.id}" contenteditable="true" oninput="onIaOutInput(this)">${existingTxt||'Collez ici le texte généré par Claude...'}</div>
+      <div class="ia-out ${existingTxt?'':'empty'}" id="out-${pd.id}">
+        <span class="ia-ph">${IA_OUT_PLACEHOLDER_TEXT}</span>
+        <div class="ia-user" contenteditable="true" spellcheck="true" oninput="onIaOutInput(this.closest('.ia-out'))">${existingTxt}</div>
+      </div>
     </div>`;
   }).join('');
   promptsBuilt=true;
