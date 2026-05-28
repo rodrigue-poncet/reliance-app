@@ -22414,14 +22414,20 @@ function onIaOutInput(el){
   syncIaOutEmpty(el);
   if(el&&el.id){
     const key=el.id.replace(/^out-/,'');
-    if(key)iaOutCache[key]=readIaOutEl(el)||'';
+    if(key){
+      const txt=readIaOutEl(el);
+      if(txt)iaOutCache[key]=txt;
+      else delete iaOutCache[key];
+    }
   }
   autoSave();
 }
 
 function snapshotIaOutCacheFromDom(){
   IA_OUT_PROMPT_IDS.forEach(k=>{
-    const txt=readIaOutEl(document.getElementById('out-'+k));
+    const el=document.getElementById('out-'+k);
+    if(!el)return;
+    const txt=readIaOutEl(el);
     if(txt)iaOutCache[k]=txt;
     else delete iaOutCache[k];
   });
@@ -22443,7 +22449,8 @@ function applyIaOutCacheToDom(){
 function collectIaOutputs(d){
   snapshotIaOutCacheFromDom();
   IA_OUT_PROMPT_IDS.forEach(k=>{
-    if(iaOutCache[k])d['ia_'+k]=iaOutCache[k];
+    const txt=iaOutCache[k];
+    if(txt&&isIaOutMeaningfulText(txt))d['ia_'+k]=txt;
   });
 }
 
@@ -27095,13 +27102,13 @@ function drawMindmap() {
   const annee   = new Date().getFullYear();
   
   // Valeurs top 3 depuis valData
-  const topVals = (typeof valData !== 'undefined' ? [...valData].sort((a,b)=>b.score-a.score).slice(0,3).map(v=>'#'+(valData.indexOf(v)+1)+' '+v.label) : ['—','—','—']);
+  const topVals = (typeof valData !== 'undefined' ? [...valData].sort((a,b)=>b.score-a.score).slice(0,3).map(v=>v.name||'—') : ['—','—','—']);
   
   // RIASEC top 2
   const topRia  = (typeof riasec !== 'undefined' ? [...riasec].sort((a,b)=>b.score-a.score).slice(0,2).map(r=>r.code+' — '+r.label) : ['—','—']);
   
   // Personnalité 16P
-  const perso   = (typeof selType !== 'undefined' && selType) ? [selType.title, ...selType.tags.slice(0,3)] : ['Non renseigné'];
+  const perso   = (typeof selType !== 'undefined' && selType) ? [selType.code+' — '+selType.name, selType.grp].filter(Boolean) : ['Non renseigné'];
   
   // Objectifs depuis f_o1..f_o3
   const objs    = [gv('f_o1'),gv('f_o2'),gv('f_o3')].filter(Boolean);
