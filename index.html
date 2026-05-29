@@ -23694,34 +23694,42 @@ function buildSynthesePrompt(d){
   const finLabel=d.finDetail||d.fin||'—';
   return `Tu es consultant expert en bilan de compétences Méthode RELIANCE® (RP Coaching & Formation). Génère un DOCUMENT WORD COMPLET — synthèse officielle du bilan de compétences — prêt à télécharger (.docx), structuré, professionnel et conforme Qualiopi.
 
-CHARTE GRAPHIQUE OBLIGATOIRE
-• Police Calibri partout (corps 11 pt, interligne 1,15)
+CHARTE GRAPHIQUE OBLIGATOIRE (document de contenu client — charte sobre §5.2)
+• Police Calibri partout · Corps de texte : #555555, 10 pt, interligne aéré
 • Format A4, marges 2 cm
-• En-tête : RP Coaching & Formation à gauche, titre SYNTHÈSE DU BILAN DE COMPÉTENCES à droite
-• Pied de page sur chaque page : contact@rodrigueponcet.fr · 06 74 03 59 37 · numéro de page
-• Titres de sections en #074F6A gras · Sous-titres en #E97132
-• En-têtes de tableaux fond #C1E4F5
-• MISE EN PAGE ALLÉGÉE : éviter les rectangles de couleur à fond plein hors en-têtes de tableaux. Utiliser des bordures gauches colorées épaisses (style filet) pour délimiter les sections. Pas de fond coloré derrière les titres de section. Document agréable à imprimer en noir et blanc.
+• En-tête : logo RP à gauche (~2 cm), titre SYNTHÈSE DU BILAN DE COMPÉTENCES à droite — pas de bandeau coloré
+• Pied de page sobre sur chaque page : contact@rodrigueponcet.fr · 06 74 03 59 37 · page X/Y
+• Titres de sections : texte #074F6A gras, 13 pt — pas de fond coloré derrière les titres
+• Sous-titres : texte #E97132 gras, 11 pt
+• Tableaux : bordures légères #CCCCCC · En-têtes de colonnes fond #EEF5F8 (pas #C1E4F5, pas de fond navy)
+• Mise en page sobre et aérée, lisible à l'impression noir et blanc — pas de rectangles de couleur à fond plein
 • NOMENCLATURE TESTS RELIANCE® (obligatoire dans tout le document) : dire « Boussole de Valeurs » (jamais Schwartz), « Orientation Professionnelle » (jamais RIASEC), « Signature Comportementale » (jamais Myers-Briggs, MBTI, 16 Personalities ni 16P)
+• SOMMAIRE OBLIGATOIRE : ne jamais omettre la section 2. Tableau deux colonnes Titre/Page. Numéros de page approximatifs si inconnus. L'absence de sommaire est une erreur.
 
-STRUCTURE DU DOCUMENT (respecter l'ordre et la numérotation)
+STRUCTURE DU DOCUMENT (respecter strictement cet ordre et cette numérotation — ne pas réorganiser)
 
-1. PAGE DE GARDE
-En haut de la page de garde, prévoir deux espaces distincts : à gauche [LOGO CONSULTANT — à insérer manuellement], à droite [LOGO RP COACHING & FORMATION — à insérer manuellement]. Entre les deux, titre SYNTHÈSE DU BILAN DE COMPÉTENCES centré en #074F6A gras.
+1. PAGE DE GARDE — identité, dates, lieu, financement
+En haut : à gauche [LOGO CONSULTANT — à insérer manuellement], à droite [LOGO RP COACHING & FORMATION — à insérer manuellement]. Titre SYNTHÈSE DU BILAN DE COMPÉTENCES centré en #074F6A gras.
 Nom bénéficiaire : ${d.nom||'—'} · Consultant : ${d.cons||'—'} · Organisme : ${d.orga||'—'}
 Lieu : ${d.lieu||'—'} · Dates : du ${d.dateDebut||'—'} au ${d.dateFin||'—'}
 Durée totale : ${d.dureeTotal||'—'} (face-à-face : ${d.dureeFace||'—'} · travail individuel : ${d.dureeTp||'—'})
 Modalité : ${d.mod||'—'} · Financement : ${finLabel}
 
-2. SOMMAIRE NUMÉROTÉ (avec numéros de page)
+2. SOMMAIRE — OBLIGATOIRE, ne jamais omettre
+Tableau deux colonnes : Titre | Page (approximative). Lister toutes les sections 1 à 13 avec numéros de page estimés. L'absence de sommaire est une erreur.
 
-3. TABLEAU PARCOURS SÉANCES — 3 phases (Préliminaire / Investigation / Conclusion)
+3. PARCOURS ET DÉROULÉ DES SÉANCES — tableau 3 phases (Préliminaire / Investigation / Conclusion)
 Pour chaque phase : programme, contenu, outils utilisés (et séances du calendrier le cas échéant).
 Données RELIANCE® :
 ${d.phasesParcoursTxt||'—'}
 Texte IA parcours (si disponible) : ${ia('parcours')||'—'}
 
-4. ANALYSE DES COMPÉTENCES
+4. OBJECTIFS DU BILAN — placé immédiatement après le parcours
+Objectif 1 : ${d.o1||'—'} · Objectif 2 : ${d.o2||'—'} · Objectif 3 : ${d.o3||'—'}
+Contexte : ${d.ctx||'—'}
+Tableau à compléter : Objectif | Atteint (Oui - Partiellement - Non) | Commentaire — pré-remplir Objectif avec : ${d.o1||'—'}, ${d.o2||'—'}, ${d.o3||'—'} ; laisser Atteint et Commentaire vides.
+
+5. ANALYSE DES COMPÉTENCES — savoir-faire, savoirs, savoir-être
 Savoir-faire : ${d.sf||'—'}
 Savoirs : ${d.sv||'—'}
 Savoir-être : ${d.se||'—'}
@@ -23730,11 +23738,11 @@ Valeurs : ${d.val||'—'} · Motivations : ${d.mot||'—'}
 Tests : Boussole ${d.topVal||'—'} · Orientation ${d.topR||'—'} (${d.topRLabels||'—'}) · Signature ${d.p16txt||'—'} — ${d.p16desc||'—'}
 Texte IA compétences : ${ia('comp')||'—'} · Texte IA tests : ${ia('tests')||'—'}
 
-5. ÉTUDE DES ÉCARTS
+6. ÉTUDE DES ÉCARTS — tableau compétences requises / acquis / non acquis
 Tableau à 5 colonnes : Compétences requises | Acquis | Non acquis | Avantages | Axes d'amélioration
 Construire à partir du projet (${d.proj||'—'}), de la faisabilité (${d.fais||'—'}), des compétences ci-dessus et des fiches métiers. Minimum 4 lignes pertinentes.
 
-6. VALIDATION DU PROJET
+7. VALIDATION DU PROJET — tableau motivations / projet / actions
 Tableau : Vous (motivations, formations, expériences, contraintes) | Votre projet | Actions à engager
 Projet retenu : ${d.proj||'—'} — ${d.pdesc||'—'}
 Argumentaire : ${d.arg||'—'}
@@ -23742,33 +23750,34 @@ Projet(s) non retenu(s) : ${d.proj_nr||'—'}${d.proj_nr_raison?' — '+d.proj_n
 Étapes Choisir / S'engager : ${d.e3c||'—'} / ${d.e4c||'—'} · Résultats : ${d.e3r||'—'} / ${d.e4r||'—'}
 Texte IA projet : ${ia('projet')||'—'}
 
-OBJECTIFS RETENUS
-Objectif 1 : ${d.o1||'—'} · Objectif 2 : ${d.o2||'—'} · Objectif 3 : ${d.o3||'—'}
-Inclure un tableau à compléter par le consultant avec les colonnes : Objectif | Atteint (Oui - Partiellement - Non) | Commentaire. Pré-remplir la colonne Objectif avec les objectifs réels du bénéficiaire : ${d.o1||'—'}, ${d.o2||'—'}, ${d.o3||'—'}. Laisser les colonnes Atteint et Commentaire vides pour que le consultant les complète.
+8. PERSPECTIVES — évolution du marché de l'emploi dans le secteur visé
+Secteur / projet visé : ${d.secteur||'—'} · ${d.proj||'—'}
+Rédiger 2-3 paragraphes sur les tendances, opportunités et vigilances du marché de l'emploi liées au projet retenu (données générales et sectorielles, ton professionnel).
 
-7. PLAN D'ACTION
+9. CONCLUSION DU PROJET RETENU — pourquoi ce projet, raisons du choix, facteurs favorables
+Projet : ${d.proj||'—'} · Faisabilité : ${d.fais||'—'} · Points forts : ${d.pts||'—'}
+Texte IA conclusion (si disponible) : ${ia('concl')||'Rédiger une synthèse argumentée : raisons du choix, cohérence avec le profil, facteurs favorables et points de vigilance.'}
+
+10. PLAN D'ACTION — tableau opérationnel
 Tableau : Action | Commentaire | Niveau d'importance | Délai | Réalisé le
 (Note app : colonne Commentaire = ressources ; Réalisé le = statut — pas de date dédiée)
 ${d.planTableTxt||'—'}
 Formations envisagées : ${d.form||'—'} · Besoins : ${d.acc||'—'}
 Texte IA plan : ${ia('plan')||'—'}
 
-8. CLAUSE DE CONFIDENTIALITÉ
+11. CARTE MENTALE
+Insérer exactement ce texte (placeholder) : « Carte mentale à insérer ici — générée séparément via l'onglet Synthèse de l'application RELIANCE »
+
+12. CLAUSE DE CONFIDENTIALITÉ — art. L.900-4-1 du code du travail
 Rappeler que le document est strictement confidentiel et remis au seul bénéficiaire. Citer l'article L.900-4-1 du code du travail.
 
-9. ESPACES DE SIGNATURE
+13. SIGNATURES — Fait à [lieu], le [date] — espace signature consultant + bénéficiaire
 « Fait à ${d.lieu||'………………'}, le ${d.dateFin||'………………'} »
-Deux blocs : Signature du consultant · Signature du bénéficiaire
+Deux blocs : Signature du consultant (${d.cons||'—'}) · Signature du bénéficiaire (${d.nom||'—'})
 
-CONTEXTE MÉTIER
+CONTEXTE MÉTIER (données de référence — à intégrer dans les sections ci-dessus, pas en annexe séparée)
 Bénéficiaire : ${d.nom||'—'}, ${d.poste||'—'}, secteur ${d.secteur||'—'}, ancienneté ${d.anc||'—'}
 Contexte de la démarche : ${d.ctx||'—'} · Objectifs : ${[d.o1,d.o2,d.o3].filter(Boolean).join(' / ')||'—'}
-
-CONCLUSION (section finale avant signatures)
-${ia('concl')||'Rédiger une conclusion chaleureuse et professionnelle.'}
-
-ANNEXE OPTIONNELLE
-Mind Map : générer séparément via le prompt Mind Map et l'insérer en annexe si l'utilisateur le souhaite.
 
 Avant de générer, dis-moi : préfères-tu une réponse dans le chat ou un document Word formaté ?`;
 }
@@ -23799,8 +23808,8 @@ function exportSynthese(){
 let vchart=null,vradar=null,rchart=null;
 function initCharts(){
   buildValRows();buildRiasecRows();build16P();renderFiches();
-  // Add default seances
-  if(!document.getElementById('cal-tbody').children.length){
+  // Add default seances (BC uniquement — pas en mode BOS)
+  if(!document.getElementById('cal-tbody').children.length&&!(window.RELIANCE_BOS&&RELIANCE_BOS.isActive())){
     [
     {obj:"Rétrospective du parcours : chemin de vie, formations, expériences",outils:"Livret phase investigation"},
     {obj:"Recenser les activités · Synthèse savoir-être, savoir-faire, savoirs",outils:"Livret phase investigation"},
