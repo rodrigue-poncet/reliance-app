@@ -22692,10 +22692,14 @@ function getNomFromRelianceObject(obj){
 }
 
 function buildNomFichierReliance(nom){
-  const clean=nom.trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'')||'bilan';
-  const d=new Date();
-  const date=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-  return clean+'_'+date+'.reliance';
+  const raw=nom.trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();
+  if(!raw) return 'bilan.reliance';
+  const parts=raw.split(' ').filter(Boolean);
+  const cleanPart=s=>s.replace(/[^a-zA-Z0-9]/g,'')||'';
+  if(parts.length===1) return cleanPart(parts[0])+'.reliance';
+  const nomFamille=cleanPart(parts[parts.length-1]);
+  const prenom=parts.slice(0,-1).map(cleanPart).filter(Boolean).join('_');
+  return nomFamille+'_'+prenom+'.reliance';
 }
 
 function buildRelianceFilePayload(nom,dataObj){
@@ -23193,7 +23197,7 @@ function clearData(){
     const tbody=document.getElementById('cal-tbody');
     if(tbody&&tbody.children.length===0){
       const DEFAULT_OBJ=['Rétrospective du parcours : chemin de vie, formations, expériences','Recenser les activités · Synthèse savoir-être, savoir-faire, savoirs','Formaliser les valeurs, besoins et envies','Identifier les talents et axes d\'amélioration','Identifier et clarifier les intérêts professionnels','Déterminer des voies d\'orientation · Enquêtes métiers · Marché de l\'emploi','Valider le projet professionnel prioritaire · Étude des écarts · Plan d\'actions','Synthèse finale · Facteurs favorables · Stratégie d\'action'];
-      const DEFAULT_OUTILS=['Livret phase investigation','Livret phase investigation','Livret · Boussole de Valeurs','Auto-évaluation · Sollicitation de tiers · Test Myers-Briggs','Orientation Professionnelle · Investigation codes ROME','Livret phase investigation','Livret phase investigation','Validation synthèse · Questionnaire satisfaction · RDV 6 mois'];
+      const DEFAULT_OUTILS=['Livret phase investigation','Livret phase investigation','Livret · Boussole de Valeurs','Auto-évaluation · Sollicitation de tiers · Signature Comportementale','Orientation Professionnelle · Investigation codes ROME','Livret phase investigation','Livret phase investigation','Validation synthèse · Questionnaire satisfaction · RDV 6 mois'];
       DEFAULT_OBJ.forEach((obj,i)=>addSeanceData({date:'',horaires:'',duree:'2 h 00',obj,outils:DEFAULT_OUTILS[i]||''}));
     }
   },100);
@@ -23415,7 +23419,7 @@ function resetCalendar(){
         "Livret phase investigation",
         "Livret phase investigation",
         "Livret · Boussole de Valeurs",
-        "Auto-évaluation · Sollicitation de tiers · Test Myers-Briggs (MBTI)",
+        "Auto-évaluation · Sollicitation de tiers · Signature Comportementale",
         "Orientation Professionnelle · Investigation codes ROME",
         "Livret phase investigation",
         "Livret phase investigation",
@@ -23572,7 +23576,7 @@ Données du bilan :
 - Plan d'action : ${d.planTxt||'—'}
 - Top 3 valeurs Boussole de Valeurs : ${d.topVal||'—'}
 - Code Orientation Professionnelle dominant : ${d.topR||'—'} (${d.topRLabels||'—'})
-- Profil de personnalité : ${d.p16txt||'—'}
+- Signature Comportementale : ${d.p16txt||'—'}
 
 Consignes STRICTES :
 1. Réponds UNIQUEMENT avec le code SVG brut — commence par <svg et termine par </svg>, rien d'autre
@@ -23594,7 +23598,7 @@ function getCtx(){
   const p16txt=selType?`${selType.code} - ${selType.name}`:'Non renseigné';
   const finMode=gv('f_fin');
   return{nom:gv('f_nom'),poste:gv('f_poste'),secteur:gv('f_secteur'),anc:gv('f_anc'),
-    cons:gv('f_cons'),orga:gv('f_orga'),ctx:gv('f_ctx'),o1:gv('f_o1'),o2:gv('f_o2'),
+    cons:gv('f_cons'),orga:gv('f_orga'),ctx:gv('f_ctx'),o1:gv('f_o1'),o2:gv('f_o2'),o3:gv('f_o3'),
     lieu:gv('f_lieu'),dateDebut:gv('f_date_debut'),dateFin:gv('f_date_fin'),
     mod:gv('f_mod'),fin:finMode,finDetail:finMode==='Autre'?gv('f_fin_autre'):finMode,
     dureeFace:document.getElementById('recap-entretiens')?.textContent||'',
@@ -23667,17 +23671,19 @@ function buildSynthesePrompt(d){
   return `Tu es consultant expert en bilan de compétences Méthode RELIANCE® (RP Coaching & Formation). Génère un DOCUMENT WORD COMPLET — synthèse officielle du bilan de compétences — prêt à télécharger (.docx), structuré, professionnel et conforme Qualiopi.
 
 CHARTE GRAPHIQUE OBLIGATOIRE
-• Police : Calibri (corps 11 pt, interligne 1,15)
-• Titres principaux : #074F6A
-• Sous-titres / accents : #E97132
-• Fond des en-têtes de tableaux : #C1E4F5
+• Police Calibri partout (corps 11 pt, interligne 1,15)
 • Format A4, marges 2 cm
-• En-tête de page : « RP Coaching & Formation » à gauche — « SYNTHÈSE DU BILAN DE COMPÉTENCES » à droite
-• Pied de page : coordonnées organisme (SIRET 851 939 322 00042 · N° OF 27390135539 · contact@rpcoaching.fr · 06 74 03 59 37) + numéro de page
+• En-tête : RP Coaching & Formation à gauche, titre SYNTHÈSE DU BILAN DE COMPÉTENCES à droite
+• Pied de page sur chaque page : contact@rodrigueponcet.fr · 06 74 03 59 37 · numéro de page
+• Titres de sections en #074F6A gras · Sous-titres en #E97132
+• En-têtes de tableaux fond #C1E4F5
+• MISE EN PAGE ALLÉGÉE : éviter les rectangles de couleur à fond plein hors en-têtes de tableaux. Utiliser des bordures gauches colorées épaisses (style filet) pour délimiter les sections. Pas de fond coloré derrière les titres de section. Document agréable à imprimer en noir et blanc.
+• NOMENCLATURE TESTS RELIANCE® (obligatoire dans tout le document) : dire « Boussole de Valeurs » (jamais Schwartz), « Orientation Professionnelle » (jamais RIASEC), « Signature Comportementale » (jamais Myers-Briggs, MBTI, 16 Personalities ni 16P)
 
 STRUCTURE DU DOCUMENT (respecter l'ordre et la numérotation)
 
 1. PAGE DE GARDE
+En haut de la page de garde, prévoir deux espaces distincts : à gauche [LOGO CONSULTANT — à insérer manuellement], à droite [LOGO RP COACHING & FORMATION — à insérer manuellement]. Entre les deux, titre SYNTHÈSE DU BILAN DE COMPÉTENCES centré en #074F6A gras.
 Nom bénéficiaire : ${d.nom||'—'} · Consultant : ${d.cons||'—'} · Organisme : ${d.orga||'—'}
 Lieu : ${d.lieu||'—'} · Dates : du ${d.dateDebut||'—'} au ${d.dateFin||'—'}
 Durée totale : ${d.dureeTotal||'—'} (face-à-face : ${d.dureeFace||'—'} · travail individuel : ${d.dureeTp||'—'})
@@ -23712,6 +23718,10 @@ Projet(s) non retenu(s) : ${d.proj_nr||'—'}${d.proj_nr_raison?' — '+d.proj_n
 Étapes Choisir / S'engager : ${d.e3c||'—'} / ${d.e4c||'—'} · Résultats : ${d.e3r||'—'} / ${d.e4r||'—'}
 Texte IA projet : ${ia('projet')||'—'}
 
+OBJECTIFS RETENUS
+Objectif 1 : ${d.o1||'—'} · Objectif 2 : ${d.o2||'—'} · Objectif 3 : ${d.o3||'—'}
+Inclure un tableau à compléter par le consultant avec les colonnes : Objectif | Atteint (Oui - Partiellement - Non) | Commentaire. Pré-remplir la colonne Objectif avec les objectifs réels du bénéficiaire : ${d.o1||'—'}, ${d.o2||'—'}, ${d.o3||'—'}. Laisser les colonnes Atteint et Commentaire vides pour que le consultant les complète.
+
 7. PLAN D'ACTION
 Tableau : Action | Commentaire | Niveau d'importance | Délai | Réalisé le
 (Note app : colonne Commentaire = ressources ; Réalisé le = statut — pas de date dédiée)
@@ -23728,7 +23738,7 @@ Deux blocs : Signature du consultant · Signature du bénéficiaire
 
 CONTEXTE MÉTIER
 Bénéficiaire : ${d.nom||'—'}, ${d.poste||'—'}, secteur ${d.secteur||'—'}, ancienneté ${d.anc||'—'}
-Contexte de la démarche : ${d.ctx||'—'} · Objectifs : ${[d.o1,d.o2].filter(Boolean).join(' / ')||'—'}
+Contexte de la démarche : ${d.ctx||'—'} · Objectifs : ${[d.o1,d.o2,d.o3].filter(Boolean).join(' / ')||'—'}
 
 CONCLUSION (section finale avant signatures)
 ${ia('concl')||'Rédiger une conclusion chaleureuse et professionnelle.'}
@@ -23771,7 +23781,7 @@ function initCharts(){
     {obj:"Rétrospective du parcours : chemin de vie, formations, expériences",outils:"Livret phase investigation"},
     {obj:"Recenser les activités · Synthèse savoir-être, savoir-faire, savoirs",outils:"Livret phase investigation"},
     {obj:"Formaliser les valeurs, besoins et envies",outils:"Livret · Boussole de Valeurs"},
-    {obj:"Identifier les talents et axes d\'amélioration",outils:"Auto-évaluation · Sollicitation de tiers · Test Myers-Briggs"},
+    {obj:"Identifier les talents et axes d\'amélioration",outils:"Auto-évaluation · Sollicitation de tiers · Signature Comportementale"},
     {obj:"Identifier et clarifier les intérêts professionnels",outils:"Orientation Professionnelle · Investigation codes ROME"},
     {obj:"Déterminer des voies d\'orientation · Enquêtes métiers · Marché de l\'emploi",outils:"Livret phase investigation"},
     {obj:"Valider le projet professionnel prioritaire · Étude des écarts · Plan d\'actions",outils:"Livret phase investigation"},
@@ -25480,7 +25490,7 @@ const DEFAULT_SEANCE_OUTILS = [
   "Livret « phase investigation »",
   "Livret « phase investigation »",
   "Livret « phase investigation » · Boussole de Valeurs",
-  "Livret « phase investigation » · Auto-évaluation · Test Myers-Briggs (MBTI)",
+  "Livret « phase investigation » · Auto-évaluation · Signature Comportementale",
   "Orientation Professionnelle · Restitution et analyse · Investigation codes ROME",
   "Livret « phase investigation »",
   "Livret « phase investigation »",
@@ -25613,7 +25623,7 @@ async function generateENR016() {
     space(),
 
     h1('3. ÉVALUATION DES CONTENUS DU BILAN'),
-    evalTable(['Évaluation générale','Mise au clair du parcours',"Identification des compétences et réalisations","Analyse de la personnalité","Identification du potentiel et/ou des capacités liées au métier","Intérêt des tests et questionnaires"]),
+    evalTable(['Évaluation générale','Mise au clair du parcours',"Identification des compétences et réalisations","Signature Comportementale","Identification du potentiel et/ou des capacités liées au métier","Intérêt des tests et questionnaires (Boussole de Valeurs, Orientation Professionnelle, Signature Comportementale)"]),
     space(),
 
     h1('4. HANDICAP ET ACCESSIBILITÉ'),
@@ -26263,7 +26273,7 @@ function migrateSeanceFields(seances){
   }
   // Si toutes les séances ont obj vide → remplir avec les objectifs par défaut
   const DEFAULT_OBJ_FILL=['Rétrospective du parcours : chemin de vie, formations, expériences','Recenser les activités · Synthèse savoir-être, savoir-faire, savoirs','Formaliser les valeurs, besoins et envies','Identifier les talents et axes d\'amélioration','Identifier et clarifier les intérêts professionnels','Déterminer des voies d\'orientation · Enquêtes métiers · Marché de l\'emploi','Valider le projet professionnel prioritaire · Étude des écarts · Plan d\'actions','Synthèse finale · Facteurs favorables · Stratégie d\'action'];
-  const DEFAULT_OUTILS_FILL=['Livret phase investigation','Livret phase investigation','Livret · Boussole de Valeurs','Auto-évaluation · Sollicitation de tiers · Test Myers-Briggs','Orientation Professionnelle · Investigation codes ROME','Livret phase investigation','Livret phase investigation','Validation synthèse · Questionnaire satisfaction · RDV 6 mois'];
+  const DEFAULT_OUTILS_FILL=['Livret phase investigation','Livret phase investigation','Livret · Boussole de Valeurs','Auto-évaluation · Sollicitation de tiers · Signature Comportementale','Orientation Professionnelle · Investigation codes ROME','Livret phase investigation','Livret phase investigation','Validation synthèse · Questionnaire satisfaction · RDV 6 mois'];
   const allObjEmpty=seances.every(s=>!s.obj||s.obj.trim()==='');
   if(allObjEmpty){
     return seances.map((s,i)=>({...s,obj:DEFAULT_OBJ_FILL[i]||'',outils:s.outils&&s.outils.trim()?s.outils:(DEFAULT_OUTILS_FILL[i]||'')}));
@@ -27337,7 +27347,7 @@ function drawMindmap() {
     [215, 'Profil & Valeurs',   COL.valeurs,  topVals],
     [155, 'Orientation Pro.',     COL.riasec,   topRia],
     [250, 'Compétences Clés',   COL.attentes, compLines],
-    [350, 'Personnalité',       COL.perso,    perso],
+    [350, 'Signature Comportementale', COL.perso, perso],
     [ 50, 'Attentes & Besoins', COL.attentes, objs.length?objs:['Non renseigné']],
     [ 10, 'Métiers Cibles',     COL.metiers,  ficheLabels],
     [270, 'Conclusion',         COL.concl,    projLines],
