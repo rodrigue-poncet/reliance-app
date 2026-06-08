@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RELIANCE® — v7.4</title>
+<title>RELIANCE® — v7.4 FUSION</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
 /* reliance_docx_lib.js — injecté par fusion.js */
@@ -20462,6 +20462,15 @@ function setConsultantSession(consultant) {
     ...consultant,
     ts: Date.now()
   }));
+  window.RELIANCE_APP_TYPE = resolveAppType(consultant);
+  console.log('[RELIANCE] APP_TYPE défini (session) =', window.RELIANCE_APP_TYPE);
+}
+
+function resolveAppType(consultant) {
+  const t = (consultant?.type_bilan || 'BC').toUpperCase().trim();
+  if (t === 'BOS') return 'BOS';
+  if (t === 'BC+BOS' || t === 'BC + BOS') return 'BC+BOS';
+  return 'BC';
 }
 
 function clearConsultantSession() {
@@ -20482,69 +20491,6 @@ function updateDirigeantUi() {
   if (adminBtn) adminBtn.style.display = show ? '' : 'none';
   const evolBtn = document.getElementById('evol-btn');
   if (evolBtn) evolBtn.style.display = show ? '' : 'none';
-}
-
-// ─── CONNEXION ────────────────────────────────────────────────────────────────
-async function tryUnlock() {
-  const code = (document.getElementById('lcode')?.value || '').trim().toUpperCase();
-  const pwd  = (document.getElementById('lpwd')?.value  || '').trim();
-
-  if (!code || !pwd) {
-    document.getElementById('lerr').style.display = 'block';
-    document.getElementById('lerr').textContent = 'Veuillez saisir votre code et mot de passe.';
-    return;
-  }
-
-  document.getElementById('lerr').style.display = 'none';
-  document.getElementById('lock-loading').style.display = 'block';
-
-  try {
-    const { data: rows, error } = await supabaseClient
-      .from('consultants')
-      .select('*')
-      .eq('code', code)
-      .eq('mot_de_passe', pwd)
-      .eq('actif', true)
-      .limit(1);
-    const data = Array.isArray(rows) ? rows[0] : null;
-
-    document.getElementById('lock-loading').style.display = 'none';
-
-    if (error || !data) {
-      document.getElementById('lerr').style.display = 'block';
-      document.getElementById('lerr').textContent = 'Code ou mot de passe incorrect.';
-      document.getElementById('lpwd').value = '';
-      return;
-    }
-
-    // Connexion réussie
-    setConsultantSession(data);
-    localStorage.setItem('reliance_admin', isDirigeant() ? '1' : '0');
-
-    document.getElementById('lock').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-
-    // Afficher badge consultant
-    const badge = document.getElementById('lock-formateur-badge');
-    if (badge) {
-      badge.textContent = data.prenom + ' ' + data.nom;
-      badge.style.display = 'block';
-    }
-
-    updateDirigeantUi();
-
-    migrateStorage();
-    initAll();
-    loadAutoSave();
-
-    console.log('✅ Connecté :', data.code, '-', data.prenom, data.nom);
-
-  } catch(err) {
-    document.getElementById('lock-loading').style.display = 'none';
-    document.getElementById('lerr').style.display = 'block';
-    document.getElementById('lerr').textContent = 'Erreur de connexion. Vérifiez votre connexion internet.';
-    console.error('Erreur Supabase:', err);
-  }
 }
 
 // ─── DÉCONNEXION ──────────────────────────────────────────────────────────────
@@ -20571,8 +20517,15 @@ window.addEventListener('load', () => {
     document.getElementById('app').style.display = 'block';
     updateDirigeantUi();
     migrateStorage();
-    initAll();
+    window.RELIANCE_APP_TYPE = resolveAppType(consultant);
+    console.log('[RELIANCE] APP_TYPE défini (load) =', window.RELIANCE_APP_TYPE);
+    routeAppInit();
     loadAutoSave();
+    if (window.RELIANCE_APP_TYPE === 'BOS' || window.RELIANCE_APP_TYPE === 'BC+BOS') {
+      if (window.RELIANCE_BOS && typeof window.RELIANCE_BOS.activate === 'function') {
+        window.RELIANCE_BOS.activate();
+      }
+    }
   } else {
     document.getElementById('lock').style.display = 'flex';
     document.getElementById('app').style.display = 'none';
@@ -20590,7 +20543,7 @@ window.addEventListener('load', () => {
 <div id="lock">
   <div class="lock-logo">
     <img src="RELIANCE_IMG_0000" alt="RP Coaching">
-    <p>BILAN DE COMPÉTENCES · MÉTHODE RELIANCE®</p>
+    <p>BILAN DE COMPÉTENCES · BILAN D'ORIENTATION SCOLAIRE · MÉTHODE RELIANCE®</p>
   </div>
   <div class="lock-box">
     <h2>🔐 Connexion</h2>
@@ -20598,6 +20551,29 @@ window.addEventListener('load', () => {
     <p style="font-size:13px;color:rgba(255,255,255,.7);margin-bottom:16px">Saisissez votre code consultant et votre mot de passe</p>
     <input class="lock-inp" type="text" id="lcode" placeholder="Code consultant (ex: CONS-0001)" onkeydown="if(event.key==='Enter')document.getElementById('lpwd').focus()" autocomplete="off" style="margin-bottom:10px;text-transform:uppercase">
     <input class="lock-inp" type="password" id="lpwd" placeholder="Mot de passe..." onkeydown="if(event.key==='Enter')tryUnlock()" autocomplete="off">
+    <div id="login-mode-choix" style="margin: 16px 0; display:flex;
+  flex-direction:column; gap:10px;">
+  <label style="display:flex; align-items:center; gap:10px; cursor:pointer;
+    padding:10px 16px; border-radius:8px; border:1px solid rgba(255,255,255,0.2);
+    color:#fff; font-family:Calibri,sans-serif; font-size:15px;
+    transition:background 0.2s;" id="login-label-bc">
+    <input type="radio" name="login-mode" value="BC" checked
+      style="width:16px; height:16px; cursor:pointer;">
+    📋 Bilan de Compétences
+  </label>
+  <label style="display:flex; align-items:center; gap:10px; cursor:pointer;
+    padding:10px 16px; border-radius:8px; border:1px solid rgba(255,255,255,0.2);
+    color:#fff; font-family:Calibri,sans-serif; font-size:15px;
+    transition:background 0.2s;" id="login-label-bos">
+    <input type="radio" name="login-mode" value="BOS"
+      style="width:16px; height:16px; cursor:pointer;">
+    🎓 Bilan d'Orientation Scolaire
+  </label>
+</div>
+<div id="login-mode-erreur" style="display:none; color:#E97132;
+  font-family:Calibri,sans-serif; font-size:13px; margin-bottom:8px;
+  text-align:center; padding:8px;">
+</div>
     <button class="lock-btn" onclick="tryUnlock()">Se connecter →</button>
     <div class="lock-err" id="lerr">Code ou mot de passe incorrect.</div>
     <div id="lock-loading" style="display:none;color:rgba(255,255,255,.7);font-size:13px;margin-top:8px">⏳ Connexion en cours...</div>
@@ -20691,7 +20667,8 @@ window.addEventListener('load', () => {
     <div class="tbr">
       <span style="font-size:10px;color:rgba(255,255,255,.4)"><span class="auto-save-dot"></span>Auto-save</span>
       <button class="tbtn orange" onclick="openSaveModal()">💾 Sauvegarder</button>
-      <button class="tbtn" onclick="document.getElementById('docs-modal').classList.add('open')" style="border-color:rgba(78,167,46,.5);color:#B9F0A0">📄 Générer Word</button>
+      <button class="tbtn" onclick="routeDocsModal()" style="border-color:rgba(78,167,46,.5);color:#B9F0A0">📄 Générer Word</button>
+      <button class="tbtn" onclick="routeGuide()">📖 Guide</button>
       <button class="tbtn" id="evol-btn" onclick="document.getElementById('evol-modal').classList.add('open')" style="display:none">🛠️ Évoluer</button>
       <button class="tbtn" id="pwd-btn" onclick="document.getElementById('pwd-modal').classList.add('open')" style="display:none">🔑 Code</button>
       <button class="tbtn danger" onclick="lockApp()">🔒</button>
@@ -20725,7 +20702,7 @@ window.addEventListener('load', () => {
     <div class="tab" onclick="sw(16)"><span class="tab-ic">🔄</span><span class="tab-lb">Suivi 6 mois</span></div>
     <div class="tab" onclick="sw(17)"><span class="tab-ic">📋</span><span class="tab-lb">Prompts IA</span></div>
     <div class="tab" onclick="sw(18)" id="tab-incident" style="position:relative"><span class="tab-ic">🚨</span><span class="tab-lb">Incident qualité</span><span id="incident-alert-dot" style="position:absolute;top:7px;right:8px;width:8px;height:8px;border-radius:50%;background:#c62828;display:none;box-shadow:0 0 0 2px white;animation:pulse 2s infinite"></span></div>
-      <div class="tab" onclick="sw(19)"><span class="tab-ic">📖</span><span class="tab-lb">Guide utilisateur</span></div>
+      <div class="tab" onclick="routeGuide()"><span class="tab-ic">📖</span><span class="tab-lb">Guide utilisateur</span></div>
     <div class="tab" id="tab-guide-admin" onclick="openAdminGuide()" style="display:none"><span class="tab-ic">🔐</span><span class="tab-lb">Guide admin</span></div>
     </div>
     </div>
@@ -21561,6 +21538,11 @@ window.addEventListener('load', () => {
     <div class="fg"><div class="fl">Description</div><textarea class="ft" id="f_pdesc"></textarea></div>
     <div class="fg"><div class="fl">Argumentaire de cohérence</div><textarea class="ft" id="f_arg" oninput="upProg()"></textarea></div>
     <div class="fg"><div class="fl">Analyse de faisabilité</div><textarea class="ft" id="f_fais"></textarea></div>
+    <div style="font-size:11px;font-weight:700;color:#E97132;text-transform:uppercase;letter-spacing:.5px;margin:12px 0 8px">🔄 Projet(s) secondaire(s) / alternatif(s)</div>
+    <div class="fg"><div class="fl">Intitulé du projet secondaire</div><input class="fi" id="f_proj_sec" placeholder="Ex : Reconversion vers la menuiserie"></div>
+    <div class="fg"><div class="fl">Description</div><textarea class="ft" id="f_proj_sec_desc" rows="3"></textarea></div>
+    <div class="fg"><div class="fl">Argumentaire de cohérence</div><textarea class="ft" id="f_proj_sec_arg" rows="3"></textarea></div>
+    <div class="fg"><div class="fl">Analyse de faisabilité</div><textarea class="ft" id="f_proj_sec_fais" rows="3"></textarea></div>
     <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 8px">Projet(s) non retenu(s)</div>
     <div class="fg"><div class="fl">Intitulé du projet non retenu</div><input class="fi" id="f_proj_nr" placeholder="Ex : Reconversion vers la menuiserie"></div>
     <div class="fg"><div class="fl">Raison du non-retenu</div><textarea class="ft" id="f_proj_nr_raison" placeholder="Ex : Manque de débouchés locaux, formation trop longue..."></textarea></div>
@@ -21799,6 +21781,15 @@ window.addEventListener('load', () => {
         </div>
         <div style="font-size:11px;color:var(--muted);margin-top:6px;font-style:italic">Contact organisme : <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3e5d51504a5f5d4a7e4c515a4c57594b5b4e51505d5b4a10584c">[email&#160;protected]</a> / 0674035937 — Vous pouvez vous retirer du réseau à tout moment.</div>
       </div>
+    </div>
+
+    <div class="section-title" style="color:#074F6A;margin:16px 0 10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">📅 Conservation et destruction des données</div>
+    <div class="fg">
+      <label class="fl" style="display:block;margin-bottom:6px">Date de destruction planifiée des documents
+        <span style="font-size:11px;color:#888;font-weight:400">R. 6313-7 — généralement date fin bilan + 1 an</span>
+      </label>
+      <input class="fi" type="date" id="rgpd_date" onchange="checkRgpdAlert()">
+      <button type="button" onclick="setRgpdDateAuto()" style="margin-top:6px;padding:6px 12px;background:var(--c3);color:white;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif" class="btn-small">📅 Calculer automatiquement (fin bilan + 1 an)</button>
     </div>
 
     <button class="export-cal-btn" onclick="exportDocumentsLegaux()">📄 Exporter Documents légaux (prompts Word)</button>
@@ -22281,6 +22272,30 @@ function tryUnlock(){
       }
 
       // Connexion réussie
+      const modeErr = document.getElementById('login-mode-erreur');
+      if (modeErr) modeErr.style.display = 'none';
+      const modeChoisi = (document.querySelector('input[name="login-mode"]:checked')
+        ?.value || 'BC').toUpperCase();
+      const typeBilan = (data.type_bilan || 'BC').toUpperCase().trim();
+      const droitsBC  = typeBilan === 'BC' || typeBilan === 'BC+BOS';
+      const droitsBOS = typeBilan === 'BOS' || typeBilan === 'BC+BOS';
+
+      if (modeChoisi === 'BC' && !droitsBC) {
+        if (modeErr) {
+          modeErr.textContent = '⛔ Vous n\'avez pas accès au module BC. Contactez votre administrateur.';
+          modeErr.style.display = 'block';
+        }
+        return;
+      }
+      if (modeChoisi === 'BOS' && !droitsBOS) {
+        if (modeErr) {
+          modeErr.textContent = '⛔ Vous n\'avez pas accès au module BOS. Contactez votre administrateur.';
+          modeErr.style.display = 'block';
+        }
+        return;
+      }
+
+      data.type_bilan = modeChoisi;
       const isDir = data.code === 'DIRIGEANT';
       setConsultantSession(data);
       localStorage.setItem('reliance_admin', isDir ? '1' : '0');
@@ -22294,8 +22309,13 @@ function tryUnlock(){
 
       mkSess(stored());
       migrateStorage();
-      initAll();
+      routeAppInit();
       loadAutoSave();
+      if (window.RELIANCE_APP_TYPE === 'BOS' || window.RELIANCE_APP_TYPE === 'BC+BOS') {
+        if (window.RELIANCE_BOS && typeof window.RELIANCE_BOS.activate === 'function') {
+          window.RELIANCE_BOS.activate();
+        }
+      }
 
       console.log('✅ Connecté :', data.code, data.prenom, data.nom);
     })
@@ -22503,7 +22523,7 @@ function collectData(opts){
   const fields=['f_nom','f_poste','f_secteur','f_anc','f_cons','f_orga','f_date_debut','f_date_fin','f_fin','f_mod','f_lieu','f_ctx','f_o1','f_o2','f_o3',
     'e1c','e1r','e1o','e1d','e2c','e2r','e2o','e2d','e3c','e3r','e3o','e3d','e4c','e4r','e4o','e4d',
     'se1','se2','se3','se4','se5','sf1','sf2','sf3','sf4','sf5','sv1','sv2','sv3','sv4','sv5',
-    'f_pts','f_vig','f_val','f_mot','f_proj','f_pdesc','f_arg','f_fais','f_proj_nr','f_proj_nr_raison',
+    'f_pts','f_vig','f_val','f_mot','f_proj','f_pdesc','f_arg','f_fais','f_proj_sec','f_proj_sec_desc','f_proj_sec_arg','f_proj_sec_fais','f_proj_nr','f_proj_nr_raison',
     'f_form','f_acc',
     'cal_benef','cal_form','cal_debut','cal_modal','recap-tp','cal_ajustement',
     'conv_nom','conv_dob','conv_adresse','conv_email','conv_tel','conv_situation','conv_lieu','conv_montant','conv_fait_a','conv_date_sign',
@@ -22764,6 +22784,7 @@ function purgeRelianceSessionOnLogout(){
 }
 
 let _confirmModalCallback=null;
+
 function afficherModaleConfirmation(titre,message,onConfirm){
   _confirmModalCallback=typeof onConfirm==='function'?onConfirm:null;
   const t=document.getElementById('confirm-modal-title');
@@ -23023,27 +23044,14 @@ function getAvancementPctFromRow(row){
 
 // ─── SUPABASE : CHARGEMENT LISTE DOSSIERS ────────────────────────────────────
 async function loadSlotsFromSupabase(filterConsultantId) {
-  // filterConsultantId : optionnel, pour le Dirigeant qui veut voir les dossiers d'un consultant précis
   const consultant = getCurrentConsultant();
   if (!consultant) return [];
   try {
-    let query = supabaseClient
+    const query = supabaseClient
       .from('beneficiaires_bc')
       .select('id, consultant_id, nom, nom_beneficiaire, consultant_code, slug_key, donnees, created_at, updated_at')
+      .eq('consultant_id', consultant.id)
       .order('nom', { ascending: true });
-
-    if (isDirigeant()) {
-      // Dirigeant : par défaut ses propres dossiers, ou tous si filterConsultantId = 'ALL'
-      if (filterConsultantId && filterConsultantId !== 'ALL') {
-        query = query.eq('consultant_id', filterConsultantId);
-      } else if (!filterConsultantId) {
-        query = query.eq('consultant_id', consultant.id);
-      }
-      // filterConsultantId === 'ALL' → pas de filtre → tous les dossiers
-    } else {
-      // Consultant : ses dossiers uniquement — cloisonnement strict
-      query = query.eq('consultant_id', consultant.id);
-    }
 
     const { data, error } = await query;
     if (error) { console.warn('[RELIANCE] Supabase load error:', error); return []; }
@@ -23117,8 +23125,14 @@ async function renderSlots(filterConsultantId) {
   const area = document.getElementById('slot-list-area');
   area.innerHTML = '<p style="font-size:12px;color:var(--muted);text-align:center;padding:12px">⏳ Chargement des dossiers...</p>';
 
-  // Tous les utilisateurs voient leurs propres dossiers uniquement
-  const allSlots = await loadSlotsFromSupabase(isDirigeant() ? 'ALL' : null);
+  let allSlots = [];
+  if (window.RELIANCE_APP_TYPE === 'BOS' || window.RELIANCE_APP_TYPE === 'BC+BOS') {
+    if (window.RELIANCE_BOS && typeof window.RELIANCE_BOS.loadBosSlotsFromSupabase === 'function') {
+      allSlots = await window.RELIANCE_BOS.loadBosSlotsFromSupabase();
+    }
+  } else {
+    allSlots = await loadSlotsFromSupabase(null);
+  }
 
   if (allSlots.length === 0) {
     area.innerHTML = '<p style="font-size:12px;color:var(--muted);text-align:center;padding:12px">Aucun dossier indexé. Enregistrez un fichier .reliance pour créer l\'index.</p>';
@@ -23584,7 +23598,7 @@ const promptDefs=[
   {id:'tests',label:'Profil Boussole de Valeurs, Orientation Professionnelle & Signature Comportementale',color:'var(--c5)',bg:'#EDE7F6',
    build:d=>`${charteHeader("Profil Boussole Orientation Signature")}Tu es consultant expert en bilan de compétences RELIANCE®. Rédige le document Word des résultats de tests pour le bénéficiaire ${d.nom||'—'}. Respecte exactement la structure ci-dessous : titres de chapitres inclus, prose uniquement (pas de puces), ton professionnel et valorisant.\n\nCHAPITRE 1 — BOUSSOLE DE VALEURS\nPrésente en un paragraphe simple ce qu'est la Boussole de Valeurs et ce qu'elle mesure. Puis un paragraphe présentant le résultat de ${d.nom||'le bénéficiaire'} : ses valeurs dominantes sont ${d.topVal||'—'}.\n\nCHAPITRE 2 — ORIENTATION PROFESSIONNELLE\nPrésente en un paragraphe simple ce qu'est ce test d'orientation. Puis un paragraphe présentant le résultat de ${d.nom||'le bénéficiaire'} : son profil dominant est ${d.topR||'—'} (${d.topRLabels||'—'}).\n\nCHAPITRE 3 — SIGNATURE COMPORTEMENTALE\nPrésente en un paragraphe simple ce qu'est la Signature Comportementale. Puis un paragraphe présentant le résultat de ${d.nom||'le bénéficiaire'} : ${d.p16txt||'—'} — ${d.p16desc||'—'}.\n\nCHAPITRE SYNTHÈSE\nUn paragraphe synthétisant les 3 résultats ensemble. Puis un paragraphe « Qui est ${d.nom||'cette personne'} ? » intégrant ce qui a été renseigné dans Se comprendre : ${d.e2c||'—'} et ${d.e2r||'—'} — donnant une lecture identitaire complète de la personne.\n\nAvant de générer ta réponse, pose-moi cette question : Préfères-tu une réponse dans le chat (à coller dans l'application RELIANCE) ou un document Word formaté à télécharger ?`},
   {id:'projet',label:'Argumentaire du projet professionnel',color:'var(--orange)',bg:'#FFF3E0',
-   build:d=>`${charteHeader("Argumentaire Projet Professionnel")}Rédige l'ARGUMENTAIRE DU PROJET PROFESSIONNEL pour la synthèse RELIANCE®.\n\nBénéficiaire : ${d.nom} | Projet : ${d.proj}\nDescription : ${d.pdesc}\nArgumentaire : ${d.arg} | Faisabilité : ${d.fais}\nÉtape CHOISIR : ${d.e3c} | Résultats S'ENGAGER : ${d.e4r}\n\n3 paragraphes. Cohérence compétences/valeurs/aspirations. Ton : professionnel, convaincant, humain.\n\nAvant de générer ta réponse, pose-moi cette question : Préfères-tu une réponse dans le chat (à coller dans l'application RELIANCE) ou un document Word formaté à télécharger ?`},
+   build:d=>`${charteHeader("Argumentaire Projet Professionnel")}Rédige l'ARGUMENTAIRE DU PROJET PROFESSIONNEL pour la synthèse RELIANCE®.\n\nBénéficiaire : ${d.nom} | Projet retenu : ${d.proj}\nDescription : ${d.pdesc}\nArgumentaire : ${d.arg} | Faisabilité : ${d.fais}\n${[d.proj_sec,d.proj_sec_desc,d.proj_sec_arg,d.proj_sec_fais].some(v=>v&&String(v).trim())?`Projet(s) secondaire(s) / alternatif(s) : ${d.proj_sec||'—'}\nDescription secondaire : ${d.proj_sec_desc||'—'}\nCohérence secondaire : ${d.proj_sec_arg||'—'}\nFaisabilité secondaire : ${d.proj_sec_fais||'—'}\n`:''}Étape CHOISIR : ${d.e3c} | Résultats S'ENGAGER : ${d.e4r}\n\n3 paragraphes. Cohérence compétences/valeurs/aspirations. Ton : professionnel, convaincant, humain.\n\nAvant de générer ta réponse, pose-moi cette question : Préfères-tu une réponse dans le chat (à coller dans l'application RELIANCE) ou un document Word formaté à télécharger ?`},
   {id:"plan",label:"Plan d'action narratif",color:"var(--c4)",bg:"#E8EAF6",
    build:d=>`${charteHeader("Plan Action")}Rédige la partie PLAN D'ACTION de la synthèse RELIANCE®.\n\nActions prévues : ${d.planTxt}\nFormations : ${d.form}\nBesoins complémentaires : ${d.acc}\nÉtape S'ENGAGER : ${d.e4c}\n\n2 paragraphes narratifs, structurés, motivants.\n\nAvant de générer ta réponse, pose-moi cette question : Préfères-tu une réponse dans le chat (à coller dans l'application RELIANCE) ou un document Word formaté à télécharger ?`},
   {id:'concl',label:'Conclusion & perspectives',color:'var(--dk2)',bg:'var(--lgrey)',
@@ -23617,8 +23631,10 @@ function getCtx(){
   const sf=['sf1','sf2','sf3','sf4','sf5'].map(gv).filter(Boolean).join(', ');
   const sv=['sv1','sv2','sv3','sv4','sv5'].map(gv).filter(Boolean).join(', ');
   const topVal=[...valData].sort((a,b)=>b.score-a.score).slice(0,3).map(v=>v.name).join(', ');
+  const valAll=[...valData].sort((a,b)=>b.score-a.score).map(v=>`${v.name} (${v.score}%)`).join(' · ');
   const topR=[...riasec].sort((a,b)=>b.score-a.score).slice(0,3).map(r=>r.code).join('');
   const topRLabels=[...riasec].sort((a,b)=>b.score-a.score).slice(0,3).map(r=>r.label).join(', ');
+  const riasecAll=[...riasec].sort((a,b)=>b.score-a.score).map(r=>`${r.code} ${r.label} (${r.score}%)`).join(' · ');
   const p16txt=selType?`${selType.code} - ${selType.name}`:'Non renseigné';
   const finMode=gv('f_fin');
   return{nom:gv('f_nom'),poste:gv('f_poste'),secteur:gv('f_secteur'),anc:gv('f_anc'),
@@ -23633,8 +23649,9 @@ function getCtx(){
     e3c:gv('e3c'),e3r:gv('e3r'),e3o:gv('e3o'),e3d:gv('e3d'),
     e4c:gv('e4c'),e4r:gv('e4r'),e4o:gv('e4o'),e4d:gv('e4d'),
     se,sf,sv,pts:gv('f_pts'),vig:gv('f_vig'),val:gv('f_val'),mot:gv('f_mot'),
-    topVal,topR,topRLabels,p16txt,p16desc:selType?selType.desc:'',
+    topVal,valAll,topR,topRLabels,riasecAll,p16txt,p16desc:selType?selType.desc:'',
     proj:gv('f_proj'),pdesc:gv('f_pdesc'),arg:gv('f_arg'),fais:gv('f_fais'),
+    proj_sec:gv('f_proj_sec'),proj_sec_desc:gv('f_proj_sec_desc'),proj_sec_arg:gv('f_proj_sec_arg'),proj_sec_fais:gv('f_proj_sec_fais'),
     proj_nr:gv('f_proj_nr'),proj_nr_raison:gv('f_proj_nr_raison'),
     form:gv('f_form'),acc:gv('f_acc'),
     planTxt:getPlan().map(a=>`${a.a} (${a.p})`).join(' | '),
@@ -23692,6 +23709,14 @@ function buildSynthesePrompt(d){
   d=d||getCtx();
   const ia=id=>getIAT(id)||'';
   const finLabel=d.finDetail||d.fin||'—';
+  const hasProjSec=[d.proj_sec,d.proj_sec_desc,d.proj_sec_arg,d.proj_sec_fais].some(v=>v&&String(v).trim());
+  const projSecBlock=hasProjSec?`
+§8bis. PROJET(S) SECONDAIRE(S) / ALTERNATIF(S)
+Projet secondaire : ${d.proj_sec||'—'}
+Description : ${d.proj_sec_desc||'—'}
+Cohérence : ${d.proj_sec_arg||'—'}
+Faisabilité : ${d.proj_sec_fais||'—'}
+`:'';
   return `Tu es consultant expert en bilan de compétences Méthode RELIANCE® (RP Coaching & Formation). Génère un DOCUMENT WORD COMPLET — synthèse officielle du bilan de compétences — prêt à télécharger (.docx), structuré, professionnel et conforme Qualiopi.
 
 CHARTE GRAPHIQUE OBLIGATOIRE (document de contenu client — charte sobre §5.2)
@@ -23714,6 +23739,7 @@ Nom bénéficiaire : ${d.nom||'—'} · Consultant : ${d.cons||'—'} · Organis
 Lieu : ${d.lieu||'—'} · Dates : du ${d.dateDebut||'—'} au ${d.dateFin||'—'}
 Durée totale : ${d.dureeTotal||'—'} (face-à-face : ${d.dureeFace||'—'} · travail individuel : ${d.dureeTp||'—'})
 Modalité : ${d.mod||'—'} · Financement : ${finLabel}
+Justifier brièvement le choix de cette modalité en lien avec la situation du bénéficiaire.
 
 2. SOMMAIRE — OBLIGATOIRE, ne jamais omettre
 Tableau deux colonnes : Titre | Page (approximative). Lister toutes les sections 1 à 13 avec numéros de page estimés. L'absence de sommaire est une erreur.
@@ -23735,7 +23761,12 @@ Savoirs : ${d.sv||'—'}
 Savoir-être : ${d.se||'—'}
 Points forts : ${d.pts||'—'} · Axes de vigilance : ${d.vig||'—'}
 Valeurs : ${d.val||'—'} · Motivations : ${d.mot||'—'}
-Tests : Boussole ${d.topVal||'—'} · Orientation ${d.topR||'—'} (${d.topRLabels||'—'}) · Signature ${d.p16txt||'—'} — ${d.p16desc||'—'}
+Boussole de Valeurs — scores complets :
+${d.valAll||d.topVal||'—'}
+Orientation Professionnelle — scores complets :
+${d.riasecAll||d.topRLabels||'—'}
+Signature Comportementale :
+${d.p16txt||'—'}
 Texte IA compétences : ${ia('comp')||'—'} · Texte IA tests : ${ia('tests')||'—'}
 
 6. ÉTUDE DES ÉCARTS — tableau compétences requises / acquis / non acquis
@@ -23746,6 +23777,7 @@ Construire à partir du projet (${d.proj||'—'}), de la faisabilité (${d.fais|
 Tableau : Vous (motivations, formations, expériences, contraintes) | Votre projet | Actions à engager
 Projet retenu : ${d.proj||'—'} — ${d.pdesc||'—'}
 Argumentaire : ${d.arg||'—'}
+${hasProjSec?projSecBlock+'(Ne générer la section §8bis que si les données ci-dessus sont renseignées.)':''}
 Projet(s) non retenu(s) : ${d.proj_nr||'—'}${d.proj_nr_raison?' — '+d.proj_nr_raison:''}
 Étapes Choisir / S'engager : ${d.e3c||'—'} / ${d.e4c||'—'} · Résultats : ${d.e3r||'—'} / ${d.e4r||'—'}
 Texte IA projet : ${ia('projet')||'—'}
@@ -23764,12 +23796,16 @@ Tableau : Action | Commentaire | Niveau d'importance | Délai | Réalisé le
 ${d.planTableTxt||'—'}
 Formations envisagées : ${d.form||'—'} · Besoins : ${d.acc||'—'}
 Texte IA plan : ${ia('plan')||'—'}
+Un entretien de suivi à 6 mois peut être organisé avec votre consultant à votre demande, afin de faire le point sur l'avancement de votre projet professionnel.
 
 11. CARTE MENTALE
 Insérer exactement ce texte (placeholder) : « Carte mentale à insérer ici — générée séparément via l'onglet Synthèse de l'application RELIANCE »
 
-12. CLAUSE DE CONFIDENTIALITÉ — art. L.900-4-1 du code du travail
-Rappeler que le document est strictement confidentiel et remis au seul bénéficiaire. Citer l'article L.900-4-1 du code du travail.
+12. MENTIONS LÉGALES ET CONFIDENTIALITÉ
+- Document strictement confidentiel (art. 226-13 et 226-14 du Code pénal)
+- Communication à un tiers uniquement avec l'accord écrit du bénéficiaire
+- Le bénéficiaire peut demander la transmission de ce document au Conseil en Évolution Professionnelle (CEP)
+- Conservation possible 3 ans avec accord écrit du bénéficiaire (R. 6313-7)
 
 13. SIGNATURES — Fait à [lieu], le [date] — espace signature consultant + bénéficiaire
 « Fait à ${d.lieu||'………………'}, le ${d.dateFin||'………………'} »
@@ -24643,6 +24679,38 @@ function updateTopbarConsultantBadge() {
   }
 }
 
+/** Charts + sliders Tests partagés (#p8) — sans buildPrompts/renderFiches/calendrier BC */
+function initBosSharedCharts() {
+  buildValRows();
+  buildRiasecRows();
+  build16P();
+  const cv = document.getElementById('chart-val');
+  if (cv && typeof Chart !== 'undefined') {
+    vchart = new Chart(cv.getContext('2d'), {type:'bar',data:{labels:valData.map(v=>v.name),datasets:[{data:valData.map(v=>v.score),backgroundColor:vCols,borderRadius:4}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{min:0,max:100,grid:{color:'#f0f0f0'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
+  }
+  const cvr = document.getElementById('chart-val-radar');
+  if (cvr && typeof Chart !== 'undefined') {
+    vradar = new Chart(cvr.getContext('2d'), {type:'radar',data:{labels:valData.map(v=>v.name),datasets:[{data:valData.map(v=>v.score),backgroundColor:'rgba(21,96,130,.12)',borderColor:'#156082',borderWidth:2,pointBackgroundColor:vCols,pointRadius:4}]},options:{scales:{r:{beginAtZero:true,max:100,ticks:{stepSize:25,font:{size:9}}}},plugins:{legend:{display:false}}}});
+  }
+  const cr = document.getElementById('chart-riasec');
+  if (cr && typeof Chart !== 'undefined') {
+    rchart = new Chart(cr.getContext('2d'), {type:'radar',data:{labels:riasec.map(r=>r.label),datasets:[{data:riasec.map(r=>r.score),backgroundColor:'rgba(21,96,130,.15)',borderColor:'#156082',borderWidth:2,pointBackgroundColor:riasec.map(r=>r.color),pointRadius:5}]},options:{scales:{r:{beginAtZero:true,max:100,ticks:{stepSize:25,font:{size:10}}}},plugins:{legend:{display:false}}}});
+  }
+}
+
+function initBosMinimal() {
+  initBosSharedCharts();
+  updateTopbarConsultantBadge();
+}
+
+function routeAppInit() {
+  if (window.RELIANCE_APP_TYPE === 'BOS') {
+    initBosMinimal();
+  } else {
+    initAll();
+  }
+}
+
 function initAll(){upProg();initCharts();initEmargTable();initEvalTables();buildChecklist();setTimeout(()=>{initAllSigPads();syncFields();syncExtendedFields();syncSuiviFields();setTimeout(()=>{if(pendingSignatureRestore){restoreAllSignatures(pendingSignatureRestore);pendingSignatureRestore=null;}},500);},300);updateTopbarConsultantBadge();}
 
 
@@ -24925,6 +24993,19 @@ function stampEvalDate(){
 
 
 // ════════════ VOYANT RGPD — ALERTE SUPPRESSION DONNÉES ════════════
+function setRgpdDateAuto(){
+  const fin=document.getElementById('f_date_fin')?.value;
+  if(!fin){
+    showToast('Renseignez d\'abord la date de fin de bilan','orange');
+    return;
+  }
+  const d=new Date(fin);
+  d.setFullYear(d.getFullYear()+1);
+  const rgpdEl=document.getElementById('rgpd_date');
+  if(rgpdEl)rgpdEl.value=d.toISOString().split('T')[0];
+  checkRgpdAlert();
+  showToast('Date de destruction calculée automatiquement','green');
+}
 function checkRgpdAlert(){
   const dateFinEl=document.getElementById('f_date_fin');
   const rgpdDateEl=document.getElementById('rgpd_date');
@@ -26932,6 +27013,19 @@ function renderGuideUser(){
       <div style="font-size:11px;opacity:.7;margin-top:6px">Pour les consultants — langage simple, pas à pas</div>
     </div>
 
+    ${guideSection('🔐','CONNEXION — NOUVEAU (v7.4)',`
+      ${guidePara('L\'écran de connexion propose désormais deux options :')}
+      ${guideLi([
+        '⚪ <strong>Bilan de Compétences</strong>',
+        '⚪ <strong>Bilan d\'Orientation Scolaire</strong>'
+      ])}
+      ${guideLi([
+        'Choisissez <strong>« Bilan de Compétences »</strong> pour votre espace BC',
+        'Si BOS apparaît non disponible → contactez votre administrateur pour activer cette option',
+        'Le mode est fixé à la connexion — pour changer de mode, déconnectez-vous et reconnectez-vous'
+      ])}
+    `)}
+
     ${guideSection('🧭','Comment lire ce guide',`
       ${guidePara('Ce guide décrit l\'application telle qu\'elle fonctionne aujourd\'hui. Lisez-le une première fois de haut en bas, puis revenez à la section qui vous concerne.')}
       ${guideInfo('💡 <strong>Astuce :</strong> les encadrés gris 📷 indiquent où insérer une capture d\'écran dans votre version imprimée ou partagée.')}
@@ -27470,7 +27564,31 @@ function checkDocxLoaded(){
   return true;
 }
 
+// Routing guide consultant BC / BOS
+function routeGuide() {
+  if (window.RELIANCE_APP_TYPE === 'BOS' ||
+      window.RELIANCE_APP_TYPE === 'BC+BOS') {
+    if (window.RELIANCE_BOS &&
+        typeof window.RELIANCE_BOS.renderGuideBosConsultant === 'function') {
+      window.RELIANCE_BOS.renderGuideBosConsultant();
+    }
+    return;
+  }
+  sw(19);
+}
+
 // Init docs modal
+function routeDocsModal() {
+  if (window.RELIANCE_APP_TYPE === 'BOS' ||
+      window.RELIANCE_APP_TYPE === 'BC+BOS') {
+    if (window.RELIANCE_BOS &&
+        typeof window.RELIANCE_BOS.openBosDocsModal === 'function') {
+      window.RELIANCE_BOS.openBosDocsModal();
+    }
+  } else {
+    openDocsModal();
+  }
+}
 function openDocsModal(){
   const nomEl=document.getElementById('docs-modal-nom');
   if(nomEl)nomEl.textContent=gv('f_nom')||'(aucun dossier actif)';
@@ -27641,6 +27759,2992 @@ window.RELIANCE_IMAGES = {"RELIANCE_IMG_0000":"data:image/png;base64,iVBORw0KGgo
     restoreImages();
   }
 })();
+
+</script>
+<script>
+/* module_bos.js — injecté par fusion.js */
+/**
+ * RELIANCE® — Module BOS (Bilan d'Orientation Scolaire)
+ * Session D4 — 6 exports Word BOS (ENR039, ENR047, ENR048, CR, EVAL, SYN)
+ * Activé si window.RELIANCE_APP_TYPE === 'BOS' ou 'BC+BOS' (activate() après login)
+ */
+const RELIANCE_BOS = (function () {
+  'use strict';
+
+  const EXT = '.reliance-bos';
+  const TYPE_BILAN = 'BOS';
+
+  const BOS_TABS = [
+    { id: 0, ic: '👤', label: 'Identité BOS', kind: 'bos' },
+    { id: 1, ic: '📝', label: 'Contexte & besoins', kind: 'bos' },
+    { id: 2, ic: '📅', label: 'Programme', kind: 'bos' },
+    { id: 3, ic: '🔮', label: 'Tests', kind: 'bc', paneId: 'p8' },
+    { id: 4, ic: '🗂️', label: 'Fiches Métiers', kind: 'bos' },
+    { id: 5, ic: '🔵', label: 'Étapes RELIANCE', kind: 'bc', paneId: 'p11' },
+    { id: 6, ic: '📋', label: 'Suivi séances', kind: 'bos', paneKey: 'bos_p6' },
+    { id: 7, ic: '🚀', label: "Plan d'actions", kind: 'bc', paneId: 'p12' },
+    { id: 8, ic: '🎯', label: 'Projet', kind: 'bos', paneKey: 'bos_p9' },
+    { id: 9, ic: '⭐', label: 'Évaluation', kind: 'bos', paneKey: 'bos_p10' },
+    { id: 10, ic: '📄', label: 'Synthèse BOS', kind: 'bos', paneKey: 'bos_p11' }
+  ];
+
+  const BOS_PANE_IDS = { 0: 'bos_p0', 1: 'bos_p1', 2: 'bos_p2', 4: 'bos_p5', 6: 'bos_p6', 8: 'bos_p9', 9: 'bos_p10', 10: 'bos_p11' };
+  const BOS_EVAL_OBJ_COUNT = 3;
+  const BOS_EVAL_ATTEINT_OPTS = ['', 'Oui', 'Non', 'Partiellement'];
+  const BOS_CR_SIG_MAX = 5;
+
+  const NIVEAUX = ['6e', '5e', '4e', '3e', '2nde', '1ère', 'Terminale', 'Post-bac'];
+
+  const BESOINS_CHECKS = [
+    { id: 'bos_b1', label: 'Mieux me connaître' },
+    { id: 'bos_b2', label: 'Identifier mes points forts' },
+    { id: 'bos_b3', label: "Trouver des idées de métiers" },
+    { id: 'bos_b4', label: 'Choisir une orientation' },
+    { id: 'bos_b5', label: 'Préparer Parcoursup' },
+    { id: 'bos_b6', label: 'Choisir mes spécialités' },
+    { id: 'bos_b7', label: 'Reprendre confiance' },
+    { id: 'bos_b8', label: 'Explorer des études' },
+    { id: 'bos_b9', label: 'Clarifier un projet' },
+    { id: 'bos_b10', label: 'Préparer une réorientation' }
+  ];
+
+  const ATTENTES_CHECKS = [
+    { id: 'bos_a1', label: 'Un accompagnement structuré' },
+    { id: 'bos_a2', label: 'Un soutien à la réflexion personnelle' },
+    { id: 'bos_a3', label: "Des outils d'aide à la décision" },
+    { id: 'bos_a4', label: "Une aide à la construction d'un projet" },
+    { id: 'bos_a5', label: "Une aide à la mise en œuvre du projet" }
+  ];
+
+  const BOS_TEXT_FIELDS = [
+    'bos_jeune_nom', 'bos_jeune_prenom', 'bos_jeune_dob', 'bos_niveau', 'bos_etablissement', 'bos_classe',
+    'bos_specialites', 'bos_jeune_email', 'bos_jeune_tel', 'bos_handicap_txt',
+    'bos_rl1_nom', 'bos_rl1_prenom', 'bos_rl1_email', 'bos_rl1_tel',
+    'bos_rl2_nom', 'bos_rl2_prenom', 'bos_rl2_email', 'bos_rl2_tel',
+    'bos_cons', 'bos_orga', 'bos_cons_tel', 'bos_cons_email', 'bos_lieu', 'bos_date_debut', 'bos_date_fin', 'bos_financement',
+    'bos_ctx_situation', 'bos_b_autre', 'bos_a_autre',
+    'bos_obj1', 'bos_obj2', 'bos_obj3', 'bos_obj1_atteint', 'bos_obj2_atteint', 'bos_obj3_atteint',
+    'bos_obj1_com', 'bos_obj2_com', 'bos_obj3_com',
+    'bos_conc_motif', 'bos_prog_contraintes',
+    'bos_metiers_explores', 'bos_debouches', 'bos_realite_metier', 'bos_metiers_retenus', 'bos_formations_envisagees',
+    'bos-projet-retenu-intitule', 'bos-projet-retenu-description', 'bos-projet-retenu-coherence', 'bos-projet-retenu-faisabilite',
+    'bos-projet-secondaire-intitule', 'bos-projet-secondaire-description', 'bos-projet-secondaire-coherence', 'bos-projet-secondaire-faisabilite',
+    'bos-projet-nonretenu-intitule', 'bos-projet-nonretenu-raison',
+    'bos-eval-jeune-stars', 'bos-eval-parent-stars',
+    'bos-rdv-post-date', 'bos-rdv-post-modalite', 'bos-rdv-post-notes'
+  ];
+
+  const BOS_IA_OUT_PROMPT_IDS = ['contexte', 'tests', 'metiers', 'projet', 'plan', 'conclusion', 'mindmap'];
+  const BOS_STYLE_PROMPT = `
+STYLE ET MISE EN FORME :
+- Rédige en prose structurée avec des paragraphes aérés
+- Tu peux utiliser des listes à puces (•) pour les points factuels (compétences, pistes métiers, actions)
+- Jamais de doubles tirets ni de tirets longs comme séparateurs
+- Titres de section courts, en gras, sans majuscules excessives
+
+TON ET PHRASÉ :
+- Ton professionnel et bienveillant — consultant expert, pas ami
+- Phrases directes et concrètes — éviter le jargon
+- Parler du jeune à la troisième personne (ex: "Lucas démontre...", "Son profil révèle...")
+- Jamais de formules génériques :
+  • "Il convient de noter que..."
+  • "Dans le cadre de cette démarche..."
+  • "Il est important de souligner..."
+  • "Force est de constater..."
+- Chaque section doit sembler rédigée par quelqu'un qui connaît réellement le jeune
+- Les transitions entre paragraphes doivent être naturelles
+`;
+  const BOS_IA_PLACEHOLDER_TEXT = 'Collez ici le texte généré par Claude...';
+  const BOS_IA_LEGACY_FIELDS = {
+    contexte: 'bos-syn-contexte',
+    tests: 'bos-syn-tests',
+    metiers: 'bos-syn-metiers',
+    projet: 'bos-syn-projet',
+    plan: 'bos-syn-plan',
+    conclusion: 'bos-syn-conclusion'
+  };
+  let bosIaOutCache = {};
+
+  const BOS_CHECK_FIELDS = [
+    'bos_mod_presentiel', 'bos_mod_distanciel', 'bos_mod_mixte',
+    'bos_handicap_oui', 'bos_handicap_non',
+    'bos_conc_adapte', 'bos_conc_non', 'bos-rdv-post-realise',
+    ...BESOINS_CHECKS.map(x => x.id),
+    ...ATTENTES_CHECKS.map(x => x.id)
+  ];
+
+  const PROG_DEFAULTS = [
+    { obj: "Parcours scolaire, centres d'intérêt, motivation, objectifs", outils: "Cahier d'exercices" },
+    { obj: 'Tests — Application RELIANCE', outils: 'Application RELIANCE' },
+    { obj: 'Exploration métiers, débouchés, réalité des métiers', outils: "Cahier d'exercices" },
+    { obj: "Construction du projet, comparatif options, faisabilité, plan d'action", outils: 'Cahier' },
+    { obj: 'Présentation aux parents — Synthèse', outils: 'Synthèse' }
+  ];
+
+  const PROG_FIELDS = ['bos_prog_debut', 'bos_prog_fin', 'bos_prog_modal'];
+
+  const BOS_SYN_FIELDS = [
+    'bos_syn_pts_forts', 'bos_syn_pistes', 'bos_syn_plan', 'bos_syn_conclusions'
+  ];
+
+  const BOS_SIG_FIXED_IDS = [
+    'sig_bos_contrat_cons', 'sig_bos_contrat_jeune', 'sig_bos_contrat_rl',
+    'sig_bos_rb_cons', 'sig_bos_rb_jeune', 'sig_bos_rb_rl',
+    'sig_bos_cal_cons', 'sig_bos_cal_jeune', 'sig_bos_cal_rl',
+    'sig_bos_eval_cons', 'sig_bos_eval_fam', 'sig_bos_eval_rl',
+    'sig_bos_syn_cons', 'sig_bos_syn_fam', 'sig_bos_syn_rl'
+  ];
+
+  const BOS_EVAL_TEXT_FIELDS = [
+    'bos-eval-jeune-positifs',
+    'bos-eval-jeune-ameliorer',
+    'bos-eval-jeune-libre',
+    'bos-eval-parent-positifs',
+    'bos-eval-parent-ameliorer',
+    'bos-eval-parent-libre'
+  ];
+
+  function bosEvalFieldIds(role, n) {
+    const p = role === 'parent' ? 'p' : 'j';
+    return {
+      atteint: 'bos_eval_' + p + '_obj' + n + '_atteint',
+      pos: 'bos_eval_' + p + '_obj' + n + '_pos',
+      amel: 'bos_eval_' + p + '_obj' + n + '_amel'
+    };
+  }
+
+  function allBosEvalFieldIds() {
+    const ids = ['bos_eval_j_ressenti', 'bos_eval_p_ressenti'];
+    ['jeune', 'parent'].forEach(role => {
+      for (let n = 1; n <= BOS_EVAL_OBJ_COUNT; n++) {
+        const f = bosEvalFieldIds(role, n);
+        ids.push(f.atteint, f.pos, f.amel);
+      }
+    });
+    return ids;
+  }
+
+  const BOS_EVAL_FIELDS = allBosEvalFieldIds();
+
+  /** Champs texte des panes BC réutilisés (étapes + plan) — pas le calendrier BC (#p6) */
+  const SHARED_BC_TEXT_FIELDS = [
+    'e1c', 'e1r', 'e1o', 'e1d', 'e2c', 'e2r', 'e2o', 'e2d',
+    'e3c', 'e3r', 'e3o', 'e3d', 'e4c', 'e4r', 'e4o', 'e4d',
+    'f_form', 'f_acc'
+  ];
+
+  let activeTab = 0;
+  let mounted = false;
+  let hooksInstalled = false;
+  let bosFiches = [];
+  let bosFicheCount = 0;
+
+  function isActive() {
+    return window.RELIANCE_APP_TYPE === 'BOS' ||
+           window.RELIANCE_APP_TYPE === 'BC+BOS';
+  }
+
+  function gv(id) {
+    const e = document.getElementById(id);
+    return e ? (e.type === 'checkbox' ? e.checked : e.value.trim()) : '';
+  }
+
+  function sv(id, val) {
+    const e = document.getElementById(id);
+    if (!e) return;
+    if (e.type === 'checkbox') e.checked = !!val;
+    else e.value = val == null ? '' : String(val);
+  }
+
+  function autosaveKey() {
+    const c = typeof getCurrentConsultant === 'function' ? getCurrentConsultant() : null;
+    return 'reliance_bos_autosave' + (c && c.code ? '_' + c.code : '');
+  }
+
+  function getJeuneNomComplet() {
+    const prenom = gv('bos_jeune_prenom');
+    const nom = gv('bos_jeune_nom');
+    return [prenom, nom].filter(Boolean).join(' ').trim();
+  }
+
+  function buildBosSlugKey(nom) {
+    const n = (nom || '').trim();
+    if (typeof getSlugKeyFromNom === 'function') {
+      return getSlugKeyFromNom(n).replace('_client_', '_bos_client_');
+    }
+    return 'bos_client_' + n.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+  }
+
+  async function syncBosMetadataSupabase(nom, slugKey, avancementPct) {
+    const consultant = typeof getCurrentConsultant === 'function' ? getCurrentConsultant() : null;
+    if (!consultant) {
+      console.warn('[RELIANCE BOS] Supabase metadata skipped: no consultant session');
+      return false;
+    }
+    if (typeof supabaseClient === 'undefined' || !supabaseClient) {
+      console.warn('[RELIANCE BOS] Supabase client unavailable');
+      return false;
+    }
+    try {
+      const payload = {
+        consultant_id: consultant.id,
+        nom: nom,
+        slug_key: slugKey,
+        nom_beneficiaire: nom,
+        consultant_code: consultant.code,
+        donnees: { avancement_pct: avancementPct },
+        updated_at: new Date().toISOString()
+      };
+      const rowIdKey = slugKey + '_bos_supabase_id';
+      let rowId = localStorage.getItem(rowIdKey);
+
+      if (!rowId) {
+        const { data: existing, error: lookupError } = await supabaseClient
+          .from('beneficiaires_bos')
+          .select('id')
+          .eq('consultant_id', consultant.id)
+          .eq('slug_key', slugKey)
+          .limit(1);
+        if (lookupError) console.warn('[RELIANCE BOS] Supabase metadata lookup error:', lookupError);
+        if (existing && existing[0]) rowId = existing[0].id;
+      }
+
+      if (rowId) {
+        const { data: updated, error: updateError } = await supabaseClient
+          .from('beneficiaires_bos')
+          .update(payload)
+          .eq('id', rowId)
+          .select('id');
+        if (!updateError && updated && updated[0]) {
+          localStorage.setItem(rowIdKey, updated[0].id);
+          return true;
+        }
+        console.warn('[RELIANCE BOS] Supabase metadata update error:', updateError || 'no row updated');
+        localStorage.removeItem(rowIdKey);
+      }
+
+      const { data: inserted, error: insertError } = await supabaseClient
+        .from('beneficiaires_bos')
+        .insert([payload])
+        .select('id')
+        .single();
+      if (!insertError && inserted) {
+        localStorage.setItem(rowIdKey, inserted.id);
+        return true;
+      }
+
+      console.warn('[RELIANCE BOS] Supabase metadata insert error:', insertError);
+      return false;
+    } catch (e) {
+      console.warn('[RELIANCE BOS] Supabase metadata exception:', e);
+      return false;
+    }
+  }
+
+  async function loadBosSlotsFromSupabase() {
+    const consultant = typeof getCurrentConsultant === 'function' ? getCurrentConsultant() : null;
+    if (!consultant) return [];
+    if (typeof supabaseClient === 'undefined' || !supabaseClient) return [];
+    try {
+      const { data, error } = await supabaseClient
+        .from('beneficiaires_bos')
+        .select('id, consultant_id, nom, nom_beneficiaire, consultant_code, slug_key, donnees, created_at, updated_at')
+        .eq('consultant_id', consultant.id)
+        .order('updated_at', { ascending: false });
+      if (error) {
+        console.warn('[RELIANCE BOS] Supabase load error:', error);
+        return [];
+      }
+      const pctFromRow = typeof getAvancementPctFromRow === 'function'
+        ? getAvancementPctFromRow
+        : (row) => (row.donnees && row.donnees.avancement_pct != null ? row.donnees.avancement_pct : null);
+      return (data || []).map(row => ({
+        slug_key: row.slug_key || row.id,
+        nom_beneficiaire: row.nom_beneficiaire || row.nom || 'Sans nom',
+        consultant_id: row.consultant_id,
+        consultant_code: row.consultant_code || '',
+        avancement_pct: pctFromRow(row),
+        updated_at: row.updated_at || row.created_at,
+        _row_id: row.id,
+        _local: false
+      }));
+    } catch (e) {
+      console.warn('[RELIANCE BOS] Supabase load exception:', e);
+      return [];
+    }
+  }
+
+  /** Libellés documents / UI — IDs techniques bos_jeune_* inchangés */
+  function libelleAccompagne() {
+    const p = gv('bos_jeune_prenom');
+    return p ? "L'accompagné(e) " + p : "L'accompagné(e)";
+  }
+
+  function libelleAccompagneSig() {
+    return libelleAccompagne();
+  }
+
+  function buildFilename() {
+    const clean = s => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]/g, '') || '';
+    const nom = clean(gv('bos_jeune_nom'));
+    const prenom = clean(gv('bos_jeune_prenom'));
+    if (nom && prenom) return nom + '_' + prenom + EXT;
+    if (nom) return nom + EXT;
+    return 'bilan_bos' + EXT;
+  }
+
+  function collectSharedTests() {
+    const shared = {};
+    if (typeof valData !== 'undefined') shared.valScores = valData.map(v => v.score);
+    if (typeof riasec !== 'undefined') shared.riasecScores = riasec.map(r => r.score);
+    if (typeof selType !== 'undefined' && selType) shared.p16sel = selType.code;
+    else shared.p16sel = null;
+    return shared;
+  }
+
+  function readPlanRows() {
+    const plan = [];
+    Array.from(document.querySelectorAll('#plan-tbody tr')).forEach(tr => {
+      const i = tr.querySelectorAll('input,select');
+      plan.push({
+        a: i[0]?.value || '',
+        p: i[1]?.value || '',
+        d: i[2]?.value || '',
+        r: i[3]?.value || '',
+        c: i[4]?.value || '',
+        s: i[5]?.value || ''
+      });
+    });
+    return plan;
+  }
+
+  function collectSharedBcPanes() {
+    const shared = {};
+    SHARED_BC_TEXT_FIELDS.forEach(id => {
+      const e = document.getElementById(id);
+      if (e) shared[id] = e.value;
+    });
+    shared.plan = readPlanRows();
+    return shared;
+  }
+
+  function formatBosDate(iso) {
+    if (!iso) return '—';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+      const p = iso.split('-');
+      return p[2] + '/' + p[1] + '/' + p[0];
+    }
+    return iso;
+  }
+
+  function collectBosCrSeances() {
+    const rows = [];
+    Array.from(document.querySelectorAll('#bos-suivi-tbody tr')).forEach(tr => {
+      const num = parseInt(tr.getAttribute('data-num'), 10);
+      if (!num) return;
+      rows.push({
+        num,
+        cr: tr.querySelector('.bos-cr-textarea')?.value || '',
+        sig_consultant: typeof saveSigData === 'function' ? saveSigData('sig_bos_cr_consultant_' + num) : '',
+        sig_benef: typeof saveSigData === 'function' ? saveSigData('sig_bos_cr_benef_' + num) : ''
+      });
+    });
+    return rows;
+  }
+
+  function readBosSeances() {
+    const rows = [];
+    Array.from(document.querySelectorAll('#bos-cal-tbody tr')).forEach((tr, idx) => {
+      const inp = tr.querySelectorAll('input,textarea');
+      rows.push({
+        num: idx + 1,
+        date: inp[0]?.value || '',
+        horaires: inp[1]?.value || '',
+        duree: inp[2]?.value || '',
+        obj: inp[3]?.value || '',
+        outils: inp[4]?.value || ''
+      });
+    });
+    return rows;
+  }
+
+  function collectBosData() {
+    const d = {};
+    BOS_TEXT_FIELDS.forEach(id => { d[id] = gv(id); });
+    BOS_CHECK_FIELDS.forEach(id => {
+      const e = document.getElementById(id);
+      if (e) d[id] = e.type === 'checkbox' ? e.checked : gv(id);
+    });
+    PROG_FIELDS.forEach(id => { d[id] = gv(id); });
+    d.bos_conclusion_rp = document.querySelector('[name="bos_conclusion_rp"]:checked')?.id || 'bos_conc_adapte';
+    d.bos_seances = readBosSeances();
+    d.bos_cr_seances = collectBosCrSeances();
+    d.bos_fiches = bosFiches.map(f => Object.assign({}, f));
+    BOS_SIG_FIXED_IDS.forEach(id => {
+      d[id] = typeof saveSigData === 'function' ? saveSigData(id) : '';
+    });
+    BOS_EVAL_TEXT_FIELDS.forEach(id => { d[id] = gv(id); });
+    BOS_EVAL_FIELDS.forEach(id => { d[id] = gv(id); });
+    BOS_SYN_FIELDS.forEach(id => { d[id] = gv(id); });
+    collectBosIaOutputs(d);
+    Object.assign(d, collectSharedTests());
+    Object.assign(d, collectSharedBcPanes());
+    d.type_bilan = TYPE_BILAN;
+    return d;
+  }
+
+  function isBosIaOutMeaningfulText(txt) {
+    return String(txt || '').trim().length > 0;
+  }
+
+  function ensureBosIaOutStructure(el) {
+    if (!el) return null;
+    if (typeof ensureIaOutStructure === 'function') return ensureIaOutStructure(el);
+    let ph = el.querySelector('.ia-ph');
+    let user = el.querySelector('.ia-user');
+    if (ph && user) return { ph, user };
+    const legacyRaw = (el.textContent || '').trim();
+    const legacyTxt = legacyRaw && !/^Collez ici/i.test(legacyRaw) ? legacyRaw : '';
+    el.innerHTML = '';
+    ph = document.createElement('span');
+    ph.className = 'ia-ph';
+    ph.textContent = BOS_IA_PLACEHOLDER_TEXT;
+    user = document.createElement('div');
+    user.className = 'ia-user';
+    user.contentEditable = 'true';
+    user.spellcheck = true;
+    if (legacyTxt) user.textContent = legacyTxt;
+    user.oninput = function () { onBosIaOutInput(el); };
+    el.appendChild(ph);
+    el.appendChild(user);
+    return { ph, user };
+  }
+
+  function syncBosIaOutEmpty(el) {
+    const s = ensureBosIaOutStructure(el);
+    if (!s) return;
+    if (isBosIaOutMeaningfulText(s.user.textContent)) el.classList.remove('empty');
+    else el.classList.add('empty');
+  }
+
+  function readBosIaOutEl(el) {
+    const s = ensureBosIaOutStructure(el);
+    if (!s) return null;
+    syncBosIaOutEmpty(el);
+    return isBosIaOutMeaningfulText(s.user.textContent) ? s.user.textContent.trim() : null;
+  }
+
+  function onBosIaOutInput(el) {
+    syncBosIaOutEmpty(el);
+    if (el && el.id) {
+      const key = el.id.replace(/^bos-out-/, '');
+      if (key) {
+        const txt = readBosIaOutEl(el);
+        if (txt) bosIaOutCache[key] = txt;
+        else delete bosIaOutCache[key];
+      }
+    }
+    bosAutoSave();
+  }
+
+  function snapshotBosIaOutCacheFromDom() {
+    BOS_IA_OUT_PROMPT_IDS.forEach(k => {
+      const el = document.getElementById('bos-out-' + k);
+      if (!el) return;
+      const txt = readBosIaOutEl(el);
+      if (txt) bosIaOutCache[k] = txt;
+      else delete bosIaOutCache[k];
+    });
+  }
+
+  function applyBosIaOutCacheToDom() {
+    BOS_IA_OUT_PROMPT_IDS.forEach(k => {
+      const e = document.getElementById('bos-out-' + k);
+      if (!e) return;
+      const s = ensureBosIaOutStructure(e);
+      if (s) {
+        s.user.textContent = bosIaOutCache[k] || '';
+        syncBosIaOutEmpty(e);
+      }
+    });
+  }
+
+  function collectBosIaOutputs(d) {
+    snapshotBosIaOutCacheFromDom();
+    BOS_IA_OUT_PROMPT_IDS.forEach(k => {
+      const txt = bosIaOutCache[k];
+      if (txt && isBosIaOutMeaningfulText(txt)) d['bos_ia_' + k] = txt;
+    });
+  }
+
+  function getBosIaText(key) {
+    if (bosIaOutCache[key] && isBosIaOutMeaningfulText(bosIaOutCache[key])) return bosIaOutCache[key];
+    const el = document.getElementById('bos-out-' + key);
+    return readBosIaOutEl(el) || '';
+  }
+
+  function restoreBosIaOutputs(d) {
+    if (!d) return;
+    BOS_IA_OUT_PROMPT_IDS.forEach(k => {
+      const storageKey = 'bos_ia_' + k;
+      let txt = d[storageKey];
+      const legacyId = BOS_IA_LEGACY_FIELDS[k];
+      if (!txt && legacyId && d[legacyId]) txt = d[legacyId];
+      if (txt) bosIaOutCache[k] = txt;
+      else delete bosIaOutCache[k];
+    });
+    applyBosIaOutCacheToDom();
+  }
+
+  function restoreSharedTests(d) {
+    if (d.valScores && typeof valData !== 'undefined') {
+      d.valScores.forEach((s, i) => { if (valData[i]) valData[i].score = s; });
+    }
+    if (d.riasecScores && typeof riasec !== 'undefined') {
+      d.riasecScores.forEach((s, i) => { if (riasec[i]) riasec[i].score = s; });
+    }
+    if (typeof buildValRows === 'function') buildValRows();
+    if (typeof buildRiasecRows === 'function') buildRiasecRows();
+    if (d.valScores) {
+      d.valScores.forEach((s, i) => {
+        const inp = document.querySelectorAll('#val-rows input[type=number]')[i];
+        if (inp) inp.value = s;
+        const bar = document.getElementById('vbar-' + i);
+        const sc = document.getElementById('vscore-' + i);
+        if (bar) bar.style.width = s + '%';
+        if (sc) sc.textContent = s;
+      });
+    }
+    if (d.riasecScores) {
+      d.riasecScores.forEach((s, i) => {
+        const inp = document.querySelectorAll('#riasec-rows input[type=number]')[i];
+        if (inp) inp.value = s;
+        const bar = document.getElementById('rbar-' + i);
+        const sc = document.getElementById('rscore-' + i);
+        if (bar) bar.style.width = s + '%';
+        if (sc) sc.textContent = s;
+      });
+    }
+    if (typeof updValCharts === 'function' && vchart) updValCharts();
+    if (typeof updRiasecChart === 'function' && rchart) updRiasecChart();
+    if (d.p16sel && typeof sel16 === 'function') setTimeout(() => sel16(d.p16sel), 150);
+  }
+
+  function restoreSharedBcPanes(d) {
+    if (!d) return;
+    SHARED_BC_TEXT_FIELDS.forEach(id => {
+      if (d[id] != null) sv(id, d[id]);
+    });
+    if (d.plan && d.plan.length) {
+      const tbody = document.getElementById('plan-tbody');
+      if (tbody) {
+        tbody.innerHTML = '';
+        d.plan.forEach(row => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td><input value="${esc(row.a || '')}"></td><td><select><option ${row.p === '🔴 Urgent' ? 'selected' : ''}>🔴 Urgent</option><option ${(!row.p || row.p === '🟠 Important') ? 'selected' : ''}>🟠 Important</option><option ${row.p === '🔵 Utile' ? 'selected' : ''}>🔵 Utile</option></select></td><td><input value="${esc(row.d || '')}"></td><td><input value="${esc(row.r || '')}"></td><td><input value="${esc(row.c || '')}"></td><td><select><option ${(!row.s || row.s === 'À faire') ? 'selected' : ''}>À faire</option><option ${row.s === 'En cours' ? 'selected' : ''}>En cours</option><option ${row.s === 'Réalisée' ? 'selected' : ''}>Réalisée</option></select></td><td><button onclick="delR(this)" style="background:none;border:none;cursor:pointer;color:#ccc">×</button></td>`;
+          tbody.appendChild(tr);
+        });
+      }
+    }
+  }
+
+  function restoreBosSeances(seances) {
+    const tbody = document.getElementById('bos-cal-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    (seances && seances.length ? seances : PROG_DEFAULTS.map((p, i) => ({
+      num: i + 1, date: '', horaires: '', duree: '2 h 00', obj: p.obj, outils: p.outils
+    }))).forEach(s => bosAddSeanceRow(s));
+  }
+
+  function restoreBosData(d) {
+    if (!d) return;
+    BOS_TEXT_FIELDS.forEach(id => { if (d[id] != null) sv(id, d[id]); });
+    BOS_CHECK_FIELDS.forEach(id => {
+      if (d[id] != null) {
+        const e = document.getElementById(id);
+        if (e && e.type === 'checkbox') e.checked = !!d[id];
+        else sv(id, d[id]);
+      }
+    });
+    PROG_FIELDS.forEach(id => { if (d[id] != null) sv(id, d[id]); });
+    if (d.bos_conclusion_rp) {
+      const el = document.getElementById(d.bos_conclusion_rp);
+      if (el) el.checked = true;
+    }
+    restoreBosSeances(d.bos_seances);
+    bosFiches = d.bos_fiches ? d.bos_fiches.map(f => Object.assign({}, f)) : [];
+    bosFicheCount = bosFiches.length ? (Math.max(...bosFiches.map(f => Number(f.id) || 0)) + 1) : 0;
+    renderBosFiches();
+    BOS_SIG_FIXED_IDS.forEach(id => {
+      if (d[id] && typeof restoreSigData === 'function') restoreSigData(id, d[id]);
+    });
+    BOS_EVAL_TEXT_FIELDS.forEach(id => { if (d[id] != null) sv(id, d[id]); });
+    BOS_EVAL_FIELDS.forEach(id => { if (d[id] != null) sv(id, d[id]); });
+    BOS_SYN_FIELDS.forEach(id => { if (d[id] != null) sv(id, d[id]); });
+    restoreBosIaOutputs(d);
+    restoreSharedTests(d);
+    restoreSharedBcPanes(d);
+    syncBosSuiviTable(d.bos_cr_seances);
+    syncEvalObjectivesLabels();
+    upProgBos();
+  }
+
+  function buildBosPayload() {
+    const c = typeof getCurrentConsultant === 'function' ? getCurrentConsultant() : null;
+    const nom = getJeuneNomComplet();
+    return {
+      format: 'RELIANCE_DOSSIER',
+      version: '2.0',
+      app_version: typeof APP_VERSION !== 'undefined' ? APP_VERSION : '7.4',
+      type_bilan: TYPE_BILAN,
+      consultant_code: c ? c.code : '',
+      nom: nom,
+      beneficiaire: { nom_complet: nom, prenom: gv('bos_jeune_prenom'), nom: gv('bos_jeune_nom') },
+      saved_at: new Date().toISOString(),
+      data: collectBosData()
+    };
+  }
+
+  function isBosFile(obj, filename) {
+    if (obj && obj.type_bilan === TYPE_BILAN) return true;
+    if (filename && String(filename).toLowerCase().endsWith(EXT)) return true;
+    if (obj && obj.data && obj.data.type_bilan === TYPE_BILAN) return true;
+    return false;
+  }
+
+  function isBcFile(obj, filename) {
+    if (filename && String(filename).toLowerCase().endsWith('.reliance') && !String(filename).toLowerCase().endsWith(EXT)) return true;
+    if (obj && obj.type_bilan && obj.type_bilan !== TYPE_BILAN) return true;
+    return false;
+  }
+
+  function bosAutoSave() {
+    try {
+      localStorage.setItem(autosaveKey(), JSON.stringify({
+        data: collectBosData(),
+        ts: Date.now(),
+        slotKey: typeof currentSlotKey !== 'undefined' ? currentSlotKey : null
+      }));
+    } catch (e) {
+      if (typeof showToast === 'function') showToast('⚠️ Brouillon BOS plein — enregistrez le fichier .reliance-bos', 'orange');
+    }
+  }
+
+  function bosLoadAutoSave() {
+    try {
+      const raw = localStorage.getItem(autosaveKey());
+      if (!raw) return;
+      const obj = JSON.parse(raw);
+      if (typeof currentRelianceFileHandle !== 'undefined' && currentRelianceFileHandle) return;
+      if (obj.data) {
+        if (obj.slotKey && typeof currentSlotKey !== 'undefined') currentSlotKey = obj.slotKey;
+        restoreBosData(obj.data);
+        const nom = getJeuneNomComplet();
+        if (nom && typeof updateActiveDossierBadge === 'function') updateActiveDossierBadge(nom);
+      }
+    } catch (e) { console.warn('[RELIANCE BOS] loadAutoSave', e); }
+  }
+
+  function upProgBos() {
+    const keys = ['bos_jeune_nom', 'bos_jeune_prenom', 'bos_ctx_situation', 'bos_obj1', 'bos_metiers_explores'];
+    const filled = keys.filter(k => gv(k).length > 0).length;
+    const p = Math.round((filled / keys.length) * 100);
+    const fill = document.getElementById('pfill');
+    const pct = document.getElementById('ppct');
+    if (fill) fill.style.width = p + '%';
+    if (pct) pct.textContent = p + '%';
+  }
+
+  function hideAllBcPanes() {
+    Array.from(document.querySelectorAll('.content-area > .pane:not(.bos-pane)')).forEach(p => {
+      p.classList.remove('active');
+      p.style.display = 'none';
+    });
+  }
+
+  function hideAllBosPanes() {
+    Array.from(document.querySelectorAll('.bos-pane')).forEach(p => {
+      p.classList.remove('active');
+      p.style.display = 'none';
+    });
+  }
+
+  function showBcPane(paneId) {
+    hideAllBosPanes();
+    hideAllBcPanes();
+    const pane = document.getElementById(paneId);
+    if (!pane) return;
+    pane.style.display = '';
+    pane.classList.add('active');
+    const ca = document.querySelector('.content-area');
+    if (ca) ca.scrollTop = 0;
+  }
+
+  function bosAddSeanceRow(s) {
+    const tbody = document.getElementById('bos-cal-tbody');
+    if (!tbody) return;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="text-align:center;font-weight:700">${s.num || tbody.children.length + 1}</td>
+      <td><input class="fi" type="date" value="${s.date || ''}"></td>
+      <td><input class="fi" value="${esc(s.horaires || '')}" placeholder="14h00 — 16h00"></td>
+      <td><input class="fi" value="${esc(s.duree || '2 h 00')}" style="width:80px"></td>
+      <td><textarea class="ft" rows="2">${esc(s.obj || '')}</textarea></td>
+      <td><input class="fi" value="${esc(s.outils || '')}"></td>`;
+    tbody.appendChild(tr);
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  }
+
+  function bosSigPadHtml(sigId, label) {
+    return `<div class="sig-pad-wrap" style="min-width:180px">
+      <canvas id="${sigId}" class="sig-canvas"></canvas>
+      <div class="sig-actions">
+        <button type="button" class="sig-clear-btn" onclick="clearSig('${sigId}')">Effacer</button>
+        <span class="sig-status empty" id="${sigId}_status">En attente</span>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">${label}</div>
+    </div>`;
+  }
+
+  function bosSigTripleSection(title, ids, labels) {
+    return `
+    <div style="font-size:11px;font-weight:700;color:var(--tbl-hdr);text-transform:uppercase;margin:14px 0 8px">${title}</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      ${bosSigPadHtml(ids[0], labels[0])}
+      ${bosSigPadHtml(ids[1], labels[1])}
+      ${bosSigPadHtml(ids[2], labels[2])}
+    </div>`;
+  }
+
+  function checksHtml(items, prefix) {
+    return items.map(x =>
+      `<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:6px">
+        <input type="checkbox" id="${x.id}"> ${x.label}
+      </label>`
+    ).join('');
+  }
+
+  function renderPaneIdentite() {
+    const opts = NIVEAUX.map(n => `<option>${n}</option>`).join('');
+    return `
+    ${renderBosDocActions(bosDocBtn('ENR039 Contrat BOS', 'exportBosENR039'))}
+    <div class="tip">L'accompagné(e), scolarité et représentants légaux — Bilan d'Orientation Scolaire RELIANCE®</div>
+    <div style="font-size:11px;font-weight:700;color:var(--c1);text-transform:uppercase;margin-bottom:8px">👤 L'accompagné(e)</div>
+    <div class="g2">
+      <div class="fg"><div class="fl">Nom</div><input class="fi" id="bos_jeune_nom" oninput="RELIANCE_BOS.upProgBos()"></div>
+      <div class="fg"><div class="fl">Prénom</div><input class="fi" id="bos_jeune_prenom" oninput="RELIANCE_BOS.upProgBos()"></div>
+    </div>
+    <div class="g2">
+      <div class="fg"><div class="fl">Date de naissance</div><input class="fi" type="date" id="bos_jeune_dob"></div>
+      <div class="fg"><div class="fl">Niveau scolaire</div><select class="fs" id="bos_niveau"><option value="">— Sélectionner —</option>${opts}</select></div>
+    </div>
+    <div class="g2">
+      <div class="fg"><div class="fl">Établissement scolaire</div><input class="fi" id="bos_etablissement"></div>
+      <div class="fg"><div class="fl">Classe</div><input class="fi" id="bos_classe"></div>
+    </div>
+    <div class="fg"><div class="fl">Spécialités / options choisies</div><input class="fi" id="bos_specialites"></div>
+    <div class="g2">
+      <div class="fg"><div class="fl">Email</div><input class="fi" type="email" id="bos_jeune_email"></div>
+      <div class="fg"><div class="fl">Téléphone</div><input class="fi" id="bos_jeune_tel"></div>
+    </div>
+    <div class="fg"><div class="fl">Modalité souhaitée</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:4px">
+        <label><input type="checkbox" id="bos_mod_presentiel"> Présentiel</label>
+        <label><input type="checkbox" id="bos_mod_distanciel"> Distanciel</label>
+        <label><input type="checkbox" id="bos_mod_mixte"> Mixte</label>
+      </div>
+    </div>
+    <div class="fg"><div class="fl">Situation de handicap / besoins spécifiques</div>
+      <div style="display:flex;gap:16px;margin:4px 0 8px">
+        <label><input type="checkbox" id="bos_handicap_oui"> Oui</label>
+        <label><input type="checkbox" id="bos_handicap_non"> Non</label>
+      </div>
+      <textarea class="ft" id="bos_handicap_txt" placeholder="Aménagements pédagogiques, accessibilité..."></textarea>
+    </div>
+    <div style="font-size:11px;font-weight:700;color:var(--c3);text-transform:uppercase;margin:14px 0 8px">👨‍👩‍👦 Représentants légaux</div>
+    <div class="g2">
+      <div class="fg"><div class="fl">Parent 1 — Nom</div><input class="fi" id="bos_rl1_nom"></div>
+      <div class="fg"><div class="fl">Parent 1 — Prénom</div><input class="fi" id="bos_rl1_prenom"></div>
+    </div>
+    <div class="g2">
+      <div class="fg"><div class="fl">Parent 1 — Email</div><input class="fi" type="email" id="bos_rl1_email"></div>
+      <div class="fg"><div class="fl">Parent 1 — Téléphone</div><input class="fi" id="bos_rl1_tel"></div>
+    </div>
+    <div class="g2">
+      <div class="fg"><div class="fl">Parent 2 — Nom</div><input class="fi" id="bos_rl2_nom"></div>
+      <div class="fg"><div class="fl">Parent 2 — Prénom</div><input class="fi" id="bos_rl2_prenom"></div>
+    </div>
+    <div class="g2">
+      <div class="fg"><div class="fl">Parent 2 — Email</div><input class="fi" type="email" id="bos_rl2_email"></div>
+      <div class="fg"><div class="fl">Parent 2 — Téléphone</div><input class="fi" id="bos_rl2_tel"></div>
+    </div>
+    <div style="font-size:11px;font-weight:700;color:var(--tbl-hdr);text-transform:uppercase;margin:14px 0 8px">📋 Accompagnement</div>
+    <div class="g2">
+      <div class="fg"><div class="fl">Consultant(e)</div><input class="fi" id="bos_cons"></div>
+      <div class="fg"><div class="fl">Organisme consultant</div><input class="fi" id="bos_orga" value="RP Coaching &amp; Formation"></div>
+    </div>
+    <div class="g2">
+      <div class="fg"><div class="fl">Téléphone consultant</div><input class="fi" id="bos_cons_tel" placeholder="06 …"></div>
+      <div class="fg"><div class="fl">Email consultant</div><input class="fi" type="email" id="bos_cons_email" placeholder="contact@…"></div>
+    </div>
+    <div class="g2">
+      <div class="fg"><div class="fl">Date de début</div><input class="fi" type="date" id="bos_date_debut"></div>
+      <div class="fg"><div class="fl">Date de fin</div><input class="fi" type="date" id="bos_date_fin"></div>
+    </div>
+    <div class="g2">
+      <div class="fg"><div class="fl">Lieu</div><input class="fi" id="bos_lieu" value="Val Suran"></div>
+      <div class="fg"><div class="fl">Financement</div><input class="fi" id="bos_financement" placeholder="Paiement direct famille"></div>
+    </div>
+    ${bosSigTripleSection('Signatures — ENR039 Contrat', ['sig_bos_contrat_cons', 'sig_bos_contrat_jeune', 'sig_bos_contrat_rl'], ['Consultant', 'Le jeune', 'Représentant légal'])}`;
+  }
+
+  function renderPaneContexte() {
+    return `
+    ${renderBosDocActions(bosDocBtn('ENR048 Recueil besoins', 'exportBosENR048'))}
+    <div class="tip">Recueil des besoins et attentes — ENR048 (BOS)</div>
+    <div class="fg"><div class="fl">Description de la situation</div><textarea class="ft" id="bos_ctx_situation" rows="4" oninput="RELIANCE_BOS.upProgBos()" placeholder="Contexte scolaire, raisons de la demande..."></textarea></div>
+    <div class="fg"><div class="fl">Besoins principaux</div><div style="margin-top:6px">${checksHtml(BESOINS_CHECKS)}</div></div>
+    <div class="fg"><div class="fl">Autre besoin (préciser)</div><input class="fi" id="bos_b_autre"></div>
+    <div class="fg"><div class="fl">Attentes vis-à-vis de l'accompagnement</div><div style="margin-top:6px">${checksHtml(ATTENTES_CHECKS)}</div></div>
+    <div class="fg"><div class="fl">Autre attente (préciser)</div><textarea class="ft" id="bos_a_autre" rows="2"></textarea></div>
+    <div class="fg"><div class="fl">Objectifs du bilan</div>
+      <table class="ptable" style="margin-top:8px">
+        <thead><tr><th>Objectif</th><th>Atteint</th><th>Commentaire</th></tr></thead>
+        <tbody>
+          <tr><td><input class="fi" id="bos_obj1" oninput="RELIANCE_BOS.upProgBos()"></td><td><select class="fs" id="bos_obj1_atteint"><option value="">—</option><option>Oui</option><option>Partiellement</option><option>Non</option></select></td><td><input class="fi" id="bos_obj1_com"></td></tr>
+          <tr><td><input class="fi" id="bos_obj2"></td><td><select class="fs" id="bos_obj2_atteint"><option value="">—</option><option>Oui</option><option>Partiellement</option><option>Non</option></select></td><td><input class="fi" id="bos_obj2_com"></td></tr>
+          <tr><td><input class="fi" id="bos_obj3"></td><td><select class="fs" id="bos_obj3_atteint"><option value="">—</option><option>Oui</option><option>Partiellement</option><option>Non</option></select></td><td><input class="fi" id="bos_obj3_com"></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="fg"><div class="fl">Conclusion entretien préalable</div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin:6px 0">
+        <label><input type="radio" name="bos_conclusion_rp" id="bos_conc_adapte" value="adapte" checked> Adapté à la situation et aux besoins</label>
+        <label><input type="radio" name="bos_conclusion_rp" id="bos_conc_non" value="non"> Non adapté</label>
+      </div>
+      <textarea class="ft" id="bos_conc_motif" rows="2" placeholder="Motifs si non adapté"></textarea>
+    </div>
+    ${bosSigTripleSection('Signatures — ENR048 Recueil besoins', ['sig_bos_rb_cons', 'sig_bos_rb_jeune', 'sig_bos_rb_rl'], ['Consultant', 'Le jeune', 'Représentant légal'])}`;
+  }
+
+  function renderPaneProgramme() {
+    return `
+    ${renderBosDocActions(bosDocBtn('ENR047 Calendrier BOS', 'exportBosENR047'))}
+    <div class="tip">Programme prévisionnel — 5 séances (ENR047 BOS)</div>
+    <div class="g2">
+      <div class="fg"><div class="fl">Période — du</div><input class="fi" type="date" id="bos_prog_debut"></div>
+      <div class="fg"><div class="fl">au</div><input class="fi" type="date" id="bos_prog_fin"></div>
+    </div>
+    <div class="fg"><div class="fl">Modalité</div>
+      <select class="fs" id="bos_prog_modal"><option>Présentiel</option><option>Distanciel</option><option>Mixte</option></select>
+    </div>
+    <div style="overflow-x:auto;margin-top:12px">
+      <table class="cal-table">
+        <thead><tr><th>N°</th><th>Date</th><th>Horaires</th><th>Durée</th><th>Objectifs</th><th>Outils</th></tr></thead>
+        <tbody id="bos-cal-tbody"></tbody>
+      </table>
+    </div>
+    <div class="fg" style="margin-top:12px"><div class="fl">Contraintes identifiées</div><textarea class="ft" id="bos_prog_contraintes" rows="2"></textarea></div>
+    ${bosSigTripleSection('Signatures — ENR047 Calendrier', ['sig_bos_cal_cons', 'sig_bos_cal_jeune', 'sig_bos_cal_rl'], ['Consultant', 'Le jeune', 'Représentant légal'])}`;
+  }
+
+  function addBosFiche() {
+    const id = bosFicheCount++;
+    bosFiches.push({ id, intitule: '', description: '', statut: 'Piste retenue' });
+    renderBosFiches();
+    bosAutoSave();
+  }
+
+  function removeBosFiche(id) {
+    bosFiches = bosFiches.filter(f => f.id !== id);
+    renderBosFiches();
+    bosAutoSave();
+  }
+
+  function updateBosFiche(id, field, value) {
+    const fc = bosFiches.find(x => x.id === id);
+    if (!fc) return;
+    fc[field] = value;
+    bosAutoSave();
+  }
+
+  function renderBosFiches() {
+    const c = document.getElementById('bos-fiches-container');
+    if (!c) return;
+    if (!bosFiches.length) {
+      c.innerHTML = '<p style="font-size:12px;color:var(--muted);text-align:center;padding:18px">Aucune fiche. Cliquez ci-dessous pour en ajouter.</p>';
+      return;
+    }
+    c.innerHTML = bosFiches.map(f => `
+    <div class="fiche-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
+        <div style="flex:1"><input class="fiche-title-input" placeholder="Intitulé du métier..." value="${esc(f.intitule || '')}" oninput="RELIANCE_BOS.updateBosFiche(${f.id}, 'intitule', this.value)"></div>
+        <button onclick="RELIANCE_BOS.removeBosFiche(${f.id})" style="background:none;border:none;cursor:pointer;color:#ccc;font-size:16px">×</button>
+      </div>
+      <div class="fg"><div class="fl">Description</div><textarea class="ft" style="min-height:60px;font-size:12px" oninput="RELIANCE_BOS.updateBosFiche(${f.id}, 'description', this.value)">${esc(f.description || '')}</textarea></div>
+      <div class="fg"><div class="fl">Statut</div>
+        <select class="fs" onchange="RELIANCE_BOS.updateBosFiche(${f.id}, 'statut', this.value)">
+          <option ${f.statut === 'Piste retenue' ? 'selected' : ''}>Piste retenue</option>
+          <option ${f.statut === 'Piste secondaire' ? 'selected' : ''}>Piste secondaire</option>
+          <option ${f.statut === 'Piste abandonnée' ? 'selected' : ''}>Piste abandonnée</option>
+        </select>
+      </div>
+    </div>`).join('');
+  }
+
+  function renderPaneExploration() {
+    return `
+    <div class="tip">Fiches métiers explorées en séance</div>
+    <div id="bos-fiches-container"></div>
+    <button class="add-fiche" onclick="RELIANCE_BOS.addBosFiche()">+ Ajouter une fiche métier</button>`;
+  }
+
+  function renderPaneSuiviSeances() {
+    return `
+    <style>.bos-ro{background:#f5f5f5;color:#555;font-size:12px;padding:6px 8px;vertical-align:top}</style>
+    ${renderBosDocActions(bosDocBtn('ENR-BOS-CR Compte-rendu', 'exportBosCR'))}
+    <div class="tip green">Suivi des séances BOS — colonnes Date à Outils reprises automatiquement du programme prévisionnel (onglet Programme). Seul le compte-rendu est saisi ici.</div>
+    <div style="overflow-x:auto;margin-top:12px">
+      <table class="cal-table">
+        <thead><tr>
+          <th style="text-align:center">N°</th>
+          <th>Date</th>
+          <th>Horaires</th>
+          <th>Durée</th>
+          <th>Objectifs</th>
+          <th>Outils</th>
+          <th style="background:#FFFDE7;color:#5D4037">Compte-rendu</th>
+          <th style="background:#FFFDE7;color:#5D4037">Sig. consultant</th>
+          <th style="background:#FFFDE7;color:#5D4037">Sig. l'accompagné(e)</th>
+        </tr></thead>
+        <tbody id="bos-suivi-tbody"></tbody>
+      </table>
+    </div>`;
+  }
+
+  function bosCrSigHtml(num, role) {
+    const id = 'sig_bos_cr_' + role + '_' + num;
+    return `<div class="sig-pad-wrap" style="min-width:130px">
+      <canvas id="${id}" class="sig-canvas" style="height:70px"></canvas>
+      <div class="sig-actions">
+        <button type="button" class="sig-clear-btn" onclick="clearSig('${id}')">Effacer</button>
+        <span class="sig-status empty" id="${id}_status">En attente</span>
+      </div>
+    </div>`;
+  }
+
+  function syncBosSuiviTable(savedCr) {
+    const tbody = document.getElementById('bos-suivi-tbody');
+    if (!tbody) return;
+    const crMap = {};
+    const prev = savedCr || collectBosCrSeances();
+    prev.forEach(s => { if (s && s.num) crMap[s.num] = s; });
+    const prog = readBosSeances();
+    tbody.innerHTML = '';
+    prog.forEach(s => {
+      const n = s.num || (tbody.children.length + 1);
+      const prevCr = crMap[n] || {};
+      const tr = document.createElement('tr');
+      tr.setAttribute('data-num', String(n));
+      tr.innerHTML = `
+        <td style="text-align:center;font-weight:700">${n}</td>
+        <td class="bos-ro">${esc(formatBosDate(s.date))}</td>
+        <td class="bos-ro">${esc(s.horaires || '—')}</td>
+        <td class="bos-ro">${esc(s.duree || '—')}</td>
+        <td class="bos-ro" style="white-space:pre-wrap;font-size:12px">${esc(s.obj || '—')}</td>
+        <td class="bos-ro">${esc(s.outils || '—')}</td>
+        <td><textarea class="ft bos-cr-textarea" rows="3" placeholder="Compte-rendu de séance..." oninput="RELIANCE_BOS.bosAutoSave()">${esc(prevCr.cr || '')}</textarea></td>
+        <td>${bosCrSigHtml(n, 'consultant')}</td>
+        <td>${bosCrSigHtml(n, 'benef')}</td>`;
+      tbody.appendChild(tr);
+    });
+    setTimeout(() => {
+      prog.forEach(s => {
+        const n = s.num;
+        if (typeof initSigPad === 'function') {
+          initSigPad('sig_bos_cr_consultant_' + n);
+          initSigPad('sig_bos_cr_benef_' + n);
+        }
+        const prevCr = crMap[n];
+        if (prevCr && typeof restoreSigData === 'function') {
+          if (prevCr.sig_consultant) restoreSigData('sig_bos_cr_consultant_' + n, prevCr.sig_consultant);
+          if (prevCr.sig_benef) restoreSigData('sig_bos_cr_benef_' + n, prevCr.sig_benef);
+        }
+      });
+    }, 150);
+  }
+
+  function clearBosCrSigs() {
+    for (let i = 1; i <= BOS_CR_SIG_MAX; i++) {
+      if (typeof clearSig === 'function') {
+        clearSig('sig_bos_cr_consultant_' + i);
+        clearSig('sig_bos_cr_benef_' + i);
+      }
+    }
+  }
+
+  function renderPaneProjet() {
+    return `
+    <div class="tip">Projet d'orientation — retenu, secondaire et non retenu.</div>
+
+    <div style="font-size:11px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 8px">🎯 Projet d'orientation retenu</div>
+    <div class="fg"><div class="fl">Intitulé du projet</div><input class="fi" id="bos-projet-retenu-intitule"></div>
+    <div class="fg"><div class="fl">Description</div><textarea class="ft" id="bos-projet-retenu-description"></textarea></div>
+    <div class="fg"><div class="fl">Argumentaire de cohérence</div><textarea class="ft" id="bos-projet-retenu-coherence"></textarea></div>
+    <div class="fg"><div class="fl">Analyse de faisabilité</div><textarea class="ft" id="bos-projet-retenu-faisabilite"></textarea></div>
+
+    <div style="font-size:11px;font-weight:700;color:var(--c3);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 8px">🔄 Projet secondaire</div>
+    <div class="fg"><div class="fl">Intitulé du projet</div><input class="fi" id="bos-projet-secondaire-intitule"></div>
+    <div class="fg"><div class="fl">Description</div><textarea class="ft" id="bos-projet-secondaire-description"></textarea></div>
+    <div class="fg"><div class="fl">Argumentaire de cohérence</div><textarea class="ft" id="bos-projet-secondaire-coherence"></textarea></div>
+    <div class="fg"><div class="fl">Analyse de faisabilité</div><textarea class="ft" id="bos-projet-secondaire-faisabilite"></textarea></div>
+
+    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 8px">❌ Projet(s) non retenu(s)</div>
+    <div class="fg"><div class="fl">Intitulé du projet non retenu</div><input class="fi" id="bos-projet-nonretenu-intitule"></div>
+    <div class="fg"><div class="fl">Raison du non-retenu</div><textarea class="ft" id="bos-projet-nonretenu-raison"></textarea></div>`;
+  }
+
+  function renderBosStars(role) {
+    return `
+    <div style="display:flex;gap:6px;font-size:20px;margin-top:5px" id="bos-eval-${role}-stars-wrap">
+      <span class="star" onclick="RELIANCE_BOS.setBosEvalStars('${role}',1)" style="cursor:pointer;color:#ddd">★</span>
+      <span class="star" onclick="RELIANCE_BOS.setBosEvalStars('${role}',2)" style="cursor:pointer;color:#ddd">★</span>
+      <span class="star" onclick="RELIANCE_BOS.setBosEvalStars('${role}',3)" style="cursor:pointer;color:#ddd">★</span>
+      <span class="star" onclick="RELIANCE_BOS.setBosEvalStars('${role}',4)" style="cursor:pointer;color:#ddd">★</span>
+      <span class="star" onclick="RELIANCE_BOS.setBosEvalStars('${role}',5)" style="cursor:pointer;color:#ddd">★</span>
+    </div>
+    <input type="hidden" id="bos-eval-${role}-stars" value="0">`;
+  }
+
+  function setBosEvalStars(role, value) {
+    const hidden = document.getElementById('bos-eval-' + role + '-stars');
+    if (hidden) hidden.value = String(value);
+    const wrap = document.getElementById('bos-eval-' + role + '-stars-wrap');
+    if (wrap) {
+      Array.from(wrap.querySelectorAll('.star')).forEach((s, idx) => {
+        s.style.color = idx < value ? '#E97132' : '#ddd';
+      });
+    }
+    bosAutoSave();
+  }
+
+  function renderPaneEvaluation() {
+    return `
+    <div class="tip">Évaluation finale BOS — retour du jeune, des parents et proposition de suivi.</div>
+
+    <div style="background:#E3F2FD;border-left:4px solid #1565C0;border-radius:8px;padding:16px;margin-bottom:20px">
+      <div style="font-size:15px;font-weight:700;color:#074F6A;margin-bottom:12px">📋 Évaluation — Le jeune</div>
+      <div class="fg"><div class="fl">Points positifs</div><textarea class="ft" id="bos-eval-jeune-positifs" rows="2" oninput="RELIANCE_BOS.bosAutoSave()"></textarea></div>
+      <div class="fg"><div class="fl">Points à améliorer</div><textarea class="ft" id="bos-eval-jeune-ameliorer" rows="2" oninput="RELIANCE_BOS.bosAutoSave()"></textarea></div>
+      <div class="fg"><div class="fl">Commentaire libre</div><textarea class="ft" id="bos-eval-jeune-libre" rows="3" oninput="RELIANCE_BOS.bosAutoSave()"></textarea></div>
+      <div class="fg"><div class="fl">Satisfaction globale de l'accompagnement</div>${renderBosStars('jeune')}</div>
+    </div>
+
+    <div style="background:#FFF3E0;border-left:4px solid #E97132;border-radius:8px;padding:16px;margin-bottom:20px">
+      <div style="font-size:15px;font-weight:700;color:#074F6A;margin-bottom:12px">👨‍👩‍👧 Évaluation — Les parents</div>
+      <div class="fg"><div class="fl">Points positifs</div><textarea class="ft" id="bos-eval-parent-positifs" rows="2" oninput="RELIANCE_BOS.bosAutoSave()"></textarea></div>
+      <div class="fg"><div class="fl">Points à améliorer</div><textarea class="ft" id="bos-eval-parent-ameliorer" rows="2" oninput="RELIANCE_BOS.bosAutoSave()"></textarea></div>
+      <div class="fg"><div class="fl">Commentaire libre</div><textarea class="ft" id="bos-eval-parent-libre" rows="3" oninput="RELIANCE_BOS.bosAutoSave()"></textarea></div>
+      <div class="fg"><div class="fl">Satisfaction globale de l'accompagnement</div>${renderBosStars('parent')}</div>
+    </div>
+
+    <div style="background:#F8F9FA;border-left:4px solid #074F6A;border-radius:8px;padding:16px;margin-bottom:20px">
+      <div style="font-size:15px;font-weight:700;color:#074F6A;margin-bottom:12px">📅 Rendez-vous post BOS</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Proposition de suivi (optionnel)</div>
+      <div class="g2">
+        <div class="fg"><div class="fl">Date proposée</div><input class="fi" type="date" id="bos-rdv-post-date"></div>
+        <div class="fg"><div class="fl">Modalité</div><select class="fs" id="bos-rdv-post-modalite"><option>Distanciel (recommandé)</option><option>Présentiel</option></select></div>
+      </div>
+      <div class="fg"><div class="fl">Notes / objectifs du RDV</div><textarea class="ft" id="bos-rdv-post-notes" rows="3" oninput="RELIANCE_BOS.bosAutoSave()"></textarea></div>
+      <div style="margin-top:6px"><label><input type="checkbox" id="bos-rdv-post-realise" onchange="RELIANCE_BOS.bosAutoSave()"> RDV réalisé</label></div>
+    </div>
+    ${bosSigTripleSection('Signatures — Évaluation BOS', ['sig_bos_eval_cons', 'sig_bos_eval_fam', 'sig_bos_eval_rl'], ['Consultant', 'Le jeune / Famille', 'Représentant légal'])}`;
+  }
+
+  function syncEvalObjectivesLabels() {
+    setBosEvalStars('jeune', Number(gv('bos-eval-jeune-stars') || 0));
+    setBosEvalStars('parent', Number(gv('bos-eval-parent-stars') || 0));
+  }
+
+  function renderBosIaOutSection(num, title, key, promptLabel, btnColor, opts) {
+    opts = opts || {};
+    const fn = opts.fn || ('buildBosSynPrompt' + key.charAt(0).toUpperCase() + key.slice(1));
+    const btnText = opts.btnText || ('📋 Copier le prompt ' + promptLabel);
+    return `
+    <div class="prompt-card" style="margin-bottom:16px;border:1px solid var(--border);border-radius:9px;overflow:hidden">
+      <div class="prompt-hdr" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--tbl-bg);border-bottom:1px solid var(--border)">
+        <span class="prompt-title" style="font-size:13px;font-weight:700;color:var(--dk2)">${num}) ${title}</span>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button type="button" class="copy-btn" style="background:${btnColor};color:white;border:none;border-radius:6px;padding:7px 13px;font-size:11px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif" onclick="RELIANCE_BOS.${fn}()">${btnText}</button>
+          <a href="https://claude.ai" target="_blank" class="open-claude-btn" style="font-size:11px;padding:6px 12px;color:var(--orange);font-weight:700;text-decoration:none">Claude.ai →</a>
+        </div>
+      </div>
+      <div class="ia-out empty" id="bos-out-${key}">
+        <span class="ia-ph">${BOS_IA_PLACEHOLDER_TEXT}</span>
+        <div class="ia-user" contenteditable="true" spellcheck="true" oninput="RELIANCE_BOS.onBosIaOutInput(this.closest('.ia-out'))"></div>
+      </div>
+    </div>`;
+  }
+
+  function renderPaneSynthese() {
+    return `
+    <div class="tip green" style="margin-bottom:14px">
+      <strong>Mode sans API</strong> — Copiez chaque prompt, ouvrez <a href="https://claude.ai" target="_blank" style="color:var(--orange);font-weight:700">Claude.ai</a>, collez et envoyez. Recopiez le résultat dans la zone jaune. Sauvegarde automatique du brouillon.
+    </div>
+    ${renderBosIaOutSection(1, 'Présentation du jeune et contexte', 'contexte', 'contexte', 'var(--c1)')}
+    ${renderBosIaOutSection(2, 'Résultats des tests et profil', 'tests', 'tests', 'var(--c5)')}
+    ${renderBosIaOutSection(3, 'Exploration métiers et pistes', 'metiers', 'métiers', 'var(--c4)')}
+    ${renderBosIaOutSection(4, "Projet d'orientation retenu", 'projet', 'projet', 'var(--orange)')}
+    ${renderBosIaOutSection(5, "Plan d'actions et suites", 'plan', 'plan', 'var(--c3)')}
+    ${renderBosIaOutSection(6, 'Conclusion', 'conclusion', 'conclusion', 'var(--dk2)')}
+    ${renderBosIaOutSection(7, 'Mind Map — Visuel SVG (à coller dans Word)', 'mindmap', 'Mind Map', '#196B24', { fn: 'buildBosSynPromptMindmap', btnText: '🗺️ Générer le prompt Mind Map' })}
+
+    <div style="margin-top:16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+      <button type="button" onclick="RELIANCE_BOS.exportBosSynthese()" style="${BOS_DOC_BTN_STYLE}">📋 Copier le prompt synthèse complète</button>
+      <a href="https://claude.ai" target="_blank" class="open-claude-btn" style="font-size:11px;padding:6px 12px;color:var(--orange);font-weight:700">Claude.ai →</a>
+    </div>
+    ${bosSigTripleSection('Signatures — Synthèse BOS', ['sig_bos_syn_cons', 'sig_bos_syn_fam', 'sig_bos_syn_rl'], ['Consultant', 'Le jeune / Famille', 'Représentant légal'])}`;
+  }
+
+  function copyBosPromptToClipboard(prompt) {
+    const done = () => {
+      if (typeof showToast === 'function') showToast('📋 Prompt copié — Collez dans Claude.ai', 'green');
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(prompt).then(done).catch(() => {
+        fallbackCopy(prompt);
+        done();
+      });
+    }
+    fallbackCopy(prompt);
+    done();
+  }
+
+  function getBosBesoinsLabels(d) {
+    const labels = BESOINS_CHECKS.filter(b => d[b.id]).map(b => b.label);
+    if (d.bos_b_autre) labels.push(d.bos_b_autre);
+    return labels.length ? labels.join(', ') : '—';
+  }
+
+  function getBosAttentesLabels(d) {
+    const labels = ATTENTES_CHECKS.filter(b => d[b.id]).map(b => b.label);
+    if (d.bos_a_autre) labels.push(d.bos_a_autre);
+    return labels.length ? labels.join(', ') : '—';
+  }
+
+  function getBosJeuneLabel(d) {
+    d = d || {};
+    return ((d.bos_jeune_prenom || '') + ' ' + (d.bos_jeune_nom || '')).trim() || '—';
+  }
+
+  /** Lit les scores Boussole / Orientation / Signature depuis #p8 (globals BC + DOM #val-rows, #riasec-rows, #p16-grid). */
+  function getBosTestsSummary() {
+    let topVal = '—';
+    let topR = '—';
+    let p16 = '—';
+    let valAll = '—';
+    let riasecAll = '—';
+    let riasecCode = '—';
+    let valTop3Detail = '—';
+    let riasecTop2Detail = '—';
+    if (typeof valData !== 'undefined') {
+      const sorted = [...valData].sort((a, b) => b.score - a.score);
+      topVal = sorted.slice(0, 3).map(v => v.name + ' (' + v.score + '/100)').join(', ');
+      valAll = sorted.map(v => v.name + ' : ' + v.score + '/100').join(' · ');
+      valTop3Detail = sorted.slice(0, 3).map(v => '- ' + v.name + ' (' + v.score + '/100) : ' + (v.desc || '')).join('\n');
+    }
+    if (typeof riasec !== 'undefined') {
+      const sorted = [...riasec].sort((a, b) => b.score - a.score);
+      topR = sorted.slice(0, 3).map(r => r.code + ' ' + r.label + ' (' + r.score + '/100)').join(', ');
+      riasecAll = sorted.map(r => r.code + ' ' + r.label + ' : ' + r.score + '/100').join(' · ');
+      riasecCode = sorted.slice(0, 3).map(r => r.code).join('');
+      riasecTop2Detail = sorted.slice(0, 2).map(r => '- ' + r.code + ' (' + r.label + ') ' + r.score + '/100 : ' + (r.desc || '')).join('\n');
+    }
+    if (typeof selType !== 'undefined' && selType) {
+      p16 = selType.code + ' — ' + selType.name + ' (groupe ' + selType.grp + ')';
+      if (selType.desc) p16 += '\n' + selType.desc;
+    } else if (typeof p16 !== 'undefined' && Array.isArray(p16)) {
+      const det = document.getElementById('p16-code');
+      if (det && det.textContent) p16 = det.textContent.trim();
+    }
+    return { topVal, topR, p16, valAll, riasecAll, riasecCode, valTop3Detail, riasecTop2Detail };
+  }
+
+  function getRiasecTop2Label() {
+    if (typeof riasec === 'undefined') return 'Non renseigné';
+    const sorted = [...riasec].sort((a, b) => b.score - a.score);
+    const txt = sorted.slice(0, 2).map(r => r.code + ' — ' + r.label + ' (' + r.score + '/100)').join(', ');
+    return txt || 'Non renseigné';
+  }
+
+  function bosPromptVal(v) {
+    const s = (v == null ? '' : String(v)).trim();
+    return s || 'Non renseigné';
+  }
+
+  /** Scores tests RELIANCE® — bloc réutilisable (synthèse complète, etc.). */
+  function formatBosTestsScoresBloc(t) {
+    return `── BOUSSOLE DE VALEURS ──
+Résultats (toutes valeurs, scores /100) : ${t.valAll}
+Top 3 : ${t.topVal}
+Détail top 3 :
+${t.valTop3Detail}
+
+── ORIENTATION PROFESSIONNELLE ──
+Code dominant (top 3 lettres) : ${t.riasecCode}
+Scores par dimension : ${t.riasecAll}
+Top 2 détaillé :
+${t.riasecTop2Detail}
+
+── SIGNATURE COMPORTEMENTALE ──
+Type : ${t.p16}`;
+  }
+
+  function formatBosProjetSyntheseBloc(d) {
+    const lines = [];
+    const ret = (d['bos-projet-retenu-intitule'] || '').trim();
+    if (ret) {
+      lines.push('Projet retenu : ' + ret + (d['bos-projet-retenu-description'] ? '\nDescription : ' + d['bos-projet-retenu-description'] : ''));
+    }
+    const sec = (d['bos-projet-secondaire-intitule'] || '').trim();
+    if (sec) {
+      lines.push('Projet secondaire : ' + sec + (d['bos-projet-secondaire-description'] ? '\nDescription : ' + d['bos-projet-secondaire-description'] : ''));
+    }
+    const non = (d['bos-projet-nonretenu-intitule'] || '').trim();
+    if (non) {
+      lines.push('Projet non retenu : ' + non + '\nRaison : ' + bosPromptVal(d['bos-projet-nonretenu-raison']));
+    }
+    return lines.length ? lines.join('\n\n') : 'Non renseigné';
+  }
+
+  /** Programme réel — onglet Programme (#bos-cal-tbody). */
+  function formatBosProgrammeTxt() {
+    const seances = readBosSeances();
+    const programmeTxt = seances
+      .filter(s => s.obj || s.date)
+      .map(s => `Séance ${s.num}${s.date ? ' — ' + s.date : ''}
+Objectif : ${s.obj || '—'}
+Outils : ${s.outils || '—'}`)
+      .join('\n\n');
+    return programmeTxt || 'Programme non renseigné';
+  }
+
+  function formatBosSeancesTxt(seances) {
+    if (seances && seances.length) {
+      const programmeTxt = seances
+        .filter(s => s.obj || s.date)
+        .map(s => `Séance ${s.num}${s.date ? ' — ' + s.date : ''}
+Objectif : ${s.obj || '—'}
+Outils : ${s.outils || '—'}`)
+        .join('\n\n');
+      return programmeTxt || 'Programme non renseigné';
+    }
+    return formatBosProgrammeTxt();
+  }
+
+  /** Étapes RELIANCE® — champs #p11 (pont BOS onglet 5 → pane BC p11). */
+  const BOS_RELIANCE_ETAPES = [
+    { name: 'SE RECENTRER', phase: 'Phase préliminaire · Accueil · Clarification', c: 'e1c', r: 'e1r', o: 'e1o', d: 'e1d' },
+    { name: 'SE COMPRENDRE', phase: 'Phase investigation · Analyse · Prise de recul', c: 'e2c', r: 'e2r', o: 'e2o', d: 'e2d' },
+    { name: 'CHOISIR', phase: 'Phase investigation · Exploration · Décision', c: 'e3c', r: 'e3r', o: 'e3o', d: 'e3d' },
+    { name: "S'ENGAGER", phase: "Phase conclusion · Formalisation · Plan d'action", c: 'e4c', r: 'e4r', o: 'e4o', d: 'e4d' }
+  ];
+
+  function readRelianceStepValue(id, d) {
+    if (d && d[id] != null && String(d[id]).trim()) return String(d[id]).trim();
+    const e = document.getElementById(id);
+    return e ? String(e.value || '').trim() : '';
+  }
+
+  function formatBosRelianceEtapesTxt(d) {
+    const blocks = [];
+    BOS_RELIANCE_ETAPES.forEach((step, idx) => {
+      const contenus = readRelianceStepValue(step.c, d);
+      const resultats = readRelianceStepValue(step.r, d);
+      const outils = readRelianceStepValue(step.o, d);
+      const duree = readRelianceStepValue(step.d, d);
+      if (!contenus && !resultats && !outils && !duree) return;
+      blocks.push(
+        'Étape ' + (idx + 1) + ' — ' + step.name + ' (' + step.phase + ')\n' +
+        'Contenus & travaux : ' + (contenus || '—') + '\n' +
+        'Résultats : ' + (resultats || '—') + '\n' +
+        'Outils : ' + (outils || '—') + '\n' +
+        'Durée : ' + (duree || '—')
+      );
+    });
+    return blocks.length ? blocks.join('\n\n') : '—';
+  }
+
+  /** Contenus des 4 étapes RELIANCE (#p11) — champs e1c à e4c pour validation projet. */
+  function formatBosRelianceContenusTxt(d) {
+    const lines = [];
+    BOS_RELIANCE_ETAPES.forEach((step, idx) => {
+      const contenus = readRelianceStepValue(step.c, d);
+      if (contenus) lines.push('Étape ' + (idx + 1) + ' — ' + step.name + ' : ' + contenus);
+    });
+    return lines.length ? lines.join('\n') : '—';
+  }
+
+  function formatBosFichesTxt(fiches) {
+    const list = fiches || [];
+    if (!list.length) return '—';
+    return list.map(f => '- ' + (f.intitule || '—') + ' | Statut : ' + (f.statut || '—') +
+      (f.description ? ' | ' + f.description : '')).join('\n');
+  }
+
+  function formatBosEvalDetailTxt(d) {
+    const lines = [
+      'Objectifs bilan : ' + [d.bos_obj1, d.bos_obj2, d.bos_obj3].filter(Boolean).join(' / ') || '—',
+      'Atteinte obj.1 (jeune) : ' + (d.bos_obj1_atteint || '—') + ' — ' + (d.bos_obj1_com || ''),
+      'Le jeune — Satisfaction : ' + (d['bos-eval-jeune-stars'] || '0') + '/5',
+      'Points positifs : ' + (d['bos-eval-jeune-positifs'] || '—'),
+      'À améliorer : ' + (d['bos-eval-jeune-ameliorer'] || '—'),
+      'Commentaire : ' + (d['bos-eval-jeune-libre'] || '—'),
+      'Les parents — Satisfaction : ' + (d['bos-eval-parent-stars'] || '0') + '/5',
+      'Points positifs : ' + (d['bos-eval-parent-positifs'] || '—'),
+      'À améliorer : ' + (d['bos-eval-parent-ameliorer'] || '—'),
+      'Commentaire : ' + (d['bos-eval-parent-libre'] || '—')
+    ];
+    if (d.bos_eval_j_ressenti) lines.push('Ressenti jeune (synthèse) : ' + d.bos_eval_j_ressenti);
+    if (d.bos_eval_p_ressenti) lines.push('Ressenti parents (synthèse) : ' + d.bos_eval_p_ressenti);
+    return lines.join('\n');
+  }
+
+  function formatBosRdvPostTxt(d) {
+    if (!d['bos-rdv-post-date'] && !d['bos-rdv-post-notes']) return '';
+    return '\n\nRDV POST BOS\nDate : ' + (d['bos-rdv-post-date'] || '—') +
+      ' · Modalité : ' + (d['bos-rdv-post-modalite'] || '—') +
+      '\nNotes : ' + (d['bos-rdv-post-notes'] || '—') +
+      ' · Réalisé : ' + (d['bos-rdv-post-realise'] ? 'Oui' : 'Non');
+  }
+
+  function formatBosPlanTxt(plan) {
+    if (!plan || !plan.length) return '—';
+    return plan.map(row => (row.a || '—') + ' (' + (row.p || '—') + ') — délai: ' + (row.d || '—') + ' — statut: ' + (row.s || '—')).join('\n');
+  }
+
+  function buildBosSynPromptContexte() {
+    const d = collectBosData();
+    const jeune = getBosJeuneLabel(d);
+    const etapesTxt = formatBosRelianceEtapesTxt(d);
+    const prompt = `Tu es consultant expert en bilan d'orientation scolaire Méthode RELIANCE® (RP Coaching & Formation). Rédige la section "Présentation du jeune et contexte" de la synthèse BOS officielle.
+
+JEUNE : ${jeune}
+Date de naissance : ${d.bos_jeune_dob || '—'}
+Niveau : ${d.bos_niveau || '—'} · Classe : ${d.bos_classe || '—'} · Établissement : ${d.bos_etablissement || '—'}
+Spécialités : ${d.bos_specialites || '—'}
+Consultant : ${d.bos_cons || '—'} · Lieu : ${d.bos_lieu || '—'}
+Période : du ${d.bos_date_debut || '—'} au ${d.bos_date_fin || '—'} · Modalité : ${d.bos_prog_modal || '—'}
+Financement : ${d.bos_financement || '—'}
+
+CONTEXTE ET BESOINS
+Situation : ${d.bos_ctx_situation || '—'}
+Besoins exprimés : ${getBosBesoinsLabels(d)}
+Attentes : ${getBosAttentesLabels(d)}
+Objectifs : ${d.bos_obj1 || '—'} / ${d.bos_obj2 || '—'} / ${d.bos_obj3 || '—'}
+Contraintes programme : ${d.bos_prog_contraintes || '—'}
+
+── PROGRAMME DES SÉANCES ──
+${formatBosProgrammeTxt()}
+
+── ÉTAPES RELIANCE® ──
+(Onglet Étapes RELIANCE — champs #p11 : e1c/e1r/e1o/e1d … e4c/e4r/e4o/e4d)
+${etapesTxt}
+
+2-3 paragraphes fluides, valorisants, professionnels.
+
+${BOS_STYLE_PROMPT}
+
+Avant de générer ta réponse, pose-moi cette question : Préfères-tu une réponse dans le chat (à coller dans l'application RELIANCE) ou un document Word formaté à télécharger ?`;
+    copyBosPromptToClipboard(prompt);
+  }
+
+  function buildBosSynPromptTests() {
+    const d = collectBosData();
+    const t = getBosTestsSummary();
+    const jeune = getBosJeuneLabel(d);
+    const prompt = `Tu es consultant expert en bilan d'orientation scolaire Méthode RELIANCE®. Rédige l'analyse des résultats des tests pour le document de synthèse officiel.
+
+JEUNE : ${jeune}
+
+── BOUSSOLE DE VALEURS (Schwartz) ──
+Résultats (toutes valeurs, scores /100) : ${t.valAll}
+Top 3 : ${t.topVal}
+Détail top 3 :
+${t.valTop3Detail}
+Analyse : Pour chaque valeur dominante (top 3) :
+- Ce que ça signifie concrètement pour ce jeune
+- Projection dans les choix d'orientation
+- Points de vigilance
+
+── ORIENTATION PROFESSIONNELLE (RIASEC) ──
+Code dominant (top 3 lettres) : ${t.riasecCode}
+Scores par dimension : ${t.riasecAll}
+Top 2 détaillé :
+${t.riasecTop2Detail}
+Analyse : Pour chaque lettre dominante (top 2) :
+- Ce que ça signifie concrètement
+- Familles de métiers compatibles
+- Environnements de travail adaptés
+
+── SIGNATURE COMPORTEMENTALE ──
+Type : ${t.p16}
+(Note : l'application RELIANCE enregistre le type choisi sur la grille 16 profils — pas de scores de dichotomies MBTI saisis.)
+Analyse :
+- Ce que ce profil signifie pour ce jeune
+- Style d'apprentissage et de travail
+- Points forts et axes de développement
+
+── COMBINAISON DES TROIS PROFILS ──
+- Synergies entre les 3 tests
+- Orientations particulièrement cohérentes avec cette combinaison unique
+- Points de vigilance spécifiques à cette combinaison
+- 3 pistes d'orientation prioritaires justifiées
+
+Données complémentaires dossier :
+Étape SE COMPRENDRE : ${d.e2c || '—'}
+Résultats : ${d.e2r || '—'}
+Synthèse consultant : points forts ${d.bos_syn_pts_forts || '—'} · pistes ${d.bos_syn_pistes || '—'}
+
+Rédige en prose fluide, chapitres distincts, style document officiel mais accessible à un jeune et ses parents.
+
+${BOS_STYLE_PROMPT}
+
+Avant de générer ta réponse, pose-moi cette question : Préfères-tu une réponse dans le chat (à coller dans l'application RELIANCE) ou un document Word formaté à télécharger ?`;
+    copyBosPromptToClipboard(prompt);
+  }
+
+  function buildBosSynPromptMetiers() {
+    const d = collectBosData();
+    const t = getBosTestsSummary();
+    const fichesTxt = formatBosFichesTxt(d.bos_fiches);
+    const jeune = getBosJeuneLabel(d);
+    const besoins = getBosBesoinsLabels(d);
+    const intituleRetenu = (d['bos-projet-retenu-intitule'] || '').trim();
+    const projetRetenuBloc = intituleRetenu
+      ? 'PROJET RETENU (cohérence) : ' + intituleRetenu
+      : '';
+
+    const prompt = `Tu es consultant expert en bilan d'orientation scolaire Méthode RELIANCE®. Rédige la section "Exploration métiers et pistes" de la synthèse BOS.
+
+JEUNE : ${jeune}
+
+PROFIL RELIANCE® (lien avec les métiers) :
+- Boussole de Valeurs : ${bosPromptVal(t.topVal)}
+- Orientation Professionnelle : ${getRiasecTop2Label()}
+- Signature Comportementale : ${bosPromptVal(t.p16)}
+
+CONTEXTE ET BESOINS :
+- Situation : ${bosPromptVal(d.bos_ctx_situation)}
+- Besoins principaux : ${besoins === '—' ? 'Non renseigné' : besoins}
+
+EXPLORATION MÉTIERS :
+- Métiers explorés : ${bosPromptVal(d.bos_metiers_explores)}
+- Débouchés : ${bosPromptVal(d.bos_debouches)}
+- Réalité des métiers : ${bosPromptVal(d.bos_realite_metier)}
+- Métiers retenus / écartés : ${bosPromptVal(d.bos_metiers_retenus)}
+- Formations envisagées : ${bosPromptVal(d.bos_formations_envisagees)}
+
+FICHES MÉTIERS BOS :
+${fichesTxt === '—' ? 'Non renseigné' : fichesTxt}
+
+ÉTAPES RELIANCE® (ce qui oriente vers ces métiers) :
+- SE RECENTRER : ${bosPromptVal(d.e1c)}
+- SE COMPRENDRE : ${bosPromptVal(d.e2c)}
+- CHOISIR : ${bosPromptVal(d.e3c)}${d.e3r ? ' — Résultats : ' + d.e3r : ''}
+- S'ENGAGER : ${bosPromptVal(d.e4c)}
+${projetRetenuBloc ? '\n' + projetRetenuBloc : ''}
+
+INSTRUCTIONS STRICTES :
+- Les métiers viennent UNIQUEMENT des fiches et champs listés ci-dessus
+- Ne pas inventer de pistes non listées
+- Si un champ est vide → "Non renseigné"
+- Faire le lien explicite entre le profil RELIANCE® (tests + étapes) et les métiers explorés
+- Projet secondaire et non retenu → traités dans leur propre section, ne pas les mentionner ici
+
+2-3 paragraphes structurés, ton professionnel et pédagogique.
+
+${BOS_STYLE_PROMPT}
+
+Avant de générer ta réponse, pose-moi cette question : Préfères-tu une réponse dans le chat (à coller dans l'application RELIANCE) ou un document Word formaté à télécharger ?`;
+    copyBosPromptToClipboard(prompt);
+  }
+
+  function buildBosSynPromptProjet() {
+    const d = collectBosData();
+    const jeune = getBosJeuneLabel(d);
+    const t = getBosTestsSummary();
+    const situation = d.bos_ctx_situation || '—';
+    const besoins = getBosBesoinsLabels(d);
+    const etapesContenus = formatBosRelianceContenusTxt(d);
+    let riasecTop2 = '—';
+    if (typeof riasec !== 'undefined') {
+      const sorted = [...riasec].sort((a, b) => b.score - a.score);
+      riasecTop2 = sorted.slice(0, 2).map(r => r.code + ' — ' + r.label + ' (' + r.score + '/100)').join(', ');
+    }
+
+    const intituleRetenu = (d['bos-projet-retenu-intitule'] || '').trim();
+    const descRetenu = d['bos-projet-retenu-description'] || '—';
+    const coherenceRetenu = d['bos-projet-retenu-coherence'] || '—';
+    const faisabiliteRetenu = d['bos-projet-retenu-faisabilite'] || '—';
+    const intituleSecondaire = (d['bos-projet-secondaire-intitule'] || '').trim();
+    const descSecondaire = d['bos-projet-secondaire-description'] || '—';
+    const intituleNonRetenu = (d['bos-projet-nonretenu-intitule'] || '').trim();
+    const raisonNonRetenu = d['bos-projet-nonretenu-raison'] || '—';
+
+    let prompt = `Tu es consultant expert en bilan d'orientation scolaire Méthode RELIANCE®. Rédige la section "Projet d'orientation" de la synthèse BOS officielle.
+
+JEUNE : ${jeune}
+
+── PROJET D'ORIENTATION RETENU ──
+Intitulé : ${intituleRetenu || '—'}
+Description : ${descRetenu}
+Cohérence (saisie consultant) : ${coherenceRetenu}
+Faisabilité (saisie consultant) : ${faisabiliteRetenu}
+
+Rédige la validation de cohérence en argumentant le lien entre ce projet et chacune de ces 5 sources :
+
+- Boussole de Valeurs : valeurs dominantes ${t.topVal}
+  → En quoi ce projet répond à ces valeurs profondes
+
+- Orientation Professionnelle : code ${riasecTop2}
+  → Cohérence entre le profil et le secteur/métier visé
+
+- Signature Comportementale : type ${t.p16}
+  → Style de travail et d'apprentissage adapté à ce projet
+
+- Contexte et besoins initiaux : ${situation}
+  Besoins exprimés : ${besoins}
+  → Les attentes de départ sont-elles satisfaites par ce projet
+
+- Étapes RELIANCE® :
+${etapesContenus}
+  → Ce qui a émergé dans le parcours et confirme ce choix
+`;
+
+    if (intituleSecondaire) {
+      prompt += `
+── PROJET SECONDAIRE ──
+Intitulé : ${intituleSecondaire}
+Description : ${descSecondaire}
+
+Rédige une sous-section distincte :
+- Pourquoi ce projet a été envisagé
+- En quoi il complète ou diffère du projet retenu
+- Dans quelles conditions il pourrait devenir prioritaire
+`;
+    }
+
+    if (intituleNonRetenu) {
+      prompt += `
+── PROJET(S) NON RETENU(S) ──
+Intitulé : ${intituleNonRetenu}
+Raison indiquée : ${raisonNonRetenu}
+
+Rédige avec bienveillance :
+- La raison du non-retenu formulée positivement
+- Ce que cette exploration a apporté à la réflexion
+`;
+    }
+
+    prompt += `
+${BOS_STYLE_PROMPT}
+
+Avant de générer ta réponse, pose-moi cette question : Préfères-tu une réponse dans le chat (à coller dans l'application RELIANCE) ou un document Word formaté à télécharger ?`;
+
+    copyBosPromptToClipboard(prompt);
+  }
+
+  function buildBosSynPromptPlan() {
+    const d = collectBosData();
+    const planTxt = formatBosPlanTxt(d.plan || readPlanRows());
+    const jeune = getBosJeuneLabel(d);
+    const prompt = `Tu es consultant expert en bilan d'orientation scolaire Méthode RELIANCE®. Rédige la section "Plan d'actions et suites" de la synthèse BOS.
+
+JEUNE : ${jeune}
+
+PLAN D'ACTION (#plan-tbody — onglet Plan d'actions partagé BC/BOS)
+${planTxt}
+
+Formations / besoins (onglet Étapes) : ${d.f_form || '—'} · ${d.f_acc || '—'}
+Synthèse plan consultant : ${d.bos_syn_plan || '—'}
+${formatBosRdvPostTxt(d)}
+
+2 paragraphes narratifs, structurés, motivants.
+
+${BOS_STYLE_PROMPT}
+
+Avant de générer ta réponse, pose-moi cette question : Préfères-tu une réponse dans le chat (à coller dans l'application RELIANCE) ou un document Word formaté à télécharger ?`;
+    copyBosPromptToClipboard(prompt);
+  }
+
+  function buildBosSynPromptConclusion() {
+    const d = collectBosData();
+    const jeune = getBosJeuneLabel(d);
+    const evalTxt = formatBosEvalDetailTxt(d);
+    const prompt = `Tu es consultant expert en bilan d'orientation scolaire Méthode RELIANCE®. Rédige la CONCLUSION de la synthèse BOS.
+
+JEUNE : ${jeune}
+Consultant : ${d.bos_cons || '—'}
+
+ÉVALUATION (onglet Évaluation BOS)
+${evalTxt}
+
+Synthèse consultant : points forts ${d.bos_syn_pts_forts || '—'} · pistes ${d.bos_syn_pistes || '—'} · conclusions ${d.bos_syn_conclusions || '—'}
+${formatBosRdvPostTxt(d)}
+
+2-3 paragraphes chaleureux, professionnels, encourageants.
+
+${BOS_STYLE_PROMPT}
+
+Avant de générer ta réponse, pose-moi cette question : Préfères-tu une réponse dans le chat (à coller dans l'application RELIANCE) ou un document Word formaté à télécharger ?`;
+    copyBosPromptToClipboard(prompt);
+  }
+
+  function buildBosSynPromptMindmap() {
+    const d = collectBosData();
+    const t = getBosTestsSummary();
+    const prenom = d.bos_jeune_prenom || 'le jeune';
+    const fichesList = (d.bos_fiches || []).filter(f => f.intitule).map(f => f.intitule + ' (' + (f.statut || '—') + ')').join(', ') || '—';
+    const ptsForts = d.bos_syn_pts_forts || d.bos_metiers_retenus || '—';
+    const vigilance = d.bos_syn_pistes || d.bos_realite_metier || '—';
+    const typeSig = (typeof selType !== 'undefined' && selType) ? (selType.code + ' — ' + selType.name) : (t.p16 || '—');
+    const prompt = `Crée une mind map visuelle SVG du profil d'orientation de ${prenom} avec :
+- Centre : ${prenom} + type Signature Comportementale ${typeSig}
+- Branches : Valeurs dominantes (${t.topVal}) / Code Orientation Professionnelle ${t.riasecCode} (${t.topR}) / Pistes métiers (${fichesList}) / Points forts (${ptsForts}) / Points de vigilance (${vigilance})
+
+Consignes STRICTES :
+1. Réponds UNIQUEMENT avec le code SVG brut — commence par <svg et termine par </svg>
+2. Aucun texte, commentaire ni bloc markdown avant ou après
+3. viewBox="0 0 900 620", lisible, style professionnel épuré
+4. Couleurs charte : #074F6A, #E97132, #C1E4F5
+
+${BOS_STYLE_PROMPT}
+
+Renvoie uniquement le code SVG, rien d'autre.`;
+    copyBosPromptToClipboard(prompt);
+  }
+
+  function getBosSyntheseCtx() {
+    const nom = getJeuneNomComplet();
+    snapshotBosIaOutCacheFromDom();
+    const evalRows = [
+      `Le jeune — Satisfaction globale : ${gv('bos-eval-jeune-stars') || '0'}/5`,
+      `Les parents — Satisfaction globale : ${gv('bos-eval-parent-stars') || '0'}/5`
+    ];
+    return {
+      nom,
+      prenom: gv('bos_jeune_prenom'),
+      cons: gv('bos_cons'),
+      orga: gv('bos_orga'),
+      consTel: gv('bos_cons_tel'),
+      consEmail: gv('bos_cons_email'),
+      lieu: gv('bos_lieu'),
+      niveau: gv('bos_niveau'),
+      etab: gv('bos_etablissement'),
+      dateDebut: gv('bos_date_debut'),
+      dateFin: gv('bos_date_fin'),
+      modal: gv('bos_prog_modal'),
+      o1: gv('bos_obj1'),
+      o2: gv('bos_obj2'),
+      o3: gv('bos_obj3'),
+      ctx: gv('bos_ctx_situation'),
+      metiers: gv('bos_metiers_explores'),
+      retenus: gv('bos_metiers_retenus'),
+      formations: gv('bos_formations_envisagees'),
+      ptsForts: getBosIaText('tests') || gv('bos_syn_pts_forts'),
+      pistes: getBosIaText('metiers') || gv('bos_syn_pistes'),
+      plan: getBosIaText('plan') || gv('bos_syn_plan'),
+      conclusions: getBosIaText('conclusion') || gv('bos_syn_conclusions'),
+      synContexte: getBosIaText('contexte'),
+      synTests: getBosIaText('tests'),
+      synMetiers: getBosIaText('metiers'),
+      synProjet: getBosIaText('projet'),
+      synPlan: getBosIaText('plan'),
+      synConclusion: getBosIaText('conclusion'),
+      ressentiJ: gv('bos-eval-jeune-libre'),
+      ressentiP: gv('bos-eval-parent-libre'),
+      evalTxt: evalRows.join('\n'),
+      evalPosJ: gv('bos-eval-jeune-positifs'),
+      evalAmelJ: gv('bos-eval-jeune-ameliorer'),
+      evalLibreJ: gv('bos-eval-jeune-libre'),
+      evalPosP: gv('bos-eval-parent-positifs'),
+      evalAmelP: gv('bos-eval-parent-ameliorer'),
+      evalLibreP: gv('bos-eval-parent-libre'),
+      iaTxt: [
+        getBosIaText('contexte') && 'Contexte :\n' + getBosIaText('contexte'),
+        getBosIaText('tests') && 'Tests :\n' + getBosIaText('tests'),
+        getBosIaText('metiers') && 'Métiers :\n' + getBosIaText('metiers'),
+        getBosIaText('projet') && 'Projet :\n' + getBosIaText('projet'),
+        getBosIaText('plan') && 'Plan :\n' + getBosIaText('plan'),
+        getBosIaText('conclusion') && 'Conclusion :\n' + getBosIaText('conclusion')
+      ].filter(Boolean).join('\n\n') || '—'
+    };
+  }
+
+  function buildBosSynthesePrompt() {
+    snapshotBosIaOutCacheFromDom();
+    const dossier = collectBosData();
+    const d = getBosSyntheseCtx();
+    const t = getBosTestsSummary();
+    const besoins = getBosBesoinsLabels(dossier);
+    const attentes = getBosAttentesLabels(dossier);
+    const fichesTxt = formatBosFichesTxt(dossier.bos_fiches);
+    const etapesRel = formatBosRelianceContenusTxt(dossier);
+    const projetBloc = formatBosProjetSyntheseBloc(dossier);
+    const testsBloc = formatBosTestsScoresBloc(t);
+    const accomp = d.prenom ? "L'accompagné(e) " + d.prenom : "L'accompagné(e)";
+    const piedContact = [d.orga, d.consEmail, d.consTel].filter(Boolean).join(' · ') || '—';
+    return `Tu es consultant expert en bilan d'orientation scolaire Méthode RELIANCE®. Génère un DOCUMENT WORD COMPLET — synthèse officielle du bilan d'orientation scolaire — prêt à télécharger (.docx), structuré et professionnel.
+
+CHARTE GRAPHIQUE OBLIGATOIRE (document de contenu client — charte sobre §5.2)
+• Police Calibri partout · Corps de texte : #555555, 10 pt, interligne aéré
+• Format A4, marges 2 cm
+• En-tête : logo consultant à gauche (~2 cm) si disponible ; à droite « Méthode RELIANCE® » en Calibri 14 pt gras #074F6A, puis titre du document
+• Pied de page sobre : ${piedContact} · pagination page X/Y
+• Titres de sections : #074F6A gras, 13 pt · Sous-titres : #E97132 gras, 11 pt
+• Tableaux : bordures #CCCCCC · En-têtes fond #EEF5F8
+• NOMENCLATURE TESTS RELIANCE® : « Boussole de Valeurs », « Orientation Professionnelle », « Signature Comportementale » (jamais Schwartz, RIASEC, MBTI, 16P)
+• SOMMAIRE OBLIGATOIRE en section 2 (tableau Titre | Page)
+
+STRUCTURE DU DOCUMENT (ordre strict — 14 sections dont 8bis)
+
+1. PAGE DE GARDE
+${accomp} : ${d.nom || '—'} · Niveau : ${d.niveau || '—'} · Établissement : ${d.etab || '—'}
+Consultant : ${d.cons || '—'} · Organisme : ${d.orga || '—'} · Lieu : ${d.lieu || '—'}
+Dates : du ${d.dateDebut || '—'} au ${d.dateFin || '—'} · Modalité : ${d.modal || '—'}
+[LOGO CONSULTANT à insérer manuellement]
+
+2. SOMMAIRE — obligatoire (tableau Titre | Page)
+
+3. INTRODUCTION & BIENVENUE AUX PARENTS
+Objectif du document, pourquoi un bilan d'orientation scolaire Méthode RELIANCE®
+
+4. LA DÉMARCHE
+── PROGRAMME DES SÉANCES ──
+${formatBosProgrammeTxt()}
+
+── ÉTAPES RELIANCE® (parcours méthode — contenus e1c à e4c) ──
+${etapesRel}
+
+5. EXPRESSION DE L'ACCOMPAGNÉ(E)
+Attentes, problématiques, besoins — données :
+Situation : ${bosPromptVal(d.ctx)}
+Besoins principaux : ${besoins === '—' ? 'Non renseigné' : besoins}
+Attentes : ${attentes === '—' ? 'Non renseigné' : attentes}
+Objectifs : ${bosPromptVal(d.o1)} · ${bosPromptVal(d.o2)} · ${bosPromptVal(d.o3)}
+
+6. LES OUTILS UTILISÉS
+Présentation pédagogique pour les parents : Boussole de Valeurs, Orientation Professionnelle, Signature Comportementale (vocabulaire accessible, sans jargon psychométrique)
+
+7. LES RÉSULTATS
+Rédige cette section à partir des scores réels ci-dessous — tableaux synthétiques obligatoires, nomenclature RELIANCE® uniquement :
+
+${testsBloc}
+
+8. MÉTIERS PERTINENTS
+Depuis l'exploration métiers — tableau : cohérence / points de vigilance / compétences à développer
+Métiers explorés : ${bosPromptVal(d.metiers)}
+Débouchés étudiés : ${bosPromptVal(dossier.bos_debouches)}
+Réalité des métiers : ${bosPromptVal(dossier.bos_realite_metier)}
+Métiers retenus / écartés : ${bosPromptVal(d.retenus)}
+Formations envisagées : ${bosPromptVal(d.formations)}
+
+FICHES MÉTIERS BOS :
+${fichesTxt === '—' ? 'Non renseigné' : fichesTxt}
+
+8bis. PROJET D'ORIENTATION
+${projetBloc}
+
+9. CONCLUSION STRATÉGIQUE
+${d.conclusions || '—'}
+
+10. CONSEILS AUX PARENTS
+Tableau deux colonnes : « Ce qu'il faut faire » | « À garder en tête »
+
+11. ACTIONS
+Tableau court terme et moyen terme — plan d'action :
+${d.plan || '—'}
+Points forts : ${d.ptsForts || '—'}
+Pistes : ${d.pistes || '—'}
+
+12. MIND MAP
+Placeholder visible : « Carte mentale à insérer ici »
+
+13. SIGNATURES — Fait à ${d.lieu || '………………'}, le ${d.dateFin || '………………'}
+Consultant : ${d.cons || '—'} · ${accomp} · Représentant(e) légal(e)
+
+DONNÉES COMPLÉMENTAIRES ÉVALUATION
+${d.evalTxt || '—'}
+Ressenti de l'accompagné(e) : ${d.ressentiJ || '—'}
+Ressenti des parents : ${d.ressentiP || '—'}
+
+TEXTE COMPLÉMENTAIRE IA (si fourni)
+${d.iaTxt || '—'}
+
+${BOS_STYLE_PROMPT}
+
+Avant de générer, demande : préférez-vous une réponse dans le chat ou un document Word formaté ?`;
+  }
+
+  function exportBosSynthese() {
+    copyBosPromptToClipboard(buildBosSynthesePrompt());
+  }
+
+  function fallbackCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); } catch (e) { /* ignore */ }
+    document.body.removeChild(ta);
+  }
+
+  function initBosIaOut() {
+    BOS_IA_OUT_PROMPT_IDS.forEach(k => {
+      const el = document.getElementById('bos-out-' + k);
+      if (el) ensureBosIaOutStructure(el);
+    });
+    applyBosIaOutCacheToDom();
+  }
+
+  const BOS_DOC_BTN_STYLE = 'padding:7px 14px;background:var(--c3);color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif';
+
+  function renderBosDocActions(html) {
+    return `<div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px;flex-wrap:wrap">${html}</div>`;
+  }
+
+  function bosDocBtn(label, method) {
+    return `<button type="button" class="bos-doc-btn" onclick="RELIANCE_BOS.${method}()" style="${BOS_DOC_BTN_STYLE}">⬇️ ${label}</button>`;
+  }
+
+  function ensureBosDocsModal() {
+    let modal = document.getElementById('bos-docs-modal');
+    if (modal) return modal;
+    modal = document.createElement('div');
+    modal.id = 'bos-docs-modal';
+    modal.className = 'modal';
+    modal.innerHTML = `<div class="modal-box" style="width:560px;max-width:95vw">
+      <h3>📄 Générer les documents Word BOS</h3>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Charte RP Coaching exacte · Données du dossier pré-remplies</p>
+      <div style="background:var(--tbl-bg);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:11px;color:var(--tbl-hdr);line-height:1.7">
+        <strong>📋 Dossier actif :</strong> <span id="bos-docs-modal-nom" style="color:var(--c1);font-weight:700">—</span><br>
+        Complétez les onglets <strong>Identité</strong>, <strong>Programme</strong> et <strong>Synthèse BOS</strong> pour pré-remplir les champs.
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <button type="button" class="doc-gen-btn bos-docs-gen-btn" data-export="exportBosENR039" style="background:#EBF4FF;border:1px solid #074F6A;cursor:pointer;display:flex;align-items:center;gap:10px;padding:12px;border-radius:8px;text-align:left;font-family:Calibri,Arial,sans-serif">
+          <span style="font-size:20px">📋</span>
+          <div><div style="font-weight:700;color:#074F6A;font-size:12px">ENR039 Contrat BOS</div><div style="font-size:10px;color:var(--muted)">Contrat d'accompagnement</div></div>
+        </button>
+        <button type="button" class="doc-gen-btn bos-docs-gen-btn" data-export="exportBosENR048" style="background:#EBF4FF;border:1px solid #074F6A;cursor:pointer;display:flex;align-items:center;gap:10px;padding:12px;border-radius:8px;text-align:left;font-family:Calibri,Arial,sans-serif">
+          <span style="font-size:20px">📝</span>
+          <div><div style="font-weight:700;color:#074F6A;font-size:12px">ENR048 Recueil besoins</div><div style="font-size:10px;color:var(--muted)">Contexte & besoins</div></div>
+        </button>
+        <button type="button" class="doc-gen-btn bos-docs-gen-btn" data-export="exportBosENR047" style="background:#EBF4FF;border:1px solid #074F6A;cursor:pointer;display:flex;align-items:center;gap:10px;padding:12px;border-radius:8px;text-align:left;font-family:Calibri,Arial,sans-serif">
+          <span style="font-size:20px">📅</span>
+          <div><div style="font-weight:700;color:#074F6A;font-size:12px">ENR047 Calendrier BOS</div><div style="font-size:10px;color:var(--muted)">Programme prévisionnel</div></div>
+        </button>
+        <button type="button" class="doc-gen-btn bos-docs-gen-btn" data-export="exportBosCR" style="background:#EBF4FF;border:1px solid #074F6A;cursor:pointer;display:flex;align-items:center;gap:10px;padding:12px;border-radius:8px;text-align:left;font-family:Calibri,Arial,sans-serif">
+          <span style="font-size:20px">📝</span>
+          <div><div style="font-weight:700;color:#074F6A;font-size:12px">CR Séances</div><div style="font-size:10px;color:var(--muted)">Comptes-rendus</div></div>
+        </button>
+        <button type="button" class="doc-gen-btn bos-docs-gen-btn" data-export="exportBosEVAL" style="background:#EBF4FF;border:1px solid #074F6A;cursor:pointer;display:flex;align-items:center;gap:10px;padding:12px;border-radius:8px;text-align:left;font-family:Calibri,Arial,sans-serif">
+          <span style="font-size:20px">⭐</span>
+          <div><div style="font-weight:700;color:#074F6A;font-size:12px">Évaluation BOS</div><div style="font-size:10px;color:var(--muted)">Jeune & parents</div></div>
+        </button>
+        <button type="button" class="doc-gen-btn bos-docs-gen-btn" data-export="exportBosSYNWord" style="background:#EBF4FF;border:1px solid #074F6A;cursor:pointer;display:flex;align-items:center;gap:10px;padding:12px;border-radius:8px;text-align:left;font-family:Calibri,Arial,sans-serif">
+          <span style="font-size:20px">📄</span>
+          <div><div style="font-weight:700;color:#074F6A;font-size:12px">Synthèse BOS</div><div style="font-size:10px;color:var(--muted)">Document de synthèse</div></div>
+        </button>
+      </div>
+      <div class="mbtns">
+        <button type="button" class="mbtn c" id="bos-docs-modal-close">Fermer</button>
+      </div>
+    </div>`;
+    document.body.appendChild(modal);
+    const closeBtn = modal.querySelector('#bos-docs-modal-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => { modal.classList.remove('open'); });
+    }
+    Array.from(modal.querySelectorAll('.bos-docs-gen-btn')).forEach(btn => {
+      btn.addEventListener('click', () => {
+        const method = btn.getAttribute('data-export');
+        if (method && typeof RELIANCE_BOS[method] === 'function') RELIANCE_BOS[method]();
+      });
+    });
+    return modal;
+  }
+
+  function openBosDocsModal() {
+    const modal = ensureBosDocsModal();
+    const nomEl = document.getElementById('bos-docs-modal-nom');
+    if (nomEl) nomEl.textContent = getJeuneNomComplet() || '(aucun dossier actif)';
+    modal.classList.add('open');
+  }
+
+  function bosGuideSection(title, bodyHtml) {
+    return `<div style="margin-bottom:16px">
+      <div style="background:#074F6A;color:white;padding:8px 12px;border-radius:6px;font-weight:700;font-size:12px;margin-bottom:8px">${title}</div>
+      <div style="font-size:12px;line-height:1.75;color:#333;padding:0 4px">${bodyHtml}</div>
+    </div>`;
+  }
+
+  function buildBosGuideContent() {
+    const p = t => `<p style="margin:4px 0">${t}</p>`;
+    const ul = items => `<ul style="margin:6px 0 6px 18px">${items.map(i => `<li style="margin:3px 0">${i}</li>`).join('')}</ul>`;
+    const info = t => `<div style="background:#EBF4FF;border-left:4px solid #074F6A;padding:8px 12px;margin:8px 0;font-size:11px">${t}</div>`;
+    const warn = t => `<div style="background:#FFF3E0;border-left:4px solid #E97132;padding:8px 12px;margin:8px 0;font-size:11px">${t}</div>`;
+    return `
+      <div style="background:linear-gradient(135deg,#074F6A,#156082);color:white;padding:16px 20px;border-radius:10px;margin-bottom:16px">
+        <div style="font-size:20px;font-weight:700">📖 Guide — Bilan d'Orientation Scolaire RELIANCE®</div>
+        <div style="font-size:11px;opacity:.85;margin-top:4px">Pour les consultants BOS — pas à pas</div>
+      </div>
+      ${bosGuideSection('🔐 1. CONNEXION', `
+        ${ul([
+          'Sur l\'écran de connexion, sélectionnez <strong>« Bilan d\'Orientation Scolaire »</strong>',
+          'Votre mode est fixé pour toute la session',
+          'Pour changer de mode : déconnectez-vous'
+        ])}
+      `)}
+      ${bosGuideSection('📋 2. LES 11 ONGLETS BOS', `
+        ${ul([
+          '<strong>1️⃣ Identité BOS</strong> — Informations du jeune + représentants légaux<br>→ Signatures ENR039 (Contrat BOS) en bas de page',
+          '<strong>2️⃣ Contexte & besoins</strong> — Situation du jeune + attentes + objectifs du bilan<br>→ Signatures ENR048 (Recueil besoins) en bas de page',
+          '<strong>3️⃣ Programme</strong> — 5 séances prévisionnelles — dates, objectifs, outils<br>→ Signatures ENR047 (Calendrier) en bas de page',
+          '<strong>4️⃣ Tests</strong> — Résultats des 3 tests RELIANCE® (partagés avec BC)<br>→ Boussole de Valeurs · Orientation Pro · Signature Comportementale',
+          '<strong>5️⃣ Fiches Métiers</strong> — Pistes explorées avec le jeune<br>→ Statut par fiche : Piste retenue / Secondaire / Abandonnée',
+          '<strong>6️⃣ Étapes RELIANCE®</strong> — Se recentrer · Se comprendre · Choisir · S\'engager<br>→ Contenus, résultats, outils par étape',
+          '<strong>7️⃣ Suivi séances</strong> — Compte-rendu + signatures par séance<br>→ Jusqu\'à 5 séances',
+          '<strong>8️⃣ Plan d\'actions</strong> — Actions court et moyen terme',
+          '<strong>9️⃣ Projet</strong> — 🎯 Projet retenu · 🔄 Projet secondaire · ❌ Non retenu',
+          '<strong>🔟 Évaluation</strong> — ⭐ Satisfaction jeune (5 étoiles) · ⭐ Satisfaction parents (5 étoiles) · 📅 Proposition RDV post BOS',
+          '<strong>1️⃣1️⃣ Synthèse BOS</strong> — 7 prompts IA + zones de résultat + signatures finales'
+        ])}
+      `)}
+      ${bosGuideSection('🤖 3. UTILISER LES PROMPTS IA', `
+        ${p('Dans l\'onglet <strong>Synthèse BOS</strong> :')}
+        ${ul([
+          '① Remplissez tous les onglets en amont',
+          '② Cliquez « 📋 Copier le prompt [section] »',
+          '③ Cliquez « Claude.ai → » pour ouvrir Claude',
+          '④ Collez le prompt (Ctrl+V) et envoyez',
+          '⑤ Choisissez « réponse dans le chat »',
+          '⑥ Copiez le résultat de Claude',
+          '⑦ Collez dans la zone jaune correspondante'
+        ])}
+        ${info('💡 Conseil : remplissez les 6 sections dans l\'ordre avant d\'utiliser le prompt synthèse complète')}
+      `)}
+      ${bosGuideSection('📄 4. GÉNÉRER LES DOCUMENTS WORD', `
+        ${p('Cliquez « 📄 Générer Word » dans la barre du haut.')}
+        ${p('<strong>6 documents disponibles :</strong>')}
+        ${ul([
+          'ENR039 — Contrat BOS (onglet Identité)',
+          'ENR048 — Recueil des besoins (onglet Contexte)',
+          'ENR047 — Calendrier BOS (onglet Programme)',
+          'CR Séances (onglet Suivi séances)',
+          'Évaluation BOS (onglet Évaluation)',
+          'Synthèse BOS (onglet Synthèse)'
+        ])}
+      `)}
+      ${bosGuideSection('✍️ 5. SIGNATURES', `
+        ${ul([
+          'Chaque document a ses propres pads de signature',
+          'Pad signé dans l\'appli → signature reportée dans le Word',
+          'Pad non signé → espace prévu dans le Word pour signature manuelle',
+          'Bouton « Effacer » pour recommencer une signature'
+        ])}
+      `)}
+      ${bosGuideSection('💾 6. SAUVEGARDER', `
+        ${ul([
+          'Bouton « Sauvegarder » → fichier <strong>.reliance-bos</strong>',
+          'Nommage recommandé : <strong>NOM_Prenom.reliance-bos</strong>',
+          'L\'autosave fonctionne en continu (pastille verte)',
+          'Pour recharger un dossier : « Sauvegarder » → « Ouvrir un dossier » → sélectionner le .reliance-bos'
+        ])}
+        ${warn('⚠️ Sauvegardez après chaque séance avec le jeune')}
+      `)}
+      ${bosGuideSection('❓ BESOIN D\'AIDE ?', `
+        ${p('contact@rodrigueponcet.fr · 06 74 03 59 37')}
+      `)}
+    `;
+  }
+
+  function ensureBosGuideModal() {
+    let modal = document.getElementById('bos-guide-modal');
+    if (modal) return modal;
+    modal = document.createElement('div');
+    modal.id = 'bos-guide-modal';
+    modal.className = 'modal';
+    modal.innerHTML = `<div class="modal-box" style="width:720px;max-width:95vw;max-height:90vh;display:flex;flex-direction:column">
+      <h3 style="margin:0 0 12px 0">📖 Guide consultant BOS</h3>
+      <div id="bos-guide-modal-body" style="overflow-y:auto;flex:1;padding-right:6px"></div>
+      <div class="macts" style="margin-top:14px">
+        <button type="button" class="mbtn c" id="bos-guide-modal-close">Fermer</button>
+      </div>
+    </div>`;
+    document.body.appendChild(modal);
+    const closeBtn = modal.querySelector('#bos-guide-modal-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => { modal.classList.remove('open'); });
+    }
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.classList.remove('open');
+    });
+    return modal;
+  }
+
+  function renderGuideBosConsultant() {
+    const modal = ensureBosGuideModal();
+    const body = document.getElementById('bos-guide-modal-body');
+    if (body) body.innerHTML = buildBosGuideContent();
+    modal.classList.add('open');
+  }
+
+  function bosFmtDate(iso) {
+    if (typeof fmtDate === 'function') return fmtDate(iso);
+    if (!iso) return '';
+    const p = String(iso).split('-');
+    if (p.length === 3) return p[2] + '/' + p[1] + '/' + p[0];
+    return iso;
+  }
+
+  function bosToday() {
+    return typeof today === 'function' ? today() : new Date().toLocaleDateString('fr-FR');
+  }
+
+  function bosDocReady() {
+    if (typeof checkDocxLoaded === 'function' && !checkDocxLoaded()) return false;
+    return typeof docx !== 'undefined' && typeof P === 'function' && typeof CONTENT_WIDTH !== 'undefined';
+  }
+
+  /** En-tête Word BOS — Méthode RELIANCE® + titre document */
+  function bosMakeHeader(docTitle) {
+    const cw = typeof CONTENT_WIDTH !== 'undefined' ? CONTENT_WIDTH : 9638;
+    const font = typeof RP_FONT !== 'undefined' ? RP_FONT : 'Calibri';
+    const logoData = typeof LOGO_DATA !== 'undefined' ? LOGO_DATA : null;
+    const cellB = {
+      top: { style: docx.BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+      bottom: { style: docx.BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+      left: { style: docx.BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+      right: { style: docx.BorderStyle.NONE, size: 0, color: 'FFFFFF' }
+    };
+    const logoCell = new docx.TableCell({
+      width: { size: 1500, type: docx.WidthType.DXA },
+      borders: cellB,
+      children: [new docx.Paragraph({
+        children: logoData
+          ? [new docx.ImageRun({ data: logoData, transformation: { width: 75, height: 54 }, type: 'png' })]
+          : [new docx.TextRun({ text: gv('bos_orga') || '—', font, size: 16, color: '074F6A' })]
+      })]
+    });
+    const titleCell = new docx.TableCell({
+      width: { size: cw - 1500, type: docx.WidthType.DXA },
+      borders: cellB,
+      verticalAlign: docx.VerticalAlign.BOTTOM,
+      children: [
+        new docx.Paragraph({
+          alignment: docx.AlignmentType.RIGHT,
+          border: { bottom: { style: docx.BorderStyle.SINGLE, size: 12, color: '074F6A' } },
+          spacing: { after: 40 },
+          children: [new docx.TextRun({
+            text: 'Méthode RELIANCE®',
+            bold: true,
+            color: '074F6A',
+            font: 'Calibri',
+            size: 28
+          })]
+        }),
+        new docx.Paragraph({
+          alignment: docx.AlignmentType.RIGHT,
+          spacing: { after: 0 },
+          children: [new docx.TextRun({
+            text: docTitle || '',
+            color: typeof RP_COLORS !== 'undefined' ? RP_COLORS.grisClair : '888888',
+            font,
+            size: typeof RP_FONT_SMALL !== 'undefined' ? RP_FONT_SMALL : 18
+          })]
+        })
+      ]
+    });
+    return new docx.Header({
+      children: [new docx.Table({
+        width: { size: cw, type: docx.WidthType.DXA },
+        columnWidths: [1500, cw - 1500],
+        borders: {
+          top: cellB.top, bottom: cellB.bottom, left: cellB.left, right: cellB.right,
+          insideH: cellB.top, insideV: cellB.top
+        },
+        rows: [new docx.TableRow({ children: [logoCell, titleCell] })]
+      })]
+    });
+  }
+
+  /** Pied de page Word BOS — organisme, email et téléphone consultant */
+  function bosMakeFooter(ref) {
+    const orga = gv('bos_orga') || '—';
+    const email = gv('bos_cons_email') || '—';
+    const tel = gv('bos_cons_tel') || '—';
+    const line1 = [orga, email, tel].filter(x => x && x !== '—').join(' · ') || '—';
+    const font = typeof RP_FONT !== 'undefined' ? RP_FONT : 'Calibri';
+    const cw = typeof CONTENT_WIDTH !== 'undefined' ? CONTENT_WIDTH : 9638;
+    const gris = typeof RP_COLORS !== 'undefined' ? RP_COLORS.grisClair : '888888';
+    return new docx.Footer({
+      children: [
+        new docx.Paragraph({
+          border: { top: { style: docx.BorderStyle.SINGLE, size: 4, color: 'C1E4F5' } },
+          tabStops: [{ type: docx.TabStopType.RIGHT, position: cw }],
+          spacing: { before: 80, after: 40 },
+          children: [
+            new docx.TextRun({ text: line1, font, size: 14, color: gris }),
+            new docx.TextRun({ text: '\t' + (ref || '') + '  —  ', font, size: 14, color: gris }),
+            new docx.TextRun({ children: [docx.PageNumber.CURRENT], font, size: 14, color: gris }),
+            new docx.TextRun({ text: ' / ', font, size: 14, color: gris }),
+            new docx.TextRun({ children: [docx.PageNumber.TOTAL_PAGES], font, size: 14, color: gris })
+          ]
+        }),
+        new docx.Paragraph({
+          tabStops: [{ type: docx.TabStopType.RIGHT, position: cw }],
+          spacing: { before: 0, after: 0 },
+          children: [
+            new docx.TextRun({
+              text: '⚪︎  Édité via RELIANCE® — Bilan d\'Orientation Scolaire',
+              font, size: 12, color: 'CCCCCC', italics: true
+            })
+          ]
+        })
+      ]
+    });
+  }
+
+  function bosDownload(generator, baseName) {
+    if (!bosDocReady()) {
+      if (typeof showToast === 'function') showToast('❌ Bibliothèque Word non chargée — ouvrez dist/index_bos.html', 'orange');
+      return;
+    }
+    if (typeof downloadDoc !== 'function') {
+      if (typeof showToast === 'function') showToast('❌ Export Word indisponible', 'orange');
+      return;
+    }
+    const slug = buildFilename().replace(EXT, '') || 'BOS';
+    downloadDoc(generator, baseName + '_' + slug + '.docx');
+  }
+
+  /** Bandeau section admin navy #074F6A */
+  function bosH1Admin(text) {
+    return new docx.Paragraph({
+      spacing: { before: 280, after: 140 },
+      shading: { fill: '074F6A', type: docx.ShadingType.CLEAR },
+      children: [new docx.TextRun({ text, bold: true, color: 'FFFFFF', font: RP_FONT, size: RP_FONT_H1 })]
+    });
+  }
+
+  /** Tableaux admin — en-têtes navy, lignes alternées #C1E4F5 */
+  function bosMakeTable(headers, rows, colWidths) {
+    const total = colWidths.reduce((a, b) => a + b, 0);
+    const hdrBorder = { style: docx.BorderStyle.SINGLE, size: 6, color: '074F6A' };
+    const cellBorder = { style: docx.BorderStyle.SINGLE, size: 4, color: 'BBBBBB' };
+    const headerRow = new docx.TableRow({
+      tableHeader: true,
+      children: headers.map((h, i) => new docx.TableCell({
+        width: { size: colWidths[i], type: docx.WidthType.DXA },
+        borders: { top: hdrBorder, bottom: hdrBorder, left: hdrBorder, right: hdrBorder },
+        shading: { fill: '074F6A', type: docx.ShadingType.CLEAR },
+        margins: { top: 80, bottom: 80, left: 120, right: 120 },
+        children: [new docx.Paragraph({
+          children: [new docx.TextRun({ text: h, bold: true, color: 'FFFFFF', font: RP_FONT, size: RP_FONT_SMALL })]
+        })]
+      }))
+    });
+    const dataRows = rows.map((row, ri) => new docx.TableRow({
+      children: row.map((cell, i) => new docx.TableCell({
+        width: { size: colWidths[i], type: docx.WidthType.DXA },
+        borders: { top: cellBorder, bottom: cellBorder, left: cellBorder, right: cellBorder },
+        shading: ri % 2 === 1 ? { fill: 'C1E4F5', type: docx.ShadingType.CLEAR } : undefined,
+        margins: { top: 80, bottom: 80, left: 120, right: 120 },
+        children: [new docx.Paragraph({
+          children: [new docx.TextRun({
+            text: typeof cell === 'object' ? (cell.text || '') : String(cell || ''),
+            bold: typeof cell === 'object' ? !!cell.bold : false,
+            font: RP_FONT,
+            size: RP_FONT_SMALL,
+            color: RP_COLORS.gris
+          })]
+        })]
+      }))
+    }));
+    return new docx.Table({ width: { size: total, type: docx.WidthType.DXA }, columnWidths: colWidths, rows: [headerRow, ...dataRows] });
+  }
+
+  function bosDoc(children, headerTitle, footerRef) {
+    return new docx.Document({
+      styles: DOC_STYLES,
+      numbering: NUMBERING,
+      sections: [{
+        properties: { page: PAGE_PROPS },
+        headers: { default: bosMakeHeader(headerTitle) },
+        footers: { default: bosMakeFooter(footerRef) },
+        children
+      }]
+    });
+  }
+
+  function bosParas(text) {
+    const t = (text || '').trim();
+    if (!t) return [P('—')];
+    return t.split(/\n/).map(line => P(line));
+  }
+
+  function bosCheckedLabels(items) {
+    return items.filter(x => {
+      const e = document.getElementById(x.id);
+      return e && e.checked;
+    }).map(x => x.label);
+  }
+
+  function getBosDocCtx() {
+    const rl1 = [gv('bos_rl1_prenom'), gv('bos_rl1_nom')].filter(Boolean).join(' ').trim();
+    const rl2 = [gv('bos_rl2_prenom'), gv('bos_rl2_nom')].filter(Boolean).join(' ').trim();
+    return {
+      jeune: getJeuneNomComplet(),
+      prenom: gv('bos_jeune_prenom'),
+      nom: gv('bos_jeune_nom'),
+      dob: bosFmtDate(gv('bos_jeune_dob')),
+      niveau: gv('bos_niveau'),
+      etab: gv('bos_etablissement'),
+      classe: gv('bos_classe'),
+      spec: gv('bos_specialites'),
+      emailJ: gv('bos_jeune_email'),
+      telJ: gv('bos_jeune_tel'),
+      rl1: rl1 || '—',
+      rl2: rl2 || '',
+      rlEmail: gv('bos_rl1_email'),
+      rlTel: gv('bos_rl1_tel'),
+      cons: gv('bos_cons') || 'Rodrigue Poncet',
+      orga: gv('bos_orga') || 'RP Coaching & Formation',
+      consTel: gv('bos_cons_tel'),
+      consEmail: gv('bos_cons_email'),
+      accompagne: libelleAccompagne(),
+      lieu: gv('bos_lieu') || 'Val Suran',
+      debut: bosFmtDate(gv('bos_date_debut')),
+      fin: bosFmtDate(gv('bos_date_fin')),
+      progDebut: bosFmtDate(gv('bos_prog_debut')),
+      progFin: bosFmtDate(gv('bos_prog_fin')),
+      modal: gv('bos_prog_modal') || 'Présentiel',
+      financement: gv('bos_financement') || 'Paiement direct famille',
+      seances: readBosSeances(),
+      crSeances: collectBosCrSeances()
+    };
+  }
+
+  function bosSigBlocks(blocks) {
+    const out = [];
+    blocks.forEach((b, i) => {
+      if (i) out.push(space(120));
+      if (typeof buildSigTableFromPads === 'function') {
+        out.push(...buildSigTableFromPads(b.id1, b.l1, b.id2, b.l2));
+      } else {
+        out.push(P(b.l1), space(400), P(b.l2));
+      }
+    });
+    return out;
+  }
+
+  /** Trois signataires : Consultant · L'accompagné(e) [prénom] · Représentant légal */
+  function bosSigThree(c, padIds) {
+    const rlLabel = c.rl2 ? c.rl1 + ' / ' + c.rl2 : c.rl1;
+    const voidId = padIds.void || padIds.rl + '_pad_void';
+    return bosSigBlocks([
+      {
+        id1: padIds.cons,
+        l1: 'Consultant(e) — ' + (c.cons || '—'),
+        id2: padIds.accomp,
+        l2: libelleAccompagneSig()
+      },
+      {
+        id1: padIds.rl,
+        l1: 'Représentant(e) légal(e) — ' + rlLabel,
+        id2: voidId,
+        l2: '\u00a0'
+      }
+    ]);
+  }
+
+  async function generateBosENR039() {
+    const c = getBosDocCtx();
+    const rlLabel = c.rl2 ? c.rl1 + ' / ' + c.rl2 : c.rl1;
+    const children = [
+      titlePara("CONTRAT DE BILAN D'ORIENTATION SCOLAIRE"),
+      versionPara('ENR039 — Méthode RELIANCE® BOS'),
+      bosH1Admin('1. PARTIES'),
+      fieldRow('Organisme', c.orga),
+      fieldRow('Consultant(e)', c.cons),
+      fieldRow("L'accompagné(e)", c.jeune),
+      fieldRow('Date de naissance', c.dob),
+      fieldRow('Représentant(s) légal(aux)', rlLabel),
+      space(120),
+      bosH1Admin('2. OBJET'),
+      P("Le présent contrat a pour objet la réalisation d'un bilan d'orientation scolaire Méthode RELIANCE® au bénéfice de " + (c.jeune || "[l'accompagné(e)]") + ', en classe de ' + (c.classe || c.niveau || '—') + '.'),
+      space(80),
+      bosH1Admin('3. MODALITÉS ET PÉRIODE'),
+      fieldG2(['Du', c.debut || c.progDebut, 'au', c.fin || c.progFin]),
+      fieldRow('Modalité', c.modal),
+      fieldRow('Lieu', c.lieu),
+      fieldRow('Financement', c.financement),
+      space(80),
+      bosH1Admin('4. TARIF'),
+      P('Montant de la prestation : selon accord figurant au mode de financement ci-dessus (« ' + c.financement + ' »).'),
+      P('Le calendrier prévisionnel (ENR047) et le recueil des besoins (ENR048) sont annexés au dossier BOS.'),
+      space(200),
+      bosH1Admin('5. SIGNATURES'),
+      fieldG2(['Fait à', c.lieu, 'Le', bosToday()]),
+      space(200),
+      ...bosSigThree(c, {
+        cons: 'sig_bos_contrat_cons',
+        accomp: 'sig_bos_contrat_jeune',
+        rl: 'sig_bos_contrat_rl',
+        void: 'sig_bos_contrat_cons2'
+      })
+    ];
+    return bosDoc(children, 'ENR039 — Contrat BOS', 'ENR039 — BOS');
+  }
+
+  async function generateBosENR047() {
+    const c = getBosDocCtx();
+    const rows = (c.seances.length ? c.seances : PROG_DEFAULTS.map((p, i) => ({
+      num: i + 1, date: '', horaires: '', duree: '2 h 00', obj: p.obj, outils: p.outils
+    }))).map(s => [
+      String(s.num),
+      bosFmtDate(s.date) || '—',
+      s.horaires || '—',
+      s.duree || '—',
+      s.obj || '—',
+      s.outils || '—'
+    ]);
+    const children = [
+      titlePara('CALENDRIER PRÉVISIONNEL — BILAN D\'ORIENTATION SCOLAIRE'),
+      versionPara('ENR047 — Méthode RELIANCE®'),
+      fieldRow("L'accompagné(e)", c.jeune),
+      fieldRow('Établissement', c.etab),
+      fieldG2(['Période du', c.progDebut, 'au', c.progFin]),
+      fieldRow('Modalité', c.modal),
+      fieldRow('Consultant(e)', c.cons),
+      space(120),
+      bosH1Admin('TABLEAU DES 5 SÉANCES'),
+      bosMakeTable(
+        ['N°', 'Date', 'Horaires', 'Durée', 'Objectifs', 'Outils'],
+        rows,
+        [500, 1100, 1200, 800, 2800, 2238]
+      ),
+      space(120),
+      fieldRow('Contraintes identifiées', gv('bos_prog_contraintes')),
+      space(300),
+      bosH1Admin('SIGNATURES'),
+      fieldG2(['Fait à', c.lieu, 'Le', bosToday()]),
+      space(200),
+      ...bosSigThree(c, {
+        cons: 'sig_bos_cal_cons',
+        accomp: 'sig_bos_cal_jeune',
+        rl: 'sig_bos_cal_rl',
+        void: 'sig_bos_cal_org'
+      })
+    ];
+    return bosDoc(children, 'ENR047 — Calendrier BOS', 'ENR047 — BOS');
+  }
+
+  async function generateBosENR048() {
+    const c = getBosDocCtx();
+    const besoins = bosCheckedLabels(BESOINS_CHECKS);
+    const attentes = bosCheckedLabels(ATTENTES_CHECKS);
+    const conc = document.getElementById('bos_conc_adapte')?.checked ? 'Adapté' : 'Non adapté';
+    const children = [
+      titlePara('RECUEIL DES BESOINS — BILAN D\'ORIENTATION SCOLAIRE'),
+      versionPara('ENR048 — Méthode RELIANCE®'),
+      fieldRow("L'accompagné(e)", c.jeune),
+      fieldRow('Niveau / classe', (c.niveau || '—') + (c.classe ? ' — ' + c.classe : '')),
+      fieldRow('Consultant(e)', c.cons),
+      space(120),
+      bosH1Admin('SITUATION'),
+      ...bosParas(gv('bos_ctx_situation')),
+      space(120),
+      bosH1Admin('BESOINS PRINCIPAUX'),
+      ...(besoins.length ? besoins.map(l => makeBullet(l, 'bullets')) : [P('—')]),
+      fieldRow('Autre besoin', gv('bos_b_autre')),
+      space(120),
+      bosH1Admin('ATTENTES'),
+      ...(attentes.length ? attentes.map(l => makeBullet(l, 'bullets')) : [P('—')]),
+      fieldRow('Autre attente', gv('bos_a_autre')),
+      space(120),
+      bosH1Admin('OBJECTIFS DU BILAN'),
+      bosMakeTable(
+        ['Objectif', 'Atteint (prévision)', 'Commentaire'],
+        [
+          [gv('bos_obj1') || '—', gv('bos_obj1_atteint') || '—', gv('bos_obj1_com') || '—'],
+          [gv('bos_obj2') || '—', gv('bos_obj2_atteint') || '—', gv('bos_obj2_com') || '—'],
+          [gv('bos_obj3') || '—', gv('bos_obj3_atteint') || '—', gv('bos_obj3_com') || '—']
+        ],
+        [3200, 1800, 4638]
+      ),
+      space(120),
+      bosH1Admin('CONCLUSION ENTRETIEN PRÉALABLE'),
+      fieldRow('Conclusion', conc),
+      ...bosParas(gv('bos_conc_motif')),
+      space(300),
+      bosH1Admin('SIGNATURES'),
+      fieldG2(['Fait à', c.lieu, 'Le', bosToday()]),
+      space(200),
+      ...bosSigThree(c, {
+        cons: 'sig_bos_rb_cons',
+        accomp: 'sig_bos_rb_jeune',
+        rl: 'sig_bos_rb_rl',
+        void: 'sig_bos_rb_void'
+      })
+    ];
+    return bosDoc(children, 'ENR048 — Recueil besoins BOS', 'ENR048 — BOS');
+  }
+
+  async function generateBosCR() {
+    syncBosSuiviTable();
+    const c = getBosDocCtx();
+    const prog = c.seances.length ? c.seances : readBosSeances();
+    const crMap = {};
+    c.crSeances.forEach(s => { crMap[s.num] = s; });
+    const rows = prog.map(s => {
+      const cr = crMap[s.num] || {};
+      return [
+        String(s.num),
+        bosFmtDate(s.date) || '—',
+        s.horaires || '—',
+        cr.cr || '—'
+      ];
+    });
+    const children = [
+      titlePara('COMPTE-RENDU DES SÉANCES — BILAN D\'ORIENTATION'),
+      versionPara('ENR-BOS-CR'),
+      fieldRow("L'accompagné(e)", c.jeune),
+      fieldRow('Consultant(e)', c.cons),
+      fieldG2(['Période', 'du ' + (c.progDebut || '—'), 'au', c.progFin || '—']),
+      space(120),
+      bosH1Admin('CE QU\'ON A VÉCU EN SÉANCE'),
+      P('Ci-dessous, le résumé de chaque rencontre : ce qui a été travaillé et les points retenus par ' + (c.prenom ? c.prenom : "l'accompagné(e)") + '.'),
+      space(80),
+      bosMakeTable(['Séance', 'Date', 'Horaires', 'Ton compte-rendu'], rows, [700, 1400, 1500, 6038]),
+      space(300),
+      bosH1Admin('SIGNATURES PAR SÉANCE'),
+      P('Les signatures ci-dessous valident chaque compte-rendu de séance.'),
+      space(120)
+    ];
+    prog.forEach(s => {
+      const n = s.num;
+      const cr = crMap[n] || {};
+      children.push(
+        h2('Séance ' + n + (bosFmtDate(s.date) ? ' — ' + bosFmtDate(s.date) : '')),
+        P('Objectif : ' + (s.obj || '—')),
+        P('Compte-rendu : ' + (cr.cr || '—')),
+        space(80)
+      );
+      if (typeof buildSigTableFromPads === 'function') {
+        children.push(...buildSigTableFromPads(
+          'sig_bos_cr_consultant_' + n, 'Consultant(e) — ' + c.cons,
+          'sig_bos_cr_benef_' + n, libelleAccompagneSig()
+        ));
+      }
+      children.push(space(200));
+    });
+    children.push(
+      bosH1Admin('SIGNATURES DU DOSSIER'),
+      fieldG2(['Fait à', c.lieu, 'Le', bosToday()]),
+      space(200),
+      ...bosSigThree(c, {
+        cons: 'sig_bos_cr_fin_cons',
+        accomp: 'sig_bos_cr_fin_accomp',
+        rl: 'sig_bos_cr_fin_rl',
+        void: 'sig_bos_cr_fin_void'
+      })
+    );
+    return bosDoc(children, 'ENR-BOS-CR', 'CR BOS');
+  }
+
+  async function generateBosEVAL() {
+    const c = getBosDocCtx();
+    const children = [
+      titlePara('ÉVALUATION DU BILAN D\'ORIENTATION SCOLAIRE'),
+      versionPara('ENR-BOS-EVAL'),
+      fieldRow("L'accompagné(e)", c.jeune),
+      fieldRow('Consultant(e)', c.cons),
+      space(120),
+      bosH1Admin("ÉVALUATION DE L'ACCOMPAGNÉ(E)")
+    ];
+    for (let n = 1; n <= BOS_EVAL_OBJ_COUNT; n++) {
+      const f = bosEvalFieldIds('jeune', n);
+      children.push(
+        h2('Objectif ' + n + ' : ' + (gv('bos_obj' + n) || '—')),
+        fieldRow('Atteint', gv(f.atteint) || '—'),
+        fieldRow('Points positifs', gv(f.pos)),
+        fieldRow('Points à améliorer', gv(f.amel)),
+        space(80)
+      );
+    }
+    children.push(
+      fieldRow("Ressenti général (l'accompagné(e))", gv('bos_eval_j_ressenti')),
+      space(200),
+      bosH1Admin('ÉVALUATION DES PARENTS')
+    );
+    for (let n = 1; n <= BOS_EVAL_OBJ_COUNT; n++) {
+      const f = bosEvalFieldIds('parent', n);
+      children.push(
+        h2('Objectif ' + n + ' : ' + (gv('bos_obj' + n) || '—')),
+        fieldRow('Atteint', gv(f.atteint) || '—'),
+        fieldRow('Points positifs', gv(f.pos)),
+        fieldRow('Points à améliorer', gv(f.amel)),
+        space(80)
+      );
+    }
+    children.push(
+      fieldRow('Ressenti général (parents)', gv('bos_eval_p_ressenti')),
+      space(300),
+      bosH1Admin('SIGNATURES'),
+      fieldG2(['Fait à', c.lieu, 'Le', bosToday()]),
+      space(200),
+      ...bosSigThree(c, {
+        cons: 'sig_bos_eval_cons',
+        accomp: 'sig_bos_eval_fam',
+        rl: 'sig_bos_eval_rl',
+        void: 'sig_bos_eval_void'
+      })
+    );
+    return bosDoc(children, 'ENR-BOS-EVAL', 'Évaluation BOS');
+  }
+
+  async function generateBosSYN() {
+    const c = getBosDocCtx();
+    snapshotBosIaOutCacheFromDom();
+    const contexte = getBosIaText('contexte');
+    const tests = getBosIaText('tests');
+    const metiers = getBosIaText('metiers');
+    const projet = getBosIaText('projet');
+    const plan = getBosIaText('plan');
+    const conclusion = getBosIaText('conclusion');
+    const children = [
+      titlePara('SYNTHÈSE DU BILAN D\'ORIENTATION SCOLAIRE'),
+      versionPara('ENR-BOS-SYN — Méthode RELIANCE®'),
+      fieldRow("L'accompagné(e)", c.jeune),
+      fieldRow('Niveau', c.niveau),
+      fieldRow('Consultant(e)', c.cons),
+      fieldG2(['Période', 'du ' + (c.debut || '—'), 'au', c.fin || '—']),
+      space(120),
+      bosH1Admin('PRÉSENTATION DU JEUNE ET CONTEXTE'),
+      ...bosParas(contexte),
+      space(120),
+      bosH1Admin('RÉSULTATS DES TESTS ET PROFIL'),
+      ...bosParas(tests),
+      space(120),
+      bosH1Admin('EXPLORATION MÉTIERS ET PISTES'),
+      ...bosParas(metiers),
+      space(120),
+      bosH1Admin('PROJET D\'ORIENTATION RETENU'),
+      ...bosParas(projet),
+      space(120),
+      bosH1Admin('PLAN D\'ACTIONS ET SUITES'),
+      ...bosParas(plan),
+      space(120),
+      bosH1Admin('CONCLUSION'),
+      ...bosParas(conclusion),
+      space(300),
+      bosH1Admin('SIGNATURES'),
+      fieldG2(['Fait à', c.lieu, 'Le', bosToday()]),
+      space(200),
+      ...bosSigThree(c, {
+        cons: 'sig_bos_syn_cons',
+        accomp: 'sig_bos_syn_fam',
+        rl: 'sig_bos_syn_rl',
+        void: 'sig_bos_syn_void'
+      })
+    ];
+    return bosDoc(children, 'ENR-BOS-SYN', 'Synthèse BOS');
+  }
+
+  function exportBosENR039() { bosDownload(generateBosENR039, 'ENR039_Contrat_BOS'); }
+  function exportBosENR047() { bosDownload(generateBosENR047, 'ENR047_Calendrier_BOS'); }
+  function exportBosENR048() { bosDownload(generateBosENR048, 'ENR048_Recueil_BOS'); }
+  function exportBosCR() { bosDownload(generateBosCR, 'ENR-BOS-CR_Seances'); }
+  function exportBosEVAL() { bosDownload(generateBosEVAL, 'ENR-BOS-EVAL'); }
+  function exportBosSYNWord() { bosDownload(generateBosSYN, 'ENR-BOS-SYN'); }
+
+  function mountBosPanes() {
+    const area = document.querySelector('.content-area');
+    if (!area || document.getElementById('bos_p0')) return;
+    const panes = [
+      { id: 'bos_p0', html: renderPaneIdentite() },
+      { id: 'bos_p1', html: renderPaneContexte() },
+      { id: 'bos_p2', html: renderPaneProgramme() },
+      { id: 'bos_p5', html: renderPaneExploration() },
+      { id: 'bos_p6', html: renderPaneSuiviSeances() },
+      { id: 'bos_p9', html: renderPaneProjet() },
+      { id: 'bos_p10', html: renderPaneEvaluation() },
+      { id: 'bos_p11', html: renderPaneSynthese() }
+    ];
+    panes.forEach((p, i) => {
+      const div = document.createElement('div');
+      div.className = 'pane bos-pane' + (i === 0 ? ' active' : '');
+      div.id = p.id;
+      div.innerHTML = p.html;
+      if (i !== 0) div.style.display = 'none';
+      area.insertBefore(div, area.firstChild);
+    });
+    restoreBosSeances(null);
+    renderBosFiches();
+    initBosIaOut();
+    const c = typeof getCurrentConsultant === 'function' ? getCurrentConsultant() : null;
+    if (c) {
+      sv('bos_cons', (c.prenom || '') + ' ' + (c.nom || ''));
+    }
+  }
+
+  function mountBosSidebar() {
+    const nav = document.querySelector('.sidebar .sb-nav');
+    if (!nav) return;
+    Array.from(nav.querySelectorAll('.tab')).forEach(t => { t.style.display = 'none'; });
+    let bosNav = document.getElementById('bos-sb-nav');
+    if (!bosNav) {
+      bosNav = document.createElement('div');
+      bosNav.id = 'bos-sb-nav';
+      nav.insertBefore(bosNav, nav.firstChild);
+    }
+    bosNav.innerHTML = BOS_TABS.map(t =>
+      `<div class="tab${t.id === activeTab ? ' active' : ''}" onclick="RELIANCE_BOS.bosSw(${t.id})">
+        <span class="tab-ic">${t.ic}</span><span class="tab-lb">${t.label}</span>
+      </div>`
+    ).join('');
+  }
+
+  function updateTopbarBos() {
+    const title = document.querySelector('.topbar-title');
+    if (title) title.innerHTML = 'Bilan d\'Orientation Scolaire <em>Méthode RELIANCE® — v7.4 BOS</em>';
+  }
+
+  function onBosTabShown(tabId) {
+    if (tabId === 6) syncBosSuiviTable();
+    if (tabId === 9) syncEvalObjectivesLabels();
+    if (tabId === 10) initBosIaOut();
+  }
+
+  function bosSw(n) {
+    if (!isActive()) return;
+    activeTab = n;
+    const tab = BOS_TABS[n];
+    if (!tab) return;
+    Array.from(document.querySelectorAll('#bos-sb-nav .tab')).forEach((t, i) => t.classList.toggle('active', i === n));
+    if (tab.kind === 'bc') {
+      showBcPane(tab.paneId);
+      bosAutoSave();
+      return;
+    }
+    hideAllBcPanes();
+    hideAllBosPanes();
+    const paneId = tab.paneKey || BOS_PANE_IDS[n];
+    const pane = paneId ? document.getElementById(paneId) : null;
+    if (pane) {
+      pane.style.display = '';
+      pane.classList.add('active');
+    }
+    onBosTabShown(n);
+    const ca = document.querySelector('.content-area');
+    if (ca) ca.scrollTop = 0;
+    bosAutoSave();
+  }
+
+  function clearBosFields() {
+    BOS_TEXT_FIELDS.forEach(id => sv(id, ''));
+    BOS_CHECK_FIELDS.forEach(id => {
+      const e = document.getElementById(id);
+      if (e && e.type === 'checkbox') e.checked = false;
+    });
+    sv('bos_orga', 'RP Coaching & Formation');
+    sv('bos_lieu', 'Val Suran');
+    restoreBosSeances(null);
+    if (typeof selType !== 'undefined') {
+      window.selType = null;
+      Array.from(document.querySelectorAll('.p16-card')).forEach(c => c.classList.remove('sel'));
+      const det = document.getElementById('p16-detail');
+      if (det) det.classList.remove('show');
+    }
+    if (typeof valData !== 'undefined') valData.forEach(v => { v.score = 50; });
+    if (typeof riasec !== 'undefined') riasec.forEach(r => { r.score = 50; });
+    if (typeof buildValRows === 'function') buildValRows();
+    if (typeof buildRiasecRows === 'function') buildRiasecRows();
+    if (typeof updValCharts === 'function' && vchart) updValCharts();
+    if (typeof updRiasecChart === 'function' && rchart) updRiasecChart();
+    clearBosCrSigs();
+    BOS_SIG_FIXED_IDS.forEach(id => {
+      if (typeof clearSig === 'function') clearSig(id);
+    });
+    bosFiches = [];
+    bosFicheCount = 0;
+    renderBosFiches();
+    const suiviTbody = document.getElementById('bos-suivi-tbody');
+    if (suiviTbody) suiviTbody.innerHTML = '';
+    const planTbody = document.getElementById('plan-tbody');
+    if (planTbody) planTbody.innerHTML = '';
+    SHARED_BC_TEXT_FIELDS.forEach(id => sv(id, ''));
+    BOS_EVAL_TEXT_FIELDS.forEach(id => sv(id, ''));
+    BOS_EVAL_FIELDS.forEach(id => sv(id, ''));
+    BOS_SYN_FIELDS.forEach(id => sv(id, ''));
+    bosIaOutCache = {};
+    BOS_IA_OUT_PROMPT_IDS.forEach(k => {
+      const el = document.getElementById('bos-out-' + k);
+      if (!el) return;
+      const s = ensureBosIaOutStructure(el);
+      if (s) s.user.textContent = '';
+      syncBosIaOutEmpty(el);
+    });
+    syncEvalObjectivesLabels();
+    upProgBos();
+  }
+
+  function installHooks() {
+    if (hooksInstalled || !isActive()) return;
+    hooksInstalled = true;
+
+    if (typeof initAll === 'function') {
+      const orig = initAll;
+      window.initAll = function () {
+        orig.apply(this, arguments);
+        onAppReady();
+      };
+    }
+
+    if (typeof autoSave === 'function') {
+      const orig = autoSave;
+      window.autoSave = function () {
+        if (isActive()) bosAutoSave();
+        else orig.apply(this, arguments);
+      };
+    }
+
+    if (typeof loadAutoSave === 'function') {
+      const origLoadAutoSave = loadAutoSave;
+      window.loadAutoSave = function () {
+        if (isActive()) bosLoadAutoSave();
+        else origLoadAutoSave.apply(this, arguments);
+      };
+    }
+
+    if (typeof saveToSlot === 'function') {
+      const origSaveToSlot = saveToSlot;
+      window.saveToSlot = async function (forceSaveAs) {
+        if (!isActive()) return origSaveToSlot.apply(this, arguments);
+        const nom = getJeuneNomComplet();
+        if (!nom) {
+          showToast("⚠️ Renseignez le nom et prénom de l'accompagné(e) avant de sauvegarder", 'orange');
+          document.getElementById('save-modal')?.classList.remove('open');
+          bosSw(0);
+          document.getElementById('bos_jeune_nom')?.focus();
+          return;
+        }
+        const slugKey = buildBosSlugKey(nom);
+        if (typeof currentSlotKey !== 'undefined') currentSlotKey = slugKey;
+        if (typeof updateActiveDossierBadge === 'function') updateActiveDossierBadge(nom);
+        showToast('⏳ Sauvegarde BOS en cours...', 'orange');
+        const dataObj = collectBosData();
+        const payload = buildBosPayload();
+        const json = JSON.stringify(payload, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const suggestedName = buildFilename();
+        if (forceSaveAs && typeof currentRelianceFileHandle !== 'undefined') currentRelianceFileHandle = null;
+        let ok = false;
+        if (typeof currentRelianceFileHandle !== 'undefined' && currentRelianceFileHandle && !forceSaveAs) {
+          try {
+            await writeRelianceBlobToHandle(currentRelianceFileHandle, blob);
+            if (typeof currentRelianceFileName !== 'undefined') currentRelianceFileName = currentRelianceFileHandle.name || suggestedName;
+            ok = true;
+          } catch (e) { currentRelianceFileHandle = null; }
+        }
+        if (!ok && typeof window.showSaveFilePicker === 'function') {
+          try {
+            const handle = await window.showSaveFilePicker({
+              suggestedName: (typeof currentRelianceFileName !== 'undefined' && currentRelianceFileName) || suggestedName,
+              types: [{ description: 'Dossier RELIANCE BOS', accept: { 'application/json': [EXT] } }]
+            });
+            if (typeof currentRelianceFileHandle !== 'undefined') currentRelianceFileHandle = handle;
+            if (typeof currentRelianceFileName !== 'undefined') currentRelianceFileName = handle.name || suggestedName;
+            await writeRelianceBlobToHandle(handle, blob);
+            ok = true;
+          } catch (e) {
+            if (e && e.name === 'AbortError') return;
+          }
+        }
+        if (!ok) {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = suggestedName;
+          a.click();
+          URL.revokeObjectURL(url);
+        }
+        bosAutoSave();
+        const nomJeune = getJeuneNomComplet();
+        const slugKeyMeta = buildBosSlugKey(nomJeune);
+        const pct = typeof upProgBos === 'function' ? upProgBos() : 0;
+        await syncBosMetadataSupabase(nomJeune, slugKeyMeta, pct);
+        showToast(ok ? '☁️ Dossier BOS enregistré — ' + suggestedName : '💾 Téléchargement BOS — ' + suggestedName, 'green');
+        document.getElementById('save-modal')?.classList.remove('open');
+      };
+    }
+
+    if (typeof applyRelianceFileObject === 'function') {
+      const orig = applyRelianceFileObject;
+      window.applyRelianceFileObject = async function (obj, sourceLabel) {
+        if (!isActive()) return orig.apply(this, arguments);
+        if (!obj || !obj.data) {
+          showToast('❌ Fichier .reliance-bos invalide', 'orange');
+          return false;
+        }
+        if (isBcFile(obj, sourceLabel) && !isBosFile(obj, sourceLabel)) {
+          showToast('❌ Fichier BC (.reliance) — ouvrez-le en mode Bilan de Compétences', 'orange');
+          return false;
+        }
+        clearBosFields();
+        restoreBosData(obj.data.bos ? Object.assign({}, obj.data.bos, obj.data.shared || obj.data) : obj.data);
+        const nom = getJeuneNomComplet() || obj.nom || 'Sans nom';
+        if (typeof updateActiveDossierBadge === 'function') updateActiveDossierBadge(nom);
+        upProgBos();
+        bosAutoSave();
+        showToast('✅ Dossier BOS chargé — ' + (sourceLabel || 'fichier'), 'green');
+        return true;
+      };
+    }
+
+    if (typeof openRelianceFilePicker === 'function') {
+      const orig = openRelianceFilePicker;
+      window.openRelianceFilePicker = async function () {
+        if (!isActive()) return orig.apply(this, arguments);
+        if (typeof window.showOpenFilePicker === 'function') {
+          try {
+            const [handle] = await window.showOpenFilePicker({
+              types: [{ description: 'Dossier RELIANCE BOS', accept: { 'application/json': [EXT, '.json'] } }],
+              multiple: false
+            });
+            const file = await handle.getFile();
+            const obj = JSON.parse(await file.text());
+            if (typeof currentRelianceFileHandle !== 'undefined') currentRelianceFileHandle = handle;
+            if (typeof currentRelianceFileName !== 'undefined') currentRelianceFileName = file.name || '';
+            const ok = await applyRelianceFileObject(obj, file.name);
+            if (ok) document.getElementById('save-modal')?.classList.remove('open');
+            return;
+          } catch (e) {
+            if (e && e.name === 'AbortError') return;
+          }
+        }
+        const inp = document.getElementById('import-file-input');
+        if (inp) {
+          inp.setAttribute('accept', EXT + ',.json');
+          inp.click();
+        }
+      };
+    }
+
+    if (typeof clearData === 'function') {
+      const origClear = clearData;
+      window.clearData = function () {
+        if (!isActive()) return origClear.apply(this, arguments);
+        afficherModaleConfirmation('Nouveau bilan BOS', 'Effacer toutes les données du bilan BOS en cours ?', () => {
+          localStorage.removeItem(autosaveKey());
+          if (typeof resetRelianceFileSession === 'function') resetRelianceFileSession();
+          if (typeof currentSlotKey !== 'undefined') currentSlotKey = null;
+          clearBosFields();
+          upProgBos();
+          if (typeof updateActiveDossierBadge === 'function') updateActiveDossierBadge('');
+          document.getElementById('save-modal')?.classList.remove('open');
+          bosSw(0);
+          showToast('✅ Nouveau bilan BOS initialisé', 'green');
+        });
+      };
+    }
+
+    const importInp = document.getElementById('import-file-input');
+    if (importInp) importInp.setAttribute('accept', EXT + ',.json');
+  }
+
+  function onAppReady() {
+    if (!isActive() || mounted) return;
+    mounted = true;
+    mountBosPanes();
+    mountBosSidebar();
+    updateTopbarBos();
+    hideAllBcPanes();
+    bosSw(0);
+    bosLoadAutoSave();
+    setTimeout(() => {
+      BOS_SIG_FIXED_IDS.forEach(id => {
+        if (document.getElementById(id) && typeof initSigPad === 'function') initSigPad(id);
+      });
+    }, 120);
+  }
+
+  function init() {
+    // Activation différée — appelée explicitement après login via activate()
+    // Auto-exec conservée uniquement si RELIANCE_APP_TYPE déjà défini au chargement
+    if (isActive()) installHooks();
+  }
+
+  function activate() {
+    if (!isActive()) return;
+    if (!hooksInstalled) {
+      installHooks();
+    }
+    if (typeof onAppReady === 'function') {
+      onAppReady();
+    }
+    console.log('[RELIANCE] BOS activé pour APP_TYPE =', window.RELIANCE_APP_TYPE);
+  }
+
+  init();
+
+  return {
+    isActive,
+    activate,
+    bosSw,
+    bosAutoSave,
+    addBosFiche,
+    removeBosFiche,
+    updateBosFiche,
+    setBosEvalStars,
+    buildBosSynPromptContexte,
+    buildBosSynPromptTests,
+    buildBosSynPromptMetiers,
+    buildBosSynPromptProjet,
+    buildBosSynPromptPlan,
+    buildBosSynPromptConclusion,
+    buildBosSynPromptMindmap,
+    onBosIaOutInput,
+    exportBosSynthese,
+    exportBosENR039,
+    exportBosENR047,
+    exportBosENR048,
+    exportBosCR,
+    exportBosEVAL,
+    exportBosSYNWord,
+    openBosDocsModal,
+    renderGuideBosConsultant,
+    collectBosData,
+    restoreBosData,
+    syncBosSuiviTable,
+    syncEvalObjectivesLabels,
+    upProgBos,
+    clearBosFields,
+    buildFilename,
+    buildBosPayload,
+    syncBosMetadataSupabase,
+    loadBosSlotsFromSupabase
+  };
+})();
+if (typeof window !== 'undefined') window.RELIANCE_BOS = RELIANCE_BOS;
 
 </script>
 </body>
