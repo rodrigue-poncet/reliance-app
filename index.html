@@ -29012,7 +29012,10 @@ Type : ${t.p16}`;
     }
     const sec = (d['bos-projet-secondaire-intitule'] || '').trim();
     if (sec) {
-      lines.push('Projet secondaire : ' + sec + (d['bos-projet-secondaire-description'] ? '\nDescription : ' + d['bos-projet-secondaire-description'] : ''));
+      lines.push('Projet secondaire : ' + sec +
+        (d['bos-projet-secondaire-description'] ? '\nDescription : ' + d['bos-projet-secondaire-description'] : '') +
+        (d['bos-projet-secondaire-coherence'] ? '\nCohérence : ' + d['bos-projet-secondaire-coherence'] : '') +
+        (d['bos-projet-secondaire-faisabilite'] ? '\nFaisabilité : ' + d['bos-projet-secondaire-faisabilite'] : ''));
     }
     const non = (d['bos-projet-nonretenu-intitule'] || '').trim();
     if (non) {
@@ -29499,6 +29502,11 @@ Renvoie uniquement le code SVG, rien d'autre.`;
     const testsBloc = formatBosTestsScoresBloc(t);
     const accomp = d.prenom ? "L'accompagné(e) " + d.prenom : "L'accompagné(e)";
     const piedContact = [d.orga, d.consEmail, d.consTel].filter(Boolean).join(' · ') || '—';
+    const crSeances = (dossier.bos_cr_seances || [])
+      .filter(s => s.cr && s.cr.trim())
+      .map(s => 'Séance ' + (s.num || '') + (s.date ? ' — ' + s.date : '') + ' :\n' + s.cr.trim())
+      .join('\n\n');
+    const crBloc = crSeances || 'Comptes-rendus non renseignés';
     return `Tu es consultant expert en bilan d'orientation scolaire Méthode RELIANCE®. Génère un DOCUMENT WORD COMPLET — synthèse officielle du bilan d'orientation scolaire — prêt à télécharger (.docx), structuré et professionnel.
 
 CHARTE GRAPHIQUE OBLIGATOIRE (document de contenu client — charte sobre §5.2)
@@ -29522,14 +29530,37 @@ Dates : du ${d.dateDebut || '—'} au ${d.dateFin || '—'} · Modalité : ${d.m
 2. SOMMAIRE — obligatoire (tableau Titre | Page)
 
 3. INTRODUCTION & BIENVENUE AUX PARENTS
-Objectif du document, pourquoi un bilan d'orientation scolaire Méthode RELIANCE®
+Rédige DEUX volets distincts dans cette section :
 
-4. LA DÉMARCHE
+VOLET À L'ATTENTION DES PARENTS :
+- Expliquer en langage accessible ce qu'est le BOS Méthode RELIANCE® et pourquoi cette démarche a été engagée
+- Décrire brièvement comment s'est déroulé l'accompagnement (durée, séances, approche)
+- Expliquer ce que ce document représente et comment s'en servir pour accompagner leur enfant
+- Ton : rassurant, professionnel, partenarial
+
+VOLET À L'ATTENTION DE ${d.prenom ? d.prenom.toUpperCase() : 'TOI'} :
+- S'adresser directement au jeune, le tutoyer
+- Valoriser son engagement et son investissement personnel dans la démarche
+- Lui rappeler que cette synthèse est sa boussole personnelle pour les choix à venir
+- L'encourager à y revenir dans 6 mois, 1 an, pour mesurer son chemin parcouru
+- Ton : chaleureux, direct, encourageant, sans condescendance
+
+4. LE PARCOURS RELIANCE®
 ── PROGRAMME DES SÉANCES ──
 ${formatBosProgrammeTxt()}
 
-── ÉTAPES RELIANCE® (parcours méthode — contenus e1c à e4c) ──
-${etapesRel}
+── COMPTES-RENDUS DES SÉANCES ──
+${crBloc}
+
+── ÉTAPES RELIANCE® (parcours méthode — 4 étapes complètes : contenus, résultats, outils, durée) ──
+${formatBosRelianceEtapesTxt(dossier)}
+
+── EN TANT QUE CONSULTANT — COMPLÉMENTS D'INFORMATION ──
+Avant d'envoyer ce prompt à Claude, complétez ces éléments directement dans le chat :
+• Points forts observés durant le parcours :
+• Points de vigilance identifiés :
+• Éléments contextuels importants à intégrer :
+• Autres observations :
 
 5. EXPRESSION DE L'ACCOMPAGNÉ(E)
 Attentes, problématiques, besoins — données :
