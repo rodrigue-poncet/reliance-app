@@ -29510,7 +29510,7 @@ Renvoie uniquement le code SVG, rien d'autre.`;
     return `Tu es consultant expert en bilan d'orientation scolaire Méthode RELIANCE®. Génère un DOCUMENT WORD COMPLET — synthèse officielle du bilan d'orientation scolaire — prêt à télécharger (.docx), structuré et professionnel.
 
 CHARTE GRAPHIQUE OBLIGATOIRE (document de contenu client — charte sobre §5.2)
-• Police Calibri partout · Corps de texte : #555555, 10 pt, interligne aéré
+• Police Calibri partout · Corps de texte : #555555, 11 pt, interligne aéré
 • Format A4, marges 2 cm
 • En-tête : logo consultant à gauche (~2 cm) si disponible ; à droite « Méthode RELIANCE® » en Calibri 14 pt gras #074F6A, puis titre du document
 • Pied de page sobre : ${piedContact} · pagination page X/Y
@@ -29545,7 +29545,14 @@ VOLET À L'ATTENTION DE ${d.prenom ? d.prenom.toUpperCase() : 'TOI'} :
 - L'encourager à y revenir dans 6 mois, 1 an, pour mesurer son chemin parcouru
 - Ton : chaleureux, direct, encourageant, sans condescendance
 
-4. LE PARCOURS RELIANCE®
+4. EXPRESSION DE L'ACCOMPAGNÉ(E)
+Attentes, problématiques, besoins — données :
+Situation : ${bosPromptVal(d.ctx)}
+Besoins principaux : ${besoins === '—' ? 'Non renseigné' : besoins}
+Attentes : ${attentes === '—' ? 'Non renseigné' : attentes}
+Objectifs : ${bosPromptVal(d.o1)} · ${bosPromptVal(d.o2)} · ${bosPromptVal(d.o3)}
+
+5. LE PARCOURS RELIANCE®
 ── PROGRAMME DES SÉANCES ──
 ${formatBosProgrammeTxt()}
 
@@ -29561,13 +29568,6 @@ Avant d'envoyer ce prompt à Claude, complétez ces éléments directement dans 
 • Points de vigilance identifiés :
 • Éléments contextuels importants à intégrer :
 • Autres observations :
-
-5. EXPRESSION DE L'ACCOMPAGNÉ(E)
-Attentes, problématiques, besoins — données :
-Situation : ${bosPromptVal(d.ctx)}
-Besoins principaux : ${besoins === '—' ? 'Non renseigné' : besoins}
-Attentes : ${attentes === '—' ? 'Non renseigné' : attentes}
-Objectifs : ${bosPromptVal(d.o1)} · ${bosPromptVal(d.o2)} · ${bosPromptVal(d.o3)}
 
 6. LES OUTILS UTILISÉS
 Présentation pédagogique pour les parents : Boussole de Valeurs, Orientation Professionnelle, Signature Comportementale (vocabulaire accessible, sans jargon psychométrique)
@@ -29608,6 +29608,14 @@ Placeholder visible : « Carte mentale à insérer ici »
 
 13. SIGNATURES — Fait à ${d.lieu || '………………'}, le ${d.dateFin || '………………'}
 Consultant : ${d.cons || '—'} · ${accomp} · Représentant(e) légal(e)
+
+14. MENTION FINALE
+Rédige un court paragraphe de clôture chaleureux et professionnel incluant :
+- Remerciements pour la confiance accordée
+- Disponibilité du consultant pour toute question à l'issue du bilan
+- Mention que les informations contenues dans ce document sont données à titre indicatif et orientatif
+- Rappel que certaines données (cursus, débouchés, conditions d'accès aux formations) sont à vérifier auprès des établissements et organismes concernés
+Ton : sincère, bienveillant, professionnel — pas de formule creuse
 
 DONNÉES COMPLÉMENTAIRES ÉVALUATION
 ${d.evalTxt || '—'}
