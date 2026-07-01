@@ -20,7 +20,7 @@ jobs:
       - name: Ping TEST (reliance-app)
         run: |
           CODE=$(curl -s -o /tmp/test.json -w "%{http_code}" \
-            "https://zjsgzspvrtliypckixkf.supabase.co/rest/v1/consultants?select=id&limit=1" \
+            "https://zjsgzspvrtliypckixkf.supabase.co/rest/v1/resultats_tests?select=id&limit=1" \
             -H "apikey: ${{ secrets.SUPABASE_TEST_ANON_KEY }}" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_TEST_ANON_KEY }}")
           cat /tmp/test.json
