@@ -21294,9 +21294,15 @@ window.addEventListener('load', () => {
       <div style="font-size:11px;color:#1B5E20">Le calendrier est co-construit avec le bénéficiaire en fonction de ses contraintes, de son rythme et de ses objectifs. Chaque étape peut être adaptée dans le respect du cadre réglementaire du bilan de compétences (24h minimum, 3 phases obligatoires).</div>
     </div>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-      <button onclick="downloadDoc(generateCompteRendu,getNomFichier('CR_Seances'))" style="padding:7px 14px;background:var(--c3);color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif;display:flex;align-items:center;gap:6px">⬇️ Word Compte-rendu séances</button>
-      <button onclick="resetCalendar()" style="padding:7px 14px;background:var(--lgrey);color:var(--muted);border:1px solid var(--border);border-radius:6px;font-size:12px;cursor:pointer;font-family:Calibri,Arial,sans-serif" title="Remet les 8 séances avec leurs objectifs et outils par défaut">🔄 Réinitialiser les séances</button>
-      <button onclick="downloadDoc(generateENR003,getNomFichier('ENR003_Calendrier'))" style="padding:7px 14px;background:var(--c3);color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif;display:flex;align-items:center;gap:6px">⬇️ Télécharger Calendrier Prévisionnel Word</button></div>
+      <div class="fg" style="min-width:260px;margin:0"><div class="fl">Formule</div>
+        <select class="fs" id="f_formule">
+          <option value="Complet">Parcours Complet — 16h (1h préliminaire + 15h calendrier)</option>
+          <option value="Essentiel">Parcours Essentiel — 13h (1h préliminaire + 12h calendrier)</option>
+        </select>
+      </div>
+      <button onclick="loadFormuleDefaults()" style="padding:7px 14px;background:var(--c1);color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif;align-self:flex-end" title="Charge le programme par défaut de la formule sélectionnée">📋 Charger le programme par défaut</button>
+      <button onclick="downloadDoc(generateCompteRendu,getNomFichier('CR_Seances'))" style="padding:7px 14px;background:var(--c3);color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif;display:flex;align-items:center;gap:6px;align-self:flex-end">⬇️ Word Compte-rendu séances</button>
+      <button onclick="downloadDoc(generateENR003,getNomFichier('ENR003_Calendrier'))" style="padding:7px 14px;background:var(--c3);color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif;display:flex;align-items:center;gap:6px;align-self:flex-end">⬇️ Télécharger Calendrier Prévisionnel Word</button></div>
     <div class="tip green">Module Calendrier & Programme prévisionnel — reproduit le document ENR003 de votre organisme. Renseignez les séances et exportez en Word.</div>
     <div class="g2" style="margin-bottom:14px">
       <div class="fg"><div class="fl">Bénéficiaire</div><input class="fi" id="cal_benef"></div>
@@ -21337,7 +21343,7 @@ window.addEventListener('load', () => {
       <div class="cal-recap-title">📊 Récapitulatif des durées</div>
       <table class="recap-table">
         <tr><td>Entretiens individuels en face à face</td><td style="text-align:right;font-weight:700" id="recap-entretiens">0 h 00</td></tr>
-        <tr><td>Travaux personnels (dont tests)</td><td style="text-align:right"><input style="width:80px;text-align:right;border:none;border-bottom:1px solid var(--border);background:transparent;font-size:12px" id="recap-tp" value="8 h 00"></td></tr>
+        <tr><td>Travaux personnels (dont tests)</td><td style="text-align:right"><input style="width:80px;text-align:right;border:none;border-bottom:1px solid var(--border);background:transparent;font-size:12px" id="recap-tp" value="8 h 00" oninput="calcRecap();calcEmargTotal()"></td></tr>
         <tr><td><strong>Durée totale du bilan de compétences</strong></td><td style="text-align:right;font-weight:700" id="recap-total">0 h 00</td></tr>
       </table>
     </div>
@@ -21466,7 +21472,7 @@ window.addEventListener('load', () => {
     <div style="background:var(--tbl-bg);border-radius:8px;padding:12px 14px;margin-top:14px">
       <table style="width:100%;font-size:12px;border-collapse:collapse">
         <tr><td style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,.4)">Total entretiens face à face</td><td style="text-align:right;font-weight:700;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.4)" id="em-total-face">0 h 00</td></tr>
-        <tr><td style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,.4)">Recherche personnelle dont tests</td><td style="text-align:right;font-weight:700;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.4)">8 h 00</td></tr>
+        <tr><td style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,.4)">Recherche personnelle dont tests</td><td style="text-align:right;font-weight:700;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.4)" id="em-total-perso">8 h 00</td></tr>
         <tr><td style="padding:6px 0;font-weight:700">Durée totale en heures</td><td style="text-align:right;font-weight:700;padding:6px 0" id="em-total">0 h 00</td></tr>
       </table>
     </div>
@@ -21663,7 +21669,10 @@ window.addEventListener('load', () => {
 
     <!-- ENR013 ATTESTATION DE REMISE -->
     <div style="background:var(--tbl-bg);border-radius:9px;overflow:hidden;margin-bottom:16px;border:1px solid var(--border)">
-      <div style="background:var(--tbl-hdr);padding:10px 14px;font-size:12px;font-weight:700;color:white">ENR013 — Attestation de remise et de conservation de synthèse</div>
+      <div style="background:var(--tbl-hdr);padding:10px 14px;font-size:12px;font-weight:700;color:white;display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <span>ENR013 — Attestation de remise et de conservation de synthèse</span>
+        <button onclick="downloadDoc(generateENR013,getNomFichier('ENR013_Attestation_remise'))" style="padding:5px 10px;background:white;color:var(--tbl-hdr);border:none;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif;white-space:nowrap">⬇️ Word</button>
+      </div>
       <div style="padding:13px 15px">
         <div style="font-size:12px;line-height:1.75;color:var(--text);margin-bottom:12px;background:#f9f9f9;padding:10px 12px;border-radius:6px;border-left:3px solid var(--c1)">
           Conformément à l'article L.900-4-1 du Code du travail, le bénéficiaire est le seul destinataire des résultats et du document de synthèse. Ces éléments ne peuvent être communiqués à un tiers qu'avec son accord exprès. Notre organisme est tenu au secret professionnel (art. 378 du Code pénal).
@@ -21765,7 +21774,10 @@ window.addEventListener('load', () => {
 
     <!-- ENR014 RÉSEAU PERSONNES RESSOURCES -->
     <div style="background:var(--tbl-bg);border-radius:9px;overflow:hidden;margin-bottom:14px;border:1px solid var(--border)">
-      <div style="background:var(--tbl-hdr);padding:10px 14px;font-size:12px;font-weight:700;color:white">ENR014 — Participation réseau — Personne ressource</div>
+      <div style="background:var(--tbl-hdr);padding:10px 14px;font-size:12px;font-weight:700;color:white;display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <span>ENR014 — Participation réseau — Personne ressource</span>
+        <button onclick="downloadDoc(generateENR014,getNomFichier('ENR014_Reseau'))" style="padding:5px 10px;background:white;color:var(--tbl-hdr);border:none;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif;white-space:nowrap">⬇️ Word</button>
+      </div>
       <div style="padding:13px 15px">
         <div style="font-size:12px;line-height:1.75;color:var(--text);margin-bottom:12px">Dans le cadre d'un bilan de compétences, il est précieux de pouvoir échanger avec un professionnel pour mieux comprendre un métier, ses conditions d'exercice et ses débouchés. Nous vous proposons de rejoindre notre réseau de personnes ressources. Votre participation reste entièrement libre et volontaire.</div>
         <div style="font-size:13px;margin-bottom:10px">
@@ -22101,6 +22113,8 @@ window.addEventListener('load', () => {
         <button onclick="downloadDoc(generateEmargement,getNomFichier('ENR034_Emargements'))" style="padding:8px 10px;background:white;border:1px solid #196B24;border-radius:6px;font-size:11px;font-weight:700;color:#196B24;cursor:pointer;font-family:Calibri,Arial,sans-serif;text-align:left;display:flex;align-items:center;gap:6px"><span>📋</span><span>ENR034 Émargements</span></button>
         <button onclick="downloadDoc(generateENR023,getNomFichier('ENR023_Convention'))" style="padding:8px 10px;background:white;border:1px solid #196B24;border-radius:6px;font-size:11px;font-weight:700;color:#196B24;cursor:pointer;font-family:Calibri,Arial,sans-serif;text-align:left;display:flex;align-items:center;gap:6px"><span>📋</span><span>ENR023 Convention</span></button>
         <button onclick="downloadDoc(generateENR017,getNomFichier('ENR017_Evaluation_form'))" style="padding:8px 10px;background:white;border:1px solid #196B24;border-radius:6px;font-size:11px;font-weight:700;color:#196B24;cursor:pointer;font-family:Calibri,Arial,sans-serif;text-align:left;display:flex;align-items:center;gap:6px"><span>📋</span><span>ENR017 Éval. form.</span></button>
+        <button onclick="downloadDoc(generateENR013,getNomFichier('ENR013_Attestation_remise'))" style="padding:8px 10px;background:white;border:1px solid #196B24;border-radius:6px;font-size:11px;font-weight:700;color:#196B24;cursor:pointer;font-family:Calibri,Arial,sans-serif;text-align:left;display:flex;align-items:center;gap:6px"><span>📜</span><span>ENR013 Remise synthèse</span></button>
+        <button onclick="downloadDoc(generateENR014,getNomFichier('ENR014_Reseau'))" style="padding:8px 10px;background:white;border:1px solid #196B24;border-radius:6px;font-size:11px;font-weight:700;color:#196B24;cursor:pointer;font-family:Calibri,Arial,sans-serif;text-align:left;display:flex;align-items:center;gap:6px"><span>🤝</span><span>ENR014 Réseau</span></button>
       </div>
     </div>
     <div style="background:#FFF3E0;border:1px solid #E97132;border-left:4px solid #E97132;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:12px;color:#7A3000;line-height:1.7">
@@ -22253,12 +22267,7 @@ function tryUnlock(){
   if (loading) loading.style.display = 'block';
 
   supabaseClient
-    .from('consultants')
-    .select('*')
-    .eq('code', code)
-    .eq('mot_de_passe', pwd)
-    .eq('actif', true)
-    .limit(1)
+    .rpc('login_consultant', { p_code: code, p_password: pwd })
     .then(({ data: rows, error }) => {
       if (loading) loading.style.display = 'none';
       const data = Array.isArray(rows) ? rows[0] : null;
@@ -23234,10 +23243,10 @@ function clearData(){
   // Re-init séances par défaut
   setTimeout(()=>{
     const tbody=document.getElementById('cal-tbody');
+    const fsel=document.getElementById('f_formule');
+    if(fsel)fsel.value='Complet';
     if(tbody&&tbody.children.length===0){
-      const DEFAULT_OBJ=['Rétrospective du parcours : chemin de vie, formations, expériences','Recenser les activités · Synthèse savoir-être, savoir-faire, savoirs','Formaliser les valeurs, besoins et envies','Identifier les talents et axes d\'amélioration','Identifier et clarifier les intérêts professionnels','Déterminer des voies d\'orientation · Enquêtes métiers · Marché de l\'emploi','Valider le projet professionnel prioritaire · Étude des écarts · Plan d\'actions','Synthèse finale · Facteurs favorables · Stratégie d\'action'];
-      const DEFAULT_OUTILS=['Livret phase investigation','Livret phase investigation','Livret · Boussole de Valeurs','Auto-évaluation · Sollicitation de tiers · Signature Comportementale','Orientation Professionnelle · Investigation codes ROME','Livret phase investigation','Livret phase investigation','Validation synthèse · Questionnaire satisfaction · RDV 6 mois'];
-      DEFAULT_OBJ.forEach((obj,i)=>addSeanceData({date:'',horaires:'',duree:'2 h 00',obj,outils:DEFAULT_OUTILS[i]||''}));
+      PROG_FORMULES.Complet.forEach(s=>addSeanceData({date:'',horaires:'',duree:s.duree,obj:s.obj,outils:s.outils}));
     }
   },100);
   // Reset tab to Bénéficiaire
@@ -23437,7 +23446,54 @@ function initCalBoldState(){
 
 
 
-function resetCalendar(){
+const PROG_FORMULES={
+  Complet:[
+    {obj:"Phase préliminaire (1h) : approfondissement de la demande, confirmation des modalités de déroulement et de l'engagement — puis Rétrospective du parcours (1h) : chemin de vie, formations, expériences",outils:"ENR002 · Livret phase investigation",duree:"2 h 00"},
+    {obj:"Recenser les activités · Synthèse savoir-être, savoir-faire, savoirs",outils:"Livret phase investigation",duree:"2 h 00"},
+    {obj:"Formaliser les valeurs, besoins et envies",outils:"Livret · Boussole de Valeurs",duree:"2 h 00"},
+    {obj:"Identifier les talents et axes d'amélioration",outils:"Auto-évaluation · Sollicitation de tiers · Signature Comportementale",duree:"2 h 00"},
+    {obj:"Identifier et clarifier les intérêts professionnels",outils:"Orientation Professionnelle · Investigation codes ROME",duree:"2 h 00"},
+    {obj:"Déterminer des voies d'orientation · Enquêtes métiers · Marché de l'emploi",outils:"Livret phase investigation",duree:"2 h 00"},
+    {obj:"Valider le projet professionnel prioritaire · Étude des écarts · Plan d'actions",outils:"Livret phase investigation",duree:"2 h 00"},
+    {obj:"Synthèse finale · Facteurs favorables · Stratégie d'action",outils:"Validation synthèse · Questionnaire satisfaction · RDV 6 mois",duree:"2 h 00"}
+  ],
+  Essentiel:[
+    {obj:"Phase préliminaire (1h) : approfondissement de la demande, confirmation des modalités de déroulement et de l'engagement — puis Rétrospective du parcours (1h) : chemin de vie, formations, expériences",outils:"ENR002 · Livret phase investigation",duree:"2 h 00"},
+    {obj:"Recenser les activités · Synthèse savoir-être, savoir-faire, savoirs",outils:"Livret phase investigation",duree:"2 h 00"},
+    {obj:"Identifier les talents et axes d'amélioration",outils:"Auto-évaluation · Sollicitation de tiers · Signature Comportementale",duree:"2 h 00"},
+    {obj:"Formaliser les valeurs, besoins et envies · Identifier les intérêts professionnels",outils:"Boussole de Valeurs · Orientation Professionnelle",duree:"2 h 00"},
+    {obj:"Déterminer des voies d'orientation · Enquêtes métiers · Marché de l'emploi",outils:"Livret phase investigation",duree:"2 h 00"},
+    {obj:"Valider le projet professionnel prioritaire · Étude des écarts · Plan d'actions",outils:"Livret phase investigation",duree:"1 h 00"},
+    {obj:"Synthèse finale · Facteurs favorables · Stratégie d'action",outils:"Validation synthèse · Questionnaire satisfaction · RDV 6 mois",duree:"2 h 00"}
+  ]
+};
+
+function loadFormuleDefaults(){
+  const sel=document.getElementById('f_formule');
+  const formule=(sel&&sel.value)||'Complet';
+  const list=PROG_FORMULES[formule]||PROG_FORMULES.Complet;
+  afficherModaleConfirmation(
+    'Charger le programme '+formule,
+    'Remplacer le calendrier actuel ('+document.querySelectorAll('#cal-tbody tr').length+' séance(s)) par le programme par défaut du Parcours '+formule+' ('+list.length+' séances) ?\nLes séances déjà remplies (comptes-rendus, signatures) seront écrasées.',
+    ()=>{
+      const tbody=document.getElementById('cal-tbody');
+      if(!tbody)return;
+      tbody.innerHTML='';
+      seanceCount=0;
+      list.forEach(s=>addSeanceData({date:'',horaires:'14h00 — 16h00',duree:s.duree,obj:s.obj,outils:s.outils}));
+      const tpInput=document.getElementById('recap-tp');
+      if(tpInput)tpInput.value=(formule==='Essentiel'?'7 h 00':'8 h 00');
+      rebuildEmargRows(list.length);
+      setTimeout(()=>{ syncEmargDates(); calcEmargTotal(); },150);
+      calcRecap();
+      showToast('✅ Programme '+formule+' chargé ('+list.length+' séances)','green');
+    }
+  );
+}
+
+function resetCalendar(){ loadFormuleDefaults(); }
+
+function resetCalendar_LEGACY_UNUSED(){
   afficherModaleConfirmation(
     'Réinitialiser le calendrier',
     'Réinitialiser les 8 séances avec les objectifs et outils par défaut ?\nLes dates, horaires et durées saisis seront conservés.',
@@ -23846,16 +23902,9 @@ function initCharts(){
   buildValRows();buildRiasecRows();build16P();renderFiches();
   // Add default seances (BC uniquement — pas en mode BOS)
   if(!document.getElementById('cal-tbody').children.length&&!(window.RELIANCE_BOS&&RELIANCE_BOS.isActive())){
-    [
-    {obj:"Rétrospective du parcours : chemin de vie, formations, expériences",outils:"Livret phase investigation"},
-    {obj:"Recenser les activités · Synthèse savoir-être, savoir-faire, savoirs",outils:"Livret phase investigation"},
-    {obj:"Formaliser les valeurs, besoins et envies",outils:"Livret · Boussole de Valeurs"},
-    {obj:"Identifier les talents et axes d\'amélioration",outils:"Auto-évaluation · Sollicitation de tiers · Signature Comportementale"},
-    {obj:"Identifier et clarifier les intérêts professionnels",outils:"Orientation Professionnelle · Investigation codes ROME"},
-    {obj:"Déterminer des voies d\'orientation · Enquêtes métiers · Marché de l\'emploi",outils:"Livret phase investigation"},
-    {obj:"Valider le projet professionnel prioritaire · Étude des écarts · Plan d\'actions",outils:"Livret phase investigation"},
-    {obj:"Synthèse finale · Facteurs favorables · Stratégie d\'action",outils:"Validation synthèse · Questionnaire satisfaction · RDV 6 mois"}
-  ].forEach(s=>addSeanceData({date:'',horaires:'14h00 — 16h00',duree:'2 h 00',obj:s.obj,outils:s.outils}));
+    const fsel=document.getElementById('f_formule');
+    if(fsel&&!fsel.value)fsel.value='Complet';
+    PROG_FORMULES.Complet.forEach(s=>addSeanceData({date:'',horaires:'14h00 — 16h00',duree:s.duree,obj:s.obj,outils:s.outils}));
   }
   const cv=document.getElementById('chart-val').getContext('2d');
   vchart=new Chart(cv,{type:'bar',data:{labels:valData.map(v=>v.name),datasets:[{data:valData.map(v=>v.score),backgroundColor:vCols,borderRadius:4}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{min:0,max:100,grid:{color:'#f0f0f0'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
@@ -23895,9 +23944,11 @@ function showToast(msg,type='default'){
 const sigPads = {};
 
 function initSigPad(canvasId) {
-  if(sigPads[canvasId])return;
+  const existing = sigPads[canvasId];
+  if (existing && document.body.contains(existing.canvas)) return;
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
+  if (existing) delete sigPads[canvasId];
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
   let drawing = false;
@@ -24106,7 +24157,16 @@ function syncEmargDates() {
 function initEmargTable() {
   const tbody = document.getElementById('emarg-tbody');
   if (!tbody || tbody.children.length > 0) return;
-  for (let i = 1; i <= 8; i++) {
+  const n = document.querySelectorAll('#cal-tbody tr').length || 8;
+  rebuildEmargRows(n);
+}
+
+function rebuildEmargRows(n) {
+  const tbody = document.getElementById('emarg-tbody');
+  if (!tbody) return;
+  n = n || 8;
+  tbody.innerHTML = '';
+  for (let i = 1; i <= n; i++) {
     const tr = document.createElement('tr');
     tr.style.background = i % 2 === 0 ? 'var(--tbl-bg)' : 'white';
     tr.innerHTML = `
@@ -24145,7 +24205,7 @@ function initEmargTable() {
   }
   // Init sig pads after DOM insertion
   setTimeout(() => {
-    for (let i = 1; i <= 8; i++) {
+    for (let i = 1; i <= n; i++) {
       initSigPad('sig_em_b_' + i);
       initSigPad('sig_em_c_' + i);
     }
@@ -24172,10 +24232,15 @@ function calcEmargTotal() {
     if (m) total += parseInt(m[1]||0)*60 + parseInt(m[2]||0);
   });
   const fmt = m => `${Math.floor(m/60)} h ${String(m%60).padStart(2,'0')}`;
+  const tpVal = document.getElementById('recap-tp')?.value || '8 h 00';
+  const tpm = tpVal.match(/(\d+)\s*h\s*(\d*)/i);
+  const tpMin = tpm ? parseInt(tpm[1]||0)*60 + parseInt(tpm[2]||0) : 480;
   const te = document.getElementById('em-total-face');
+  const tp = document.getElementById('em-total-perso');
   const tot = document.getElementById('em-total');
   if (te) te.textContent = fmt(total);
-  if (tot) tot.textContent = fmt(total + 480); // + 8h recherches
+  if (tp) tp.textContent = fmt(tpMin);
+  if (tot) tot.textContent = fmt(total + tpMin);
 }
 
 // ════════════ HANDICAP TOGGLE ════════════
@@ -24247,7 +24312,7 @@ ORGANISME : ${gv('f_orga')||'Rodrigue Poncet'} | MODALITÉ : ${gv('f_mod')}
 SÉANCES :
 ${seances.join('\n')}
 
-TOTAUX : Face à face ${document.getElementById('em-total-face')?.textContent} · Recherches : 8h00 · Total : ${document.getElementById('em-total')?.textContent}
+TOTAUX : Face à face ${document.getElementById('em-total-face')?.textContent} · Recherches : ${gv('recap-tp')||'8 h 00'} · Total : ${document.getElementById('em-total')?.textContent}
 
 SIGNATURE FORMATEUR : ${sigFormGlobal}
 SIGNATURE BÉNÉFICIAIRE : ${sigBenefGlobal}`;
@@ -25704,6 +25769,102 @@ async function generateENR015() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
+// ENR013 — ATTESTATION DE REMISE ET DE CONSERVATION DE SYNTHÈSE
+// ═══════════════════════════════════════════════════════════════════
+async function generateENR013() {
+  const nom = gv('att_nom') || gv('f_nom') || '[Nom Prénom]';
+  const cons = gv('f_cons') || 'Rodrigue Poncet';
+  const lieu = gv('att_lieu') || 'Val Suran';
+  const date = fmtDate(gv('att_date')) || today();
+  const remis = document.getElementById('att_remis')?.checked;
+  const autorise = document.getElementById('att_autorise')?.checked;
+  const nAutorise = document.getElementById('att_n_autorise')?.checked;
+
+  const children = [
+    titlePara('ATTESTATION DE REMISE ET DE CONSERVATION DE SYNTHÈSE'),
+    versionPara('ENR013 — Méthode RELIANCE®'),
+    space(100),
+    fieldRow('Bénéficiaire', nom),
+    fieldRow('Consultant(e)', cons),
+    space(120),
+    new docx.Paragraph({
+      spacing: { after: 200 },
+      shading: { fill: RP_COLORS.bleuPale, type: docx.ShadingType.CLEAR },
+      border: { left: { style: docx.BorderStyle.SINGLE, size: 16, color: RP_COLORS.bleu } },
+      indent: { left: 200 },
+      children: [new docx.TextRun({
+        text: "Conformément à l'article L.900-4-1 du Code du travail, le bénéficiaire est le seul destinataire des résultats et du document de synthèse. Ces éléments ne peuvent être communiqués à un tiers qu'avec son accord exprès. Notre organisme est tenu au secret professionnel (art. 378 du Code pénal).",
+        font: RP_FONT, size: RP_FONT_BODY
+      })]
+    }),
+    h1('DÉCLARATION DU BÉNÉFICIAIRE'),
+    P([B(remis ? '\u2611' : '☐'), B("  Atteste que le document de synthèse m'a été remis et présenté dans son intégralité.")]),
+    space(60),
+    P([B(autorise ? '\u2611' : '☐'), B('  Autorise le centre de bilan à conserver le document de synthèse jusqu\'au rendez-vous de suivi prévu six mois après la fin du bilan.')]),
+    space(60),
+    P([B(nAutorise ? '\u2611' : '☐'), B("  N'autorise pas le centre de bilan à conserver le document de synthèse.")]),
+    space(200),
+    h1('SIGNATURES'),
+    fieldG2(['Fait à', lieu, 'Le', date]),
+    space(200),
+    ...buildSigTableFromPads('sig_att_cons', 'Le consultant', 'sig_att_benef', 'Le / La bénéficiaire'),
+  ];
+
+  return new docx.Document({
+    styles: DOC_STYLES,
+    sections: [{
+      properties: { page: PAGE_PROPS },
+      headers: { default: makeHeader('ENR013 — Attestation de remise de synthèse') },
+      footers: { default: makeFooter('ENR013 — v0 — RP') },
+      children
+    }]
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ENR014 — PARTICIPATION RÉSEAU PERSONNES RESSOURCES
+// ═══════════════════════════════════════════════════════════════════
+async function generateENR014() {
+  const nom = gv('att_nom') || gv('f_nom') || '[Nom Prénom]';
+  const lieu = gv('att_lieu') || gv('cert_lieu') || 'Val Suran';
+  const date = fmtDate(gv('att_date')) || today();
+  const participe = document.getElementById('reseau_oui')?.checked;
+  const email = gv('reseau_email');
+  const tel = gv('reseau_tel');
+
+  const children = [
+    titlePara('PARTICIPATION AU RÉSEAU DE PERSONNES RESSOURCES'),
+    versionPara('ENR014 — Méthode RELIANCE®'),
+    space(100),
+    fieldRow('Bénéficiaire', nom),
+    space(120),
+    P("Dans le cadre d'un bilan de compétences, il est précieux de pouvoir échanger avec un professionnel pour mieux comprendre un métier, ses conditions d'exercice et ses débouchés. Nous vous proposons de rejoindre notre réseau de personnes ressources. Votre participation reste entièrement libre et volontaire."),
+    space(120),
+    h1('SOUHAITEZ-VOUS PARTICIPER AU RÉSEAU ?'),
+    P([B(participe ? '\u2611' : '☐'), B('  Oui       '), B(!participe ? '\u2611' : '☐'), B('  Non')]),
+    space(120),
+    ...(participe ? [
+      fieldRow('Email', email),
+      fieldRow('Téléphone', tel),
+      space(120)
+    ] : []),
+    P([B('Contact organisme : contact@rodrigueponcet.fr / 06 74 03 59 37 — Vous pouvez vous retirer du réseau à tout moment.', { italics: true, size: RP_FONT_SMALL })]),
+    space(200),
+    fieldG2(['Fait à', lieu, 'Le', date]),
+  ];
+
+  return new docx.Document({
+    styles: DOC_STYLES,
+    sections: [{
+      properties: { page: PAGE_PROPS },
+      headers: { default: makeHeader('ENR014 — Participation réseau personnes ressources') },
+      footers: { default: makeFooter('ENR014 — v0 — RP') },
+      children
+    }]
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // ENR016 — QUESTIONNAIRE À CHAUD BÉNÉFICIAIRE
 // ═══════════════════════════════════════════════════════════════════
 async function generateENR016() {
@@ -26040,6 +26201,8 @@ async function downloadAllDocs() {
     { gen: generateENR015, name: () => 'ENR015_Certificat_' + (gv('f_nom')||'').replace(/\s+/g,'_') + '.docx' },
     { gen: generateENR016, name: () => 'ENR016_Evaluation_beneficiaire_' + (gv('f_nom')||'').replace(/\s+/g,'_') + '.docx' },
     { gen: generateENR017, name: () => 'ENR017_Evaluation_formateur_' + (gv('f_nom')||'').replace(/\s+/g,'_') + '.docx' },
+    { gen: generateENR013, name: () => 'ENR013_Attestation_remise_' + (gv('f_nom')||'').replace(/\s+/g,'_') + '.docx' },
+    { gen: generateENR014, name: () => 'ENR014_Reseau_' + (gv('f_nom')||'').replace(/\s+/g,'_') + '.docx' },
   ];
   for (const { gen, name } of docs) {
     await downloadDoc(gen, name());
@@ -26433,8 +26596,9 @@ async function generateEmargement() {
       emailOk: tr.querySelector('.em-email-ok')?.checked  || false,
     });
   });
-  // Ensure 8 rows
-  while(emRows.length < 8) emRows.push({num:emRows.length+1,date:'',horaire:'',duree:'2 h 00',rp:'1 h 00'});
+  // Ensure rows match the calendar's actual séance count (formule-aware)
+  const calCount = document.querySelectorAll('#cal-tbody tr').length || 8;
+  while(emRows.length < calCount) emRows.push({num:emRows.length+1,date:'',horaire:'',duree:'2 h 00',rp:'1 h 00'});
 
   const NB  = {style:docx.BorderStyle.NONE,   size:0, color:'FFFFFF'};
   const bD  = {style:docx.BorderStyle.SINGLE, size:4, color:'BBBBBB'};
@@ -26556,12 +26720,13 @@ async function generateEmargement() {
   // ── Recap table ──
   const totalFace = document.getElementById('em-total-face')?.textContent?.trim() || '16 h 00';
   const totalAll  = document.getElementById('em-total')?.textContent?.trim()      || '24 h 00';
+  const totalPerso = document.getElementById('em-total-perso')?.textContent?.trim() || gv('recap-tp') || '8 h 00';
   const recapTable = new docx.Table({
     width: {size:CONTENT_WIDTH, type:docx.WidthType.DXA},
     columnWidths: [7000, CONTENT_WIDTH-7000],
     rows: [
       ['Entretiens individuels face à face', totalFace],
-      ['Recherche personnelle dont tests',   '8 h 00'],
+      ['Recherche personnelle dont tests',   totalPerso],
       ['Durée totale du bilan',              totalAll],
     ].map(([label,val],ri) => new docx.TableRow({children:[
       new docx.TableCell({width:{size:7000,type:docx.WidthType.DXA},
@@ -26677,6 +26842,7 @@ async function generateCompteRendu() {
   // Totaux heures
   const totalFace = document.getElementById('em-total-face')?.textContent?.trim() || '—';
   const totalAll  = document.getElementById('em-total')?.textContent?.trim()      || '—';
+  const totalPerso = document.getElementById('em-total-perso')?.textContent?.trim() || gv('recap-tp') || '8 h 00';
 
   const NB = {style:docx.BorderStyle.NONE,   size:0, color:'FFFFFF'};
   const bD = {style:docx.BorderStyle.SINGLE, size:4, color:'BBBBBB'};
@@ -26748,7 +26914,7 @@ async function generateCompteRendu() {
     columnWidths: [7000, CONTENT_WIDTH-7000],
     rows: [
       ['Entretiens individuels face à face', totalFace],
-      ['Recherche personnelle dont tests', '8 h 00'],
+      ['Recherche personnelle dont tests', totalPerso],
       ['Durée totale du bilan', totalAll],
     ].map(([label, val], ri) => new docx.TableRow({children:[
       new docx.TableCell({width:{size:7000,type:docx.WidthType.DXA},
@@ -27664,6 +27830,14 @@ function toggleAutreFinancement(){
         <span style="font-size:20px">📝</span>
         <div><div style="font-weight:700;color:#074F6A;font-size:12px">Compte-rendu séances</div><div style="font-size:10px;color:var(--muted)">CR Séances</div></div>
       </button>
+      <button onclick="downloadDoc(generateENR013,getNomFichier('ENR013_Attestation_remise'))" class="doc-gen-btn" style="background:#EBF4FF;border:1px solid #074F6A">
+        <span style="font-size:20px">📜</span>
+        <div><div style="font-weight:700;color:#074F6A;font-size:12px">Attestation remise synthèse</div><div style="font-size:10px;color:var(--muted)">ENR013</div></div>
+      </button>
+      <button onclick="downloadDoc(generateENR014,getNomFichier('ENR014_Reseau'))" class="doc-gen-btn" style="background:#EBF4FF;border:1px solid #074F6A">
+        <span style="font-size:20px">🤝</span>
+        <div><div style="font-weight:700;color:#074F6A;font-size:12px">Participation réseau</div><div style="font-size:10px;color:var(--muted)">ENR014</div></div>
+      </button>
     </div>
 
     <button onclick="downloadAllDocs()" style="width:100%;padding:12px;background:var(--c1);color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif;margin-bottom:10px">
@@ -27874,11 +28048,11 @@ TON ET PHRASÉ :
   ];
 
   const PROG_DEFAULTS = [
-    { obj: "Parcours scolaire, centres d'intérêt, motivation, objectifs", outils: "Cahier d'exercices" },
-    { obj: 'Tests — Application RELIANCE', outils: 'Application RELIANCE' },
-    { obj: 'Exploration métiers, débouchés, réalité des métiers', outils: "Cahier d'exercices" },
-    { obj: "Construction du projet, comparatif options, faisabilité, plan d'action", outils: 'Cahier' },
-    { obj: 'Présentation aux parents — Synthèse', outils: 'Synthèse' }
+    { obj: "Parcours scolaire, centres d'intérêt, motivation, objectifs", outils: "Cahier d'exercices", duree: '2 h 00' },
+    { obj: 'Tests — Application RELIANCE', outils: 'Application RELIANCE', duree: '2 h 00' },
+    { obj: 'Exploration métiers, débouchés, réalité des métiers', outils: "Cahier d'exercices", duree: '2 h 00' },
+    { obj: "Construction du projet, comparatif options, faisabilité, plan d'action", outils: 'Cahier', duree: '2 h 00' },
+    { obj: 'Présentation aux parents — Synthèse', outils: 'Synthèse', duree: '1 h 00' }
   ];
 
   const PROG_FIELDS = ['bos_prog_debut', 'bos_prog_fin', 'bos_prog_modal'];
@@ -28353,7 +28527,7 @@ TON ET PHRASÉ :
     if (!tbody) return;
     tbody.innerHTML = '';
     (seances && seances.length ? seances : PROG_DEFAULTS.map((p, i) => ({
-      num: i + 1, date: '', horaires: '', duree: '2 h 00', obj: p.obj, outils: p.outils
+      num: i + 1, date: '', horaires: '', duree: p.duree || '2 h 00', obj: p.obj, outils: p.outils
     }))).forEach(s => bosAddSeanceRow(s));
   }
 
@@ -30156,7 +30330,7 @@ Avant de générer, demande : préférez-vous une réponse dans le chat ou un do
   async function generateBosENR047() {
     const c = getBosDocCtx();
     const rows = (c.seances.length ? c.seances : PROG_DEFAULTS.map((p, i) => ({
-      num: i + 1, date: '', horaires: '', duree: '2 h 00', obj: p.obj, outils: p.outils
+      num: i + 1, date: '', horaires: '', duree: p.duree || '2 h 00', obj: p.obj, outils: p.outils
     }))).map(s => [
       String(s.num),
       bosFmtDate(s.date) || '—',
@@ -30311,42 +30485,40 @@ Avant de générer, demande : préférez-vous une réponse dans le chat ou un do
 
   async function generateBosEVAL() {
     const c = getBosDocCtx();
+    const starsTxt = role => (gv('bos-eval-' + role + '-stars') || '0') + ' / 5';
     const children = [
       titlePara('ÉVALUATION DU BILAN D\'ORIENTATION SCOLAIRE'),
       versionPara('ENR-BOS-EVAL'),
       fieldRow("L'accompagné(e)", c.jeune),
       fieldRow('Consultant(e)', c.cons),
       space(120),
-      bosH1Admin("ÉVALUATION DE L'ACCOMPAGNÉ(E)")
-    ];
-    for (let n = 1; n <= BOS_EVAL_OBJ_COUNT; n++) {
-      const f = bosEvalFieldIds('jeune', n);
-      children.push(
-        h2('Objectif ' + n + ' : ' + (gv('bos_obj' + n) || '—')),
-        fieldRow('Atteint', gv(f.atteint) || '—'),
-        fieldRow('Points positifs', gv(f.pos)),
-        fieldRow('Points à améliorer', gv(f.amel)),
-        space(80)
-      );
-    }
-    children.push(
-      fieldRow("Ressenti général (l'accompagné(e))", gv('bos_eval_j_ressenti')),
+      bosH1Admin("ÉVALUATION — LE JEUNE"),
+      fieldRow('Points positifs', gv('bos-eval-jeune-positifs')),
+      fieldRow('Points à améliorer', gv('bos-eval-jeune-ameliorer')),
+      fieldRow('Commentaire libre', gv('bos-eval-jeune-libre')),
+      fieldRow('Satisfaction globale de l\'accompagnement', starsTxt('jeune')),
       space(200),
-      bosH1Admin('ÉVALUATION DES PARENTS')
-    );
-    for (let n = 1; n <= BOS_EVAL_OBJ_COUNT; n++) {
-      const f = bosEvalFieldIds('parent', n);
+      bosH1Admin('ÉVALUATION — LES PARENTS'),
+      fieldRow('Points positifs', gv('bos-eval-parent-positifs')),
+      fieldRow('Points à améliorer', gv('bos-eval-parent-ameliorer')),
+      fieldRow('Commentaire libre', gv('bos-eval-parent-libre')),
+      fieldRow('Satisfaction globale de l\'accompagnement', starsTxt('parent')),
+      space(200)
+    ];
+    const rdvDate = gv('bos-rdv-post-date');
+    const rdvNotes = gv('bos-rdv-post-notes');
+    if (rdvDate || rdvNotes) {
+      const rdvRealise = document.getElementById('bos-rdv-post-realise');
       children.push(
-        h2('Objectif ' + n + ' : ' + (gv('bos_obj' + n) || '—')),
-        fieldRow('Atteint', gv(f.atteint) || '—'),
-        fieldRow('Points positifs', gv(f.pos)),
-        fieldRow('Points à améliorer', gv(f.amel)),
-        space(80)
+        bosH1Admin('RENDEZ-VOUS POST BOS'),
+        fieldRow('Date proposée', bosFmtDate(rdvDate)),
+        fieldRow('Modalité', gv('bos-rdv-post-modalite')),
+        fieldRow('Notes / objectifs du RDV', rdvNotes),
+        fieldRow('RDV réalisé', rdvRealise && rdvRealise.checked ? 'Oui' : 'Non'),
+        space(200)
       );
     }
     children.push(
-      fieldRow('Ressenti général (parents)', gv('bos_eval_p_ressenti')),
-      space(300),
       bosH1Admin('SIGNATURES'),
       fieldG2(['Fait à', c.lieu, 'Le', bosToday()]),
       space(200),
