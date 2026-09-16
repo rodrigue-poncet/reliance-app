@@ -20746,8 +20746,8 @@ window.addEventListener('load', () => {
     </div>
     <div class="fg"><div class="fl">Contexte de la démarche</div><textarea class="ft" id="f_ctx" oninput="upProg();syncFields()" placeholder="Situation, raisons du bilan, contraintes et ressources..."></textarea></div>
     <div class="fg"><div class="fl">Objectif 1</div><input class="fi" id="f_o1" oninput="upProg();syncFields()"></div>
-    <div class="fg"><div class="fl">Objectif 2</div><input class="fi" id="f_o2"></div>
-    <div class="fg"><div class="fl">Objectif 3 (optionnel)</div><input class="fi" id="f_o3"></div>
+    <div class="fg"><div class="fl">Objectif 2</div><input class="fi" id="f_o2" oninput="syncFields()"></div>
+    <div class="fg"><div class="fl">Objectif 3 (optionnel)</div><input class="fi" id="f_o3" oninput="syncFields()"></div>
   </div>
 
   <!-- TAB 1 ÉTAPES -->
@@ -21117,7 +21117,7 @@ window.addEventListener('load', () => {
       </div>
       <div class="fg"><div class="fl">Situation professionnelle</div>
         <select class="fs" id="conv_situation">
-          <option>Salarié(e)</option><option>Demandeur(se) d'emploi</option><option selected>Indépendant(e) / Co-gérant(e)</option><option>Autre</option>
+          <option value="">— Sélectionner —</option><option>Salarié(e)</option><option>Demandeur d'emploi</option><option>Indépendant(e)</option><option>Fonctionnaire</option><option>Autre</option>
         </select>
       </div>
     </div>
@@ -24811,6 +24811,11 @@ function buildMailCompletText(){
   const modal=gv('f_mod')||'Présentiel';
   const fin_mode=gv('f_fin')||'CPF';
   const today=new Date().toLocaleDateString('fr-FR');
+  // Durées réelles issues du récap Calendrier (s'adapte automatiquement à la formule Complet/Essentiel
+  // et à tout ajustement manuel du calendrier co-construit avec le bénéficiaire)
+  const dureeEntretiens=document.getElementById('recap-entretiens')?.textContent?.trim()||'16 h 00';
+  const dureeTp=document.getElementById('recap-tp')?.value?.trim()||'8 h 00';
+  const dureeTotale=document.getElementById('recap-total')?.textContent?.trim()||'24 h 00';
   const seances=[];
   Array.from(document.querySelectorAll('#cal-tbody tr')).forEach(tr=>{
     const inp=tr.querySelectorAll('input,textarea');
@@ -24846,21 +24851,21 @@ Date d'émission    : ${today}
 
 Intitulé           : Bilan de compétences — Méthode RELIANCE®
 Période            : du ${debut} au ${fin}
-Durée totale       : 24 heures dont :
-                     • 16 h d'entretiens individuels (présentiel ou distanciel)
-                     • 8 h de travaux personnels guidés
+Durée totale       : ${dureeTotale} dont :
+                     • ${dureeEntretiens} d'entretiens individuels (présentiel ou distanciel)
+                     • ${dureeTp} de travaux personnels guidés
 Modalité           : ${modal}
 Lieu               : ${lieu}
 Mode de financement: ${fin_mode}
 
 \u2501\u2501\u2501 DÉROULEMENT — 3 PHASES RÉGLEMENTAIRES \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
 
-Phase préliminaire    (~1 h)     : Analyse de la demande, engagement volontaire,
-                                   définition des objectifs
-Phase d'investigation (~14-18 h) : Compétences, aptitudes, motivations, valeurs,
-                                   exploration pistes professionnelles, faisabilité
-Phase de conclusion   (~2-4 h)   : Restitution, projet professionnel, plan d'action,
-                                   remise de la synthèse exclusivement au bénéficiaire
+Phase préliminaire    (~1 h)  : Analyse de la demande, engagement volontaire,
+                                définition des objectifs
+Phase d'investigation (~10 h) : Compétences, aptitudes, motivations, valeurs,
+                                exploration pistes professionnelles, faisabilité
+Phase de conclusion   (~2 h)  : Restitution, projet professionnel, plan d'action,
+                                remise de la synthèse exclusivement au bénéficiaire
 
 \u2501\u2501\u2501 PLANNING PRÉVISIONNEL \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
 
@@ -24878,7 +24883,9 @@ accord, en fonction de l'évolution du parcours (Art. R6313-4).
 • Assistance technique    : 06 74 03 59 37 — lun. au ven. 08h–19h
 • Assistance pédagogique  : contact@rodrigueponcet.fr — réponse sous 12–24 h
 • Indisponibilité         : nous prévenir 48h à l'avance minimum
-• Espace stagiaire en ligne : modalités d'accès envoyées par e-mail
+• Espace stagiaire en ligne : vous pouvez retrouver l'ensemble des documents suivants dans cet espace :
+  https://drive.google.com/drive/folders/1uKL48P9YePwpy6eAk3U7xenztNc8VwXC?usp=drive_link
+  RGPD, Règlement intérieur, Charte qualité, livret d'accueil, CGU, Charte IA.
 
 \u2501\u2501\u2501 CONFIDENTIALITÉ ET RGPD \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
 
@@ -25461,7 +25468,7 @@ async function generateENR002() {
   const dob = gv('conv_dob');
   const email = gv('conv_email');
   const tel = gv('conv_tel');
-  const situation = gv('conv_situation');
+  const situation = gv('conv_situation')||gv('f_situation')||'';
   const financement = gv('f_fin');
   const modal = getModalite();
   const cons = gv('f_cons') || 'Rodrigue Poncet';
@@ -25601,6 +25608,10 @@ async function generateENR003() {
   const modal = getModalite(), lieu = gv('f_lieu')||'Val Suran';
   const seances = getSeances();
   const calDebut = gv('cal_debut')||gv('f_date_debut');
+  // Durées réelles issues du récap Calendrier (s'adapte à la formule Complet/Essentiel)
+  const dureeEntretiens=document.getElementById('recap-entretiens')?.textContent?.trim()||'16 h 00';
+  const dureeTp=document.getElementById('recap-tp')?.value?.trim()||'8 h 00';
+  const dureeTotale=document.getElementById('recap-total')?.textContent?.trim()||'24 h 00';
 
   const seanceRows = seances.length > 0 
     ? seances.map(s => [String(s.num), fmtDate(s.date)||'[xx/xx/xxxx]', s.horaires||'[xxhxx – xxhxx]', s.duree||'[x h xx]', {text:s.obj||'',bold:s.objBold}, {text:s.outils||'',bold:s.outilsBold}])
@@ -25631,7 +25642,7 @@ async function generateENR003() {
     h1('TRAVAUX PERSONNELS ACCOMPAGNÉS'),
     makeTable(
       ['Période', 'Horaires', 'Durée totale', 'Contenu'],
-      [['Du ' + (debut||'[xx/xx/xxxx]') + ' au ' + (fin||'[xx/xx/xxxx]'), 'À définir', '8 h 00', 'Recherches personnelles · Passation de tests · Enquêtes métiers · Formalisation des projets']],
+      [['Du ' + (debut||'[xx/xx/xxxx]') + ' au ' + (fin||'[xx/xx/xxxx]'), 'À définir', dureeTp, 'Recherches personnelles · Passation de tests · Enquêtes métiers · Formalisation des projets']],
       [2400, 1400, 1000, 4238]
     ),
     space(),
@@ -25640,9 +25651,9 @@ async function generateENR003() {
     makeTable(
       ['Nature des actions', 'Durée'],
       [
-        ['Entretiens individuels en face à face', '16 h 00'],
-        ['Travaux personnels (dont tests)', '8 h 00'],
-        ['Durée totale du bilan de compétences', '24 h 00'],
+        ['Entretiens individuels en face à face', dureeEntretiens],
+        ['Travaux personnels (dont tests)', dureeTp],
+        ['Durée totale du bilan de compétences', dureeTotale],
       ],
       [7500, 2138]
     ),
@@ -26077,6 +26088,10 @@ async function generateCONVOC() {
   const financement = gv('f_fin')||'CPF';
   const seances = getSeances();
   const email = gv('conv_email');
+  // Durées réelles issues du récap Calendrier (s'adapte à la formule Complet/Essentiel)
+  const dureeEntretiens=document.getElementById('recap-entretiens')?.textContent?.trim()||'16 h 00';
+  const dureeTp=document.getElementById('recap-tp')?.value?.trim()||'8 h 00';
+  const dureeTotale=document.getElementById('recap-total')?.textContent?.trim()||'24 h 00';
 
   const seanceRows = seances.length > 0
     ? seances.map(s => [String(s.num), fmtDate(s.date), s.horaires||'', s.duree||'', lieu])
@@ -26101,8 +26116,8 @@ async function generateCONVOC() {
     h1('INFORMATIONS GÉNÉRALES'),
     fieldRow("Intitulé de la prestation", "Bilan de compétences — Méthode RELIANCE®"),
     fieldG2(['Période — du', debut, 'au', fin]),
-    P([bold("Durée totale\u00a0: "), B("24 heures dont\u00a0:")]),
-    ...["16 h d'entretiens individuels en face à face (présentiel ou distanciel)","8 h de travaux personnels guidés"].map(t => makeBullet(t, 'bullets')),
+    P([bold("Durée totale\u00a0: "), B(dureeTotale+" dont\u00a0:")]),
+    ...[dureeEntretiens+" d'entretiens individuels en face à face (présentiel ou distanciel)",dureeTp+" de travaux personnels guidés"].map(t => makeBullet(t, 'bullets')),
     P([bold("Modalité\u00a0: "), B(modal)]),
     fieldRow('Lieu', lieu),
     space(),
@@ -26111,9 +26126,9 @@ async function generateCONVOC() {
     makeTable(
       ['Phase', 'Contenu', 'Durée indicative'],
       [
-        ['Phase préliminaire', "Analyse de la demande, vérification de l'engagement volontaire, définition des objectifs, planification", '1 h'],
-        ["Phase d'investigation", "Analyse des compétences, aptitudes, motivations, valeurs ; exploration des pistes professionnelles ; étude de faisabilité", '14 à 18 h'],
-        ['Phase de conclusion', "Restitution des résultats, formalisation du projet professionnel, plan d'action, remise de la synthèse", '2 à 4 h'],
+        ['Phase préliminaire', "Analyse de la demande, vérification de l'engagement volontaire, définition des objectifs, planification", '~1 h'],
+        ["Phase d'investigation", "Analyse des compétences, aptitudes, motivations, valeurs ; exploration des pistes professionnelles ; étude de faisabilité", '~10 h'],
+        ['Phase de conclusion', "Restitution des résultats, formalisation du projet professionnel, plan d'action, remise de la synthèse", '~2 h'],
       ],
       [2000, 5500, 1538]
     ),
@@ -26277,6 +26292,10 @@ async function generateENR023() {
   const virement= document.getElementById('conv_virement')?.checked||false;
   const cheque  = document.getElementById('conv_cheque')?.checked||false;
   const especes = document.getElementById('conv_especes')?.checked||false;
+  // Durées réelles issues du récap Calendrier (s'adapte à la formule Complet/Essentiel)
+  const dureeEntretiens=document.getElementById('recap-entretiens')?.textContent?.trim()||'16 h 00';
+  const dureeTp=document.getElementById('recap-tp')?.value?.trim()||'8 h 00';
+  const dureeTotale=document.getElementById('recap-total')?.textContent?.trim()||'24 h 00';
 
   // ── helper: identity table ──
   function idTable(rows) {
@@ -26363,16 +26382,16 @@ async function generateENR023() {
     makeTable(
       ['Phase','Contenu','Durée indicative'],
       [
-        ['Phase préliminaire',"Analyse de la demande, vérification de l'engagement volontaire, définition des objectifs, planification",'1 h'],
-        ["Phase d'investigation","Analyse des compétences, aptitudes, motivations, valeurs ; exploration des pistes professionnelles ; étude de faisabilité",'14 à 18 h'],
-        ['Phase de conclusion',"Restitution des résultats, formalisation du projet professionnel, plan d'action, remise de la synthèse exclusivement au bénéficiaire",'2 à 4 h'],
+        ['Phase préliminaire',"Analyse de la demande, vérification de l'engagement volontaire, définition des objectifs, planification",'~1 h'],
+        ["Phase d'investigation","Analyse des compétences, aptitudes, motivations, valeurs ; exploration des pistes professionnelles ; étude de faisabilité",'~10 h'],
+        ['Phase de conclusion',"Restitution des résultats, formalisation du projet professionnel, plan d'action, remise de la synthèse exclusivement au bénéficiaire",'~2 h'],
       ],
       [2000,5800,1838]
     ),
     space(80),
-    P([bold('Durée totale : 24 heures, dont :')]),
-    makeBullet("16 heures d'entretiens individuels en face à face (présentiel ou distanciel)",'bullets'),
-    makeBullet("8 heures de travaux personnels guidés",'bullets'),
+    P([bold('Durée totale : '+dureeTotale+', dont :')]),
+    makeBullet(dureeEntretiens+" d'entretiens individuels en face à face (présentiel ou distanciel)",'bullets'),
+    makeBullet(dureeTp+" de travaux personnels guidés",'bullets'),
     space(80),
     fieldG2(['Période — du',debut,'au',fin2]),
     new docx.Paragraph({spacing:{after:100},children:[
