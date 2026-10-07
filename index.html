@@ -20723,6 +20723,10 @@ window.addEventListener('load', () => {
       <div class="fg"><div class="fl">Organisme</div><input class="fi" id="f_orga" value="Rodrigue Poncet"></div>
     </div>
     <div class="g2">
+      <div class="fg"><div class="fl">Email du consultant</div><input class="fi" type="email" id="f_cons_email" placeholder="prenom.nom@exemple.fr" oninput="saveConsEmailPref()"></div>
+      <div class="fg"><div class="fl">&nbsp;</div><div style="font-size:11px;color:var(--muted);line-height:1.5;padding-top:4px">Mis en copie cachée (Cci) des mails de convocation et de confirmation de séance, avec contact@rodrigueponcet.fr — preuve d'envoi archivée.</div></div>
+    </div>
+    <div class="g2">
       <div class="fg"><div class="fl">Date de début</div><input class="fi" type="date" id="f_date_debut"></div>
       <div class="fg"><div class="fl">Date de fin</div><input class="fi" type="date" id="f_date_fin"></div>
     </div>
@@ -21085,7 +21089,10 @@ window.addEventListener('load', () => {
 
   <!-- TAB 7 ÉMARGEMENTS -->
   <div class="pane" id="p4">
-    <div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button onclick="downloadDoc(generateENR023,getNomFichier('ENR023_Convention'))" style="padding:7px 14px;background:var(--c3);color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif;display:flex;align-items:center;gap:6px">⬇️ Télécharger ENR023 Word</button></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px">
+      <button onclick="envoyerConventionValidation()" style="padding:7px 14px;background:var(--orange);color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif;display:flex;align-items:center;gap:6px" title="Envoie un récapitulatif à Rodrigue par e-mail avant signature — joindre le Word téléchargé ci-contre">📧 Envoyer pour validation</button>
+      <button onclick="downloadDoc(generateENR023,getNomFichier('ENR023_Convention'))" style="padding:7px 14px;background:var(--c3);color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif;display:flex;align-items:center;gap:6px">⬇️ Télécharger ENR023 Word</button>
+    </div>
     <div class="tip green" style="background:#E8F5E9;border-left-color:#196B24;color:#1B4020">
       <strong>ENR023 — Convention de Bilan de Compétences</strong> · Les informations du bénéficiaire sont pré-remplies depuis l'onglet Bénéficiaire. Signature numérique en bas.
     </div>
@@ -21131,7 +21138,7 @@ window.addEventListener('load', () => {
         <div class="fg"><div class="fl">Date de fin (prévisionnelle)</div><input class="fi synced-ro" id="conv_fin" readonly style="background:#f5f5f5"></div>
       </div>
       <div class="g2">
-        <div class="fg"><div class="fl">Durée totale</div><input class="fi" id="conv_duree" value="24 heures"></div>
+        <div class="fg"><div class="fl">Durée du bilan (entretiens)</div><input class="fi synced-ro" id="conv_duree" readonly style="background:#f5f5f5" title="Calculée depuis le tableau des séances du Calendrier"></div>
         <div class="fg"><div class="fl">Modalité</div><select class="fs synced-ro" id="conv_modal" disabled style="background:#f5f5f5"><option>Présentiel</option><option>Distanciel</option><option>Mixte</option></select></div>
       </div>
       <div class="fg"><div class="fl">Lieu de réalisation</div><input class="fi" id="conv_lieu" value="Val Suran"></div>
@@ -21296,8 +21303,8 @@ window.addEventListener('load', () => {
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;flex-wrap:wrap">
       <div class="fg" style="min-width:260px;margin:0"><div class="fl">Formule</div>
         <select class="fs" id="f_formule">
-          <option value="Complet">Parcours Complet — 16h (1h préliminaire + 15h calendrier)</option>
-          <option value="Essentiel">Parcours Essentiel — 13h (1h préliminaire + 12h calendrier)</option>
+          <option value="Complet">Parcours Complet — 16 h (8 séances)</option>
+          <option value="Essentiel">Parcours Essentiel — 13 h (7 séances)</option>
         </select>
       </div>
       <button onclick="loadFormuleDefaults()" style="padding:7px 14px;background:var(--c1);color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif;align-self:flex-end" title="Charge le programme par défaut de la formule sélectionnée">📋 Charger le programme par défaut</button>
@@ -21473,7 +21480,7 @@ window.addEventListener('load', () => {
       <table style="width:100%;font-size:12px;border-collapse:collapse">
         <tr><td style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,.4)">Total entretiens face à face</td><td style="text-align:right;font-weight:700;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.4)" id="em-total-face">0 h 00</td></tr>
         <tr><td style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,.4)">Recherche personnelle dont tests</td><td style="text-align:right;font-weight:700;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.4)" id="em-total-perso">8 h 00</td></tr>
-        <tr><td style="padding:6px 0;font-weight:700">Durée totale en heures</td><td style="text-align:right;font-weight:700;padding:6px 0" id="em-total">0 h 00</td></tr>
+        <tr><td style="padding:6px 0;font-weight:700">Total incluant le travail personnel estimé (non facturé)</td><td style="text-align:right;font-weight:700;padding:6px 0" id="em-total">0 h 00</td></tr>
       </table>
     </div>
 
@@ -21715,7 +21722,10 @@ window.addEventListener('load', () => {
 
     <!-- ENR015 CERTIFICAT DE RÉALISATION -->
     <div style="background:var(--tbl-bg);border-radius:9px;overflow:hidden;margin-bottom:16px;border:1px solid var(--border)">
-      <div style="background:var(--tbl-hdr);padding:10px 14px;font-size:12px;font-weight:700;color:white">ENR015 — Certificat de réalisation</div>
+      <div style="background:var(--tbl-hdr);padding:10px 14px;font-size:12px;font-weight:700;color:white;display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <span>ENR015 — Certificat de réalisation</span>
+      <button onclick="envoyerCertificatSignature()" style="padding:5px 10px;background:var(--orange);color:white;border:none;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif;white-space:nowrap" title="Informe Rodrigue que le BC est terminé et lui envoie un récapitulatif avant signature — joindre le Word téléchargé">📧 Envoyer pour signature</button>
+    </div>
       <div style="padding:13px 15px">
         <div style="font-size:11px;color:var(--muted);margin-bottom:10px">SIRET 851 939 322 00042 · N° OF 27390135539 · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="fa9995948e9b998eba88959e88939d8f9f8a9594999f8ed49c88">[email&#160;protected]</a> · 06 74 03 59 37</div>
         <div class="g2">
@@ -21734,7 +21744,7 @@ window.addEventListener('load', () => {
           <div class="fg"><div class="fl">Date de fin</div><input class="fi synced-ro" id="cert_fin" readonly style="background:#f5f5f5"></div>
         </div>
         <div class="g2">
-          <div class="fg"><div class="fl">Durée totale réalisée</div><input class="fi synced-ro" id="cert_duree" readonly style="background:#f5f5f5"></div>
+          <div class="fg"><div class="fl">Durée réalisée (entretiens)</div><input class="fi synced-ro" id="cert_duree" readonly style="background:#f5f5f5"></div>
           <div class="fg"><div class="fl">Modalité</div><select class="fs synced-ro" id="cert_modal" disabled style="background:#f5f5f5"><option>Bilan de compétences</option><option>Présentiel</option><option>Distanciel</option><option>Mixte</option></select></div>
         </div>
         <div style="font-size:12px;line-height:1.7;color:var(--text);background:#f9f9f9;padding:10px 12px;border-radius:6px;border-left:3px solid var(--c1);margin:10px 0">
@@ -22174,7 +22184,7 @@ const APP_VERSION='7.4';
 const KNOWN_DK_PREFIXES=['reliance_data','reliance_v1','reliance_v2','reliance_v3','reliance_v4','reliance_v5','reliance_v6','reliance_v7'];
 const LS_CLEAN_LIMIT_KB=2000;
 const LS_MAX_DOSSIERS=10;
-const LS_PROTECTED_KEYS=new Set([PK,SK,AK,DK+'_autosave','reliance_admin_set','reliance_formateur_nom','reliance_convoc_sent','reliance_convoc_dismiss','reliance_consultant_session','reliance_admin']);
+const LS_PROTECTED_KEYS=new Set([PK,SK,AK,DK+'_autosave','reliance_admin_set','reliance_formateur_nom','reliance_convoc_sent','reliance_convoc_sent_at','reliance_convoc_dismiss','reliance_formateur_email','reliance_consultant_session','reliance_admin']);
 const DEF='RELIANCE2026';
 
 function isProtectedStorageKey(key){
@@ -22357,7 +22367,7 @@ function changePwd(){
 }
 function migrateStorage(){
   const allKeys=Object.keys(localStorage);
-  const skipKeys=new Set([DK+'_autosave',PK,SK,AK,'reliance_admin_set','reliance_formateur_nom','reliance_convoc_sent','reliance_convoc_dismiss','reliance_consultant_session','reliance_admin']);
+  const skipKeys=new Set([DK+'_autosave',PK,SK,AK,'reliance_admin_set','reliance_formateur_nom','reliance_convoc_sent','reliance_convoc_sent_at','reliance_convoc_dismiss','reliance_formateur_email','reliance_consultant_session','reliance_admin']);
   let removed=0;
   let lastDraft=null;
   allKeys.forEach(k=>{
@@ -22529,7 +22539,7 @@ function scheduleRestoreAllSignatures(d){
 
 function collectData(opts){
   const includeSignatures=opts?.includeSignatures!==false;
-  const fields=['f_nom','f_poste','f_secteur','f_anc','f_cons','f_orga','f_date_debut','f_date_fin','f_fin','f_mod','f_lieu','f_ctx','f_o1','f_o2','f_o3',
+  const fields=['f_nom','f_poste','f_secteur','f_anc','f_cons','f_cons_email','f_formule','f_orga','f_date_debut','f_date_fin','f_fin','f_mod','f_lieu','f_ctx','f_o1','f_o2','f_o3',
     'e1c','e1r','e1o','e1d','e2c','e2r','e2o','e2d','e3c','e3r','e3o','e3d','e4c','e4r','e4o','e4d',
     'se1','se2','se3','se4','se5','sf1','sf2','sf3','sf4','sf5','sv1','sv2','sv3','sv4','sv5',
     'f_pts','f_vig','f_val','f_mot','f_proj','f_pdesc','f_arg','f_fais','f_proj_sec','f_proj_sec_desc','f_proj_sec_arg','f_proj_sec_fais','f_proj_nr','f_proj_nr_raison',
@@ -22612,6 +22622,7 @@ function collectData(opts){
   const inc_oui=document.getElementById('incident_oui');d.incident_oui_checked=inc_oui?inc_oui.checked:false;
   ['conv_rgpd_ok','att_autorise','att_n_autorise','reseau_oui','reseau_non','rgpd_consent','form17_handicap'].forEach(id=>{const e=document.getElementById(id);if(e)d[id+'_checked']=e.checked;});
   d.convoc_sent=localStorage.getItem('reliance_convoc_sent')||'';
+  d.convoc_sent_at=localStorage.getItem('reliance_convoc_sent_at')||'';
   return d;
 }
 
@@ -22703,6 +22714,9 @@ function restoreData(d){
     const inc_oui2=document.getElementById('incident_oui');if(inc_oui2&&d.incident_oui_checked!==undefined){inc_oui2.checked=d.incident_oui_checked;toggleIncident();}
     ['conv_rgpd_ok','att_autorise','att_n_autorise','reseau_oui','reseau_non','rgpd_consent','form17_handicap'].forEach(id=>{const e=document.getElementById(id);if(e&&d[id+'_checked']!==undefined)e.checked=d[id+'_checked'];});
     if(d.convoc_sent)localStorage.setItem('reliance_convoc_sent',d.convoc_sent);else localStorage.removeItem('reliance_convoc_sent');
+    if(d.convoc_sent_at)localStorage.setItem('reliance_convoc_sent_at',d.convoc_sent_at);else localStorage.removeItem('reliance_convoc_sent_at');
+    if(typeof prefillConsEmail==='function')prefillConsEmail();
+    if(!d.f_formule&&typeof inferFormuleFromCalendar==='function')inferFormuleFromCalendar();
     if(typeof checkConvocAlert==='function')checkConvocAlert();
   }, 500);
   // Fill cal_benef from f_nom if empty
@@ -23185,7 +23199,7 @@ function clearAllFields(){
   suiviStars=0;Array.from(document.querySelectorAll('.sstar')).forEach(s=>s.style.color='#ddd');
   const suiviNoteEl=document.getElementById('suivi_note');if(suiviNoteEl)suiviNoteEl.value='0';
   Array.from(document.querySelectorAll('input[name="suivi_reco"]')).forEach(r=>r.checked=false);
-  localStorage.removeItem('reliance_convoc_sent');localStorage.removeItem('reliance_convoc_dismiss');upProg();
+  localStorage.removeItem('reliance_convoc_sent');localStorage.removeItem('reliance_convoc_sent_at');localStorage.removeItem('reliance_convoc_dismiss');upProg();
 }
 async function loadSlot(key, consultantCode, nomHint){
   if(key) currentSlotKey=key;
@@ -23227,11 +23241,13 @@ function clearData(){
   afficherModaleConfirmation('Nouveau bilan','Effacer toutes les données du bilan en cours ?\nTous les champs seront réinitialisés.',()=>{
   localStorage.removeItem(DK+'_autosave');
   localStorage.removeItem('reliance_convoc_sent');
+  localStorage.removeItem('reliance_convoc_sent_at');
   localStorage.removeItem('reliance_convoc_dismiss');
   currentSlotKey=null;
   resetRelianceFileSession();
   // Clear all fields without page reload (reload would re-trigger loadAutoSave)
   clearAllFields();
+  if(typeof prefillConsEmail==='function')prefillConsEmail();
   // Reset progress bar and badge
   upProg();
   updateActiveDossierBadge('');
@@ -23468,6 +23484,41 @@ const PROG_FORMULES={
   ]
 };
 
+// ════════════ FORMULES — RÉFÉRENCE DURÉES / TARIF (oct. 2026) ════════════
+// Le sélecteur de formule (onglet Calendrier) est la référence du découpage des phases et du tarif.
+// Les totaux d'heures restent calculés depuis le tableau des séances (calendrier co-construit).
+const FORMULE_PHASES={
+  Complet:{prelim:'1 h',invest:'11 h',concl:'4 h'},
+  Essentiel:{prelim:'1 h',invest:'10 h',concl:'2 h'}
+};
+const FORMULE_MONTANT={Complet:'2 000',Essentiel:'1 750'};
+const MENTION_TP_NON_FACTURE="Les heures de travail personnel guidé (tests, recherches) sont des heures estimées, prévues entre les séances. Elles ne sont pas facturées.";
+const LIBELLE_TOTAL_AVEC_TP='Total incluant le travail personnel estimé (non facturé)';
+function getFormule(){
+  const v=document.getElementById('f_formule')?.value;
+  return FORMULE_PHASES[v]?v:'Complet';
+}
+function getPhasesFormule(){return FORMULE_PHASES[getFormule()];}
+function getMontantDefaut(){return FORMULE_MONTANT[getFormule()];}
+function fmtDureeLabel(d){
+  const s=String(d||'').trim();
+  if(!s)return '';
+  return /h/i.test(s)?s:s+' heures';
+}
+// Dossiers enregistrés avant l'enregistrement de la formule : déduite du total d'entretiens du calendrier
+function inferFormuleFromCalendar(){
+  const sel=document.getElementById('f_formule');
+  if(!sel)return;
+  let total=0;
+  Array.from(document.querySelectorAll('#cal-tbody tr')).forEach(tr=>{
+    const dur=tr.querySelectorAll('input')[2]?.value||'0';
+    const m=dur.match(/(\d+)\s*h\s*(\d*)/i);
+    if(m)total+=parseInt(m[1]||0)*60+parseInt(m[2]||0);
+  });
+  if(total===13*60)sel.value='Essentiel';
+  else if(total===16*60)sel.value='Complet';
+}
+
 function loadFormuleDefaults(){
   const sel=document.getElementById('f_formule');
   const formule=(sel&&sel.value)||'Complet';
@@ -23590,6 +23641,8 @@ function calcRecap(){
   const fmt=m=>`${Math.floor(m/60)} h ${String(m%60).padStart(2,'0')}`;
   document.getElementById('recap-entretiens').textContent=fmt(total);
   document.getElementById('recap-total').textContent=fmt(total+tpMin);
+  const convDuree=document.getElementById('conv_duree');
+  if(convDuree)convDuree.value=fmt(total)+" d'entretiens individuels";
 }
 function exportCalendrier(){
   const benef=gv('cal_benef')||gv('f_nom')||'—';
@@ -24444,7 +24497,7 @@ function syncExtendedFields() {
   const certLbl = document.getElementById('cert_benef_nom_lbl'); if(certLbl) certLbl.textContent = nom||'[Nom Prénom]';
   const certDebut = document.getElementById('cert_debut'); if(certDebut) certDebut.value = dob_val;
   const certFin = document.getElementById('cert_fin'); if(certFin) certFin.value = dfin_val;
-  const certDuree = document.getElementById('cert_duree'); if(certDuree) certDuree.value = document.getElementById('recap-total')?.textContent || '24 h 00';
+  const certDuree = document.getElementById('cert_duree'); if(certDuree) certDuree.value = document.getElementById('recap-entretiens')?.textContent || '';
   const certModal = document.getElementById('cert_modal'); if(certModal) certModal.value = modal_val;
 
   // ENR016 évaluation
@@ -24466,6 +24519,56 @@ function syncExtendedFields() {
 }
 
 // ════════════ EXPORTS NEW DOCS ════════════
+function envoyerCertificatSignature(){
+  const nom = gv('cert_nom') || gv('f_nom') || '[Nom Prénom]';
+  const cons = gv('f_cons') || '[Consultant]';
+  const debut = fmtDate(gv('cert_debut')||gv('f_date_debut'));
+  const fin = fmtDate(gv('cert_fin')||gv('f_date_fin'));
+  const duree = gv('cert_duree') || document.getElementById('recap-entretiens')?.textContent?.trim() || '[Durée]';
+  const modal = getModalite();
+  const sujet = 'BC terminé — Signature Certificat de réalisation — ' + nom;
+  const corps = `Bonjour Rodrigue,
+
+Le bilan de compétences ci-dessous est terminé. Le Word ENR015 (Certificat de réalisation) est en pièce jointe (à joindre manuellement à cet e-mail avant envoi) — merci de le signer.
+
+Bénéficiaire     : ${nom}
+Consultant(e)    : ${cons}
+Période          : du ${debut} au ${fin}
+Durée réalisée   : ${duree}
+Modalité         : ${modal}
+
+Merci de ta signature.`;
+  window.location.href = 'mailto:contact@rodrigueponcet.fr?subject=' + encodeURIComponent(sujet) + '&body=' + encodeURIComponent(corps);
+  showToast('📧 Mail de fin de BC ouvert — pense à joindre le Word téléchargé','orange');
+}
+
+function envoyerConventionValidation(){
+  const nom = gv('f_nom') || '[Nom Prénom]';
+  const cons = gv('f_cons') || '[Consultant]';
+  const debut = fmtDate(gv('f_date_debut'));
+  const fin = fmtDate(gv('f_date_fin'));
+  const formule = document.getElementById('f_formule')?.value || '[Formule non renseignée]';
+  const financement = gv('conv_fin_mode') || gv('f_fin') || '[Financement]';
+  const montant = gv('conv_montant') || '[Montant non renseigné]';
+  const modal = getModalite();
+  const sujet = 'Validation Convention BC — ' + nom;
+  const corps = `Bonjour Rodrigue,
+
+Merci de valider la convention avant signature — le Word ENR023 est en pièce jointe (à joindre manuellement à cet e-mail avant envoi).
+
+Bénéficiaire     : ${nom}
+Consultant(e)    : ${cons}
+Formule          : ${formule}
+Période          : du ${debut} au ${fin}
+Financement      : ${financement}
+Montant total    : ${montant} €
+Modalité         : ${modal}
+
+Merci de confirmer avant signature du bénéficiaire.`;
+  window.location.href = 'mailto:contact@rodrigueponcet.fr?subject=' + encodeURIComponent(sujet) + '&body=' + encodeURIComponent(corps);
+  showToast('📧 Mail de validation ouvert — pense à joindre le Word téléchargé','orange');
+}
+
 function exportConvention() {
   const nom = gv('f_nom') || '—';
   const prompt = `Génère le document Word ENR023 "Convention de Bilan de Compétences" avec ces informations exactes.
@@ -24477,7 +24580,7 @@ Adresse : 174 hameau de la chapelle – St Julien 39320 Val Suran · N° déclar
 BÉNÉFICIAIRE : ${nom} · Né(e) le : ${gv('conv_dob')} · Adresse : ${gv('conv_adresse')} · Email : ${gv('conv_email')} · Tél : ${gv('conv_tel')} · Situation : ${gv('conv_situation')}
 
 PRESTATION : Bilan de compétences (Articles L6313-4, R6313-4 à R6313-8)
-Durée : ${gv('conv_duree')} · Modalité : ${gv('f_mod')} · Lieu : ${gv('conv_lieu')}
+Durée du bilan : ${gv('conv_duree')} · Travail personnel guidé estimé : ${gv('recap-tp')||'—'} (non facturé) · Modalité : ${gv('f_mod')} · Lieu : ${gv('conv_lieu')}
 Du : ${gv('f_date_debut')} au : ${gv('f_date_fin')}
 
 OBJECTIFS : ${[gv('f_o1'),gv('f_o2'),gv('f_o3')].filter(Boolean).join(' / ')}
@@ -24511,7 +24614,7 @@ Signatures consultant + bénéficiaire
 Organisme : RP Coaching & Formation · SIRET 851 939 322 00042 · N° OF 27390135539
 Bénéficiaire : ${nom}
 Prestation : ${gv('cert_intitule')} · Du ${gv('f_date_debut')} au ${gv('f_date_fin')}
-Durée totale : ${document.getElementById('recap-total')?.textContent || '24 h 00'} · Modalité : ${gv('f_mod')}
+Durée réalisée (entretiens) : ${document.getElementById('recap-entretiens')?.textContent || '—'} · Modalité : ${gv('f_mod')}
 Lieu : Val Suran · Date : ${gv('cert_date') || new Date().toLocaleDateString('fr-FR')}
 Attester : réalisation conforme L6313-1, Qualiopi, convention signée, synthèse remise exclusivement au bénéficiaire.
 
@@ -24816,6 +24919,7 @@ function buildMailCompletText(){
   const dureeEntretiens=document.getElementById('recap-entretiens')?.textContent?.trim()||'16 h 00';
   const dureeTp=document.getElementById('recap-tp')?.value?.trim()||'8 h 00';
   const dureeTotale=document.getElementById('recap-total')?.textContent?.trim()||'24 h 00';
+  const ph=getPhasesFormule();
   const seances=[];
   Array.from(document.querySelectorAll('#cal-tbody tr')).forEach(tr=>{
     const inp=tr.querySelectorAll('input,textarea');
@@ -24851,20 +24955,20 @@ Date d'émission    : ${today}
 
 Intitulé           : Bilan de compétences — Méthode RELIANCE®
 Période            : du ${debut} au ${fin}
-Durée totale       : ${dureeTotale} dont :
-                     • ${dureeEntretiens} d'entretiens individuels (présentiel ou distanciel)
-                     • ${dureeTp} de travaux personnels guidés
+Durée du bilan     : ${dureeEntretiens} d'entretiens individuels (présentiel ou distanciel)
+Travail personnel  : ${dureeTp} estimées (non facturées)
+                     ${MENTION_TP_NON_FACTURE}
 Modalité           : ${modal}
 Lieu               : ${lieu}
 Mode de financement: ${fin_mode}
 
 \u2501\u2501\u2501 DÉROULEMENT — 3 PHASES RÉGLEMENTAIRES \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
 
-Phase préliminaire    (~1 h)  : Analyse de la demande, engagement volontaire,
+Phase préliminaire    (${ph.prelim})  : Analyse de la demande, engagement volontaire,
                                 définition des objectifs
-Phase d'investigation (~10 h) : Compétences, aptitudes, motivations, valeurs,
+Phase d'investigation (${ph.invest}) : Compétences, aptitudes, motivations, valeurs,
                                 exploration pistes professionnelles, faisabilité
-Phase de conclusion   (~2 h)  : Restitution, projet professionnel, plan d'action,
+Phase de conclusion   (${ph.concl})  : Restitution, projet professionnel, plan d'action,
                                 remise de la synthèse exclusivement au bénéficiaire
 
 \u2501\u2501\u2501 PLANNING PRÉVISIONNEL \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
@@ -24970,6 +25074,32 @@ function copyMailHtml(){
   }
 }
 
+// ════════════ CCI AUTOMATIQUE — PREUVE D'ENVOI (oct. 2026) ════════════
+// Cci = email du consultant (onglet Bénéficiaire) + adresse de l'organisme, sans doublon.
+const ORG_BCC_EMAIL='contact@rodrigueponcet.fr';
+const CONS_EMAIL_PREF_KEY='reliance_formateur_email';
+function isValidEmail(e){return /^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/.test(e||'');}
+function saveConsEmailPref(){
+  const v=(document.getElementById('f_cons_email')?.value||'').trim();
+  if(isValidEmail(v))localStorage.setItem(CONS_EMAIL_PREF_KEY,v);
+}
+function prefillConsEmail(){
+  const el=document.getElementById('f_cons_email');
+  if(!el||el.value.trim())return;
+  const pref=localStorage.getItem(CONS_EMAIL_PREF_KEY)||'';
+  if(pref)el.value=pref;
+}
+function getMailBccList(){
+  const consEmail=((document.getElementById('f_cons_email')?.value||'').trim())||(localStorage.getItem(CONS_EMAIL_PREF_KEY)||'');
+  const list=[consEmail,ORG_BCC_EMAIL].map(e=>(e||'').trim().toLowerCase()).filter(isValidEmail);
+  return Array.from(new Set(list));
+}
+function buildBccParam(){
+  const list=getMailBccList();
+  return list.length?'&bcc='+list.map(encodeURIComponent).join(','):'';
+}
+setTimeout(prefillConsEmail,1500);
+
 function openMailto(){
   const nom = gv('f_nom') || '';
   const email = gv('f_email') || '';
@@ -24977,8 +25107,9 @@ function openMailto(){
   const fin = fmtDate(gv('f_date_fin'));
   const objet = encodeURIComponent('Convocation — Bilan de compétences — ' + nom + (debut !== 'xx/xx/xxxx' ? ' — du ' + debut + ' au ' + fin : ''));
   const body = encodeURIComponent(buildMailCompletText());
-  const mailto = 'mailto:' + (email || '') + '?subject=' + objet + '&body=' + body;
+  const mailto = 'mailto:' + (email || '') + '?subject=' + objet + buildBccParam() + '&body=' + body;
   window.open(mailto, '_blank');
+  showToast('📧 Cci : ' + getMailBccList().join(', '),'green');
 }
 
 function copyMailObjet(){
@@ -25022,16 +25153,23 @@ function openDistancielMailto(){
   const date = document.getElementById('dist_seance_date')?.value||'[date]';
   const subject = encodeURIComponent(`Confirmation participation — Séance N°${num} du ${date} — Bilan de compétences`);
   const body = encodeURIComponent(buildDistancielMail());
-  window.open(`mailto:${email}?subject=${subject}&body=${body}`);
+  window.open(`mailto:${email}?subject=${subject}${buildBccParam()}&body=${body}`);
+  showToast('📧 Cci : ' + getMailBccList().join(', '),'green');
 }
 
-function markConvocSent(){localStorage.setItem(CONVOC_SENT_KEY,'oui');localStorage.removeItem(CONVOC_DISMISS_KEY);updateConvocStatus();checkConvocAlert();showToast('✅ Convocation marquée envoyée','green');}
-function resetConvocSent(){localStorage.removeItem(CONVOC_SENT_KEY);localStorage.removeItem(CONVOC_DISMISS_KEY);updateConvocStatus();checkConvocAlert();}
+function markConvocSent(){localStorage.setItem(CONVOC_SENT_KEY,'oui');localStorage.setItem('reliance_convoc_sent_at',new Date().toISOString());localStorage.removeItem(CONVOC_DISMISS_KEY);updateConvocStatus();checkConvocAlert();showToast('✅ Convocation marquée envoyée','green');}
+function resetConvocSent(){localStorage.removeItem(CONVOC_SENT_KEY);localStorage.removeItem('reliance_convoc_sent_at');localStorage.removeItem(CONVOC_DISMISS_KEY);updateConvocStatus();checkConvocAlert();}
 function dismissConvocAlert(){localStorage.setItem(CONVOC_DISMISS_KEY,'oui');const b=document.getElementById('convoc-banner');if(b)b.style.display='none';}
 function updateConvocStatus(){
   const sent=localStorage.getItem(CONVOC_SENT_KEY)==='oui';
   const lbl=document.getElementById('convoc-status-label');
-  if(lbl)lbl.innerHTML=sent?'<span style="color:#196B24;font-weight:700">✅ Envoyée</span>':'<span style="color:#E97132;font-weight:700">⏳ Non envoyée</span>';
+  let quand='';
+  const at=localStorage.getItem('reliance_convoc_sent_at');
+  if(sent){
+    const dt=at?new Date(at):null;
+    quand=(dt&&!isNaN(dt))?' le '+dt.toLocaleDateString('fr-FR')+' à '+dt.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):' (date non enregistrée)';
+  }
+  if(lbl)lbl.innerHTML=sent?'<span style="color:#196B24;font-weight:700">✅ Envoyée'+quand+'</span>':'<span style="color:#E97132;font-weight:700">⏳ Non envoyée</span>';
 }
 function checkConvocAlert(){
   const sent=localStorage.getItem(CONVOC_SENT_KEY)==='oui';
@@ -25641,7 +25779,7 @@ async function generateENR003() {
     
     h1('TRAVAUX PERSONNELS ACCOMPAGNÉS'),
     makeTable(
-      ['Période', 'Horaires', 'Durée totale', 'Contenu'],
+      ['Période', 'Horaires', 'Durée estimée', 'Contenu'],
       [['Du ' + (debut||'[xx/xx/xxxx]') + ' au ' + (fin||'[xx/xx/xxxx]'), 'À définir', dureeTp, 'Recherches personnelles · Passation de tests · Enquêtes métiers · Formalisation des projets']],
       [2400, 1400, 1000, 4238]
     ),
@@ -25651,12 +25789,13 @@ async function generateENR003() {
     makeTable(
       ['Nature des actions', 'Durée'],
       [
-        ['Entretiens individuels en face à face', dureeEntretiens],
-        ['Travaux personnels (dont tests)', dureeTp],
-        ['Durée totale du bilan de compétences', dureeTotale],
+        ['Durée du bilan — entretiens individuels en face à face', dureeEntretiens],
+        ['Travail personnel guidé estimé (dont tests) — non facturé', dureeTp],
+        [LIBELLE_TOTAL_AVEC_TP, dureeTotale],
       ],
       [7500, 2138]
     ),
+    P([B(MENTION_TP_NON_FACTURE,{italics:true})]),
     space(400),
     
     h1('SIGNATURES'),
@@ -25703,7 +25842,7 @@ async function generateENR015() {
   const intitule = gv('cert_intitule')||'Bilan de compétences — Méthode RELIANCE®';
   const debut = fmtDate(gv('cert_debut')||gv('f_date_debut'));
   const fin = fmtDate(gv('cert_fin')||gv('f_date_fin'));
-  const duree = gv('cert_duree')||'24';
+  const duree = gv('cert_duree')||document.getElementById('recap-entretiens')?.textContent?.trim()||'';
   const modal = getModalite();
   const lieu = gv('cert_lieu')||'Val Suran';
   const date = fmtDate(gv('cert_date'));
@@ -25734,7 +25873,7 @@ async function generateENR015() {
     
     h1('PÉRIODE ET DURÉE'),
     fieldG2(['Date de début', debut, 'Date de fin', fin]),
-    fieldRow('Durée totale réalisée', duree ? duree + ' heures' : ''),
+    fieldRow('Durée réalisée (entretiens individuels)', fmtDureeLabel(duree)),
     P([bold('Modalité\u00a0: '),
        B(modal==='Présentiel'?'\u2611':'☐'), B('  Présentiel  '),
        B(modal==='Distanciel'?'\u2611':'☐'), B('  Distanciel  '),
@@ -25985,7 +26124,7 @@ async function generateENR017() {
   const nom = gv('f_nom');
   const cons = gv('f_cons')||'Rodrigue Poncet';
   const debut = fmtDate(gv('f_date_debut')), fin = fmtDate(gv('f_date_fin'));
-  const duree = gv('cert_duree')||'24';
+  const duree = gv('cert_duree')||document.getElementById('recap-entretiens')?.textContent?.trim()||'';
   const modal = getModalite();
   const lieu = gv('f_lieu')||'Val Suran';
   const obs1 = gv('form17_obs1'), obs2 = gv('form17_obs2');
@@ -25998,7 +26137,7 @@ async function generateENR017() {
     fieldRow('Lieu de la prestation', lieu),
     fieldRow('Formateur(s) / Consultant(s)', cons),
     fieldG2(['Date de début', debut, 'Date de fin', fin]),
-    P([bold("Durée réalisée\u00a0: "), B((duree||'___')+' heures au total')]),
+    P([bold("Durée réalisée (entretiens)\u00a0: "), B(fmtDureeLabel(duree)||'___')]),
     P([bold("Mode\u00a0: "),
        B(modal==='Présentiel'?'\u2611':'☐'), B('  Présentiel  '),
        B(modal==='Distanciel'?'\u2611':'☐'), B('  Distanciel  '),
@@ -26116,8 +26255,9 @@ async function generateCONVOC() {
     h1('INFORMATIONS GÉNÉRALES'),
     fieldRow("Intitulé de la prestation", "Bilan de compétences — Méthode RELIANCE®"),
     fieldG2(['Période — du', debut, 'au', fin]),
-    P([bold("Durée totale\u00a0: "), B(dureeTotale+" dont\u00a0:")]),
-    ...[dureeEntretiens+" d'entretiens individuels en face à face (présentiel ou distanciel)",dureeTp+" de travaux personnels guidés"].map(t => makeBullet(t, 'bullets')),
+    P([bold("Durée du bilan\u00a0: "), B(dureeEntretiens+" d'entretiens individuels en face à face (présentiel ou distanciel)")]),
+    P([bold("Travail personnel guidé estimé\u00a0: "), B(dureeTp+" (non facturé)")]),
+    P([B(MENTION_TP_NON_FACTURE,{italics:true})]),
     P([bold("Modalité\u00a0: "), B(modal)]),
     fieldRow('Lieu', lieu),
     space(),
@@ -26126,9 +26266,9 @@ async function generateCONVOC() {
     makeTable(
       ['Phase', 'Contenu', 'Durée indicative'],
       [
-        ['Phase préliminaire', "Analyse de la demande, vérification de l'engagement volontaire, définition des objectifs, planification", '~1 h'],
-        ["Phase d'investigation", "Analyse des compétences, aptitudes, motivations, valeurs ; exploration des pistes professionnelles ; étude de faisabilité", '~10 h'],
-        ['Phase de conclusion', "Restitution des résultats, formalisation du projet professionnel, plan d'action, remise de la synthèse", '~2 h'],
+        ['Phase préliminaire', "Analyse de la demande, vérification de l'engagement volontaire, définition des objectifs, planification", getPhasesFormule().prelim],
+        ["Phase d'investigation", "Analyse des compétences, aptitudes, motivations, valeurs ; exploration des pistes professionnelles ; étude de faisabilité", getPhasesFormule().invest],
+        ['Phase de conclusion', "Restitution des résultats, formalisation du projet professionnel, plan d'action, remise de la synthèse", getPhasesFormule().concl],
       ],
       [2000, 5500, 1538]
     ),
@@ -26282,7 +26422,7 @@ async function generateENR023() {
   const modal   = gv('conv_modal')  || getModalite();
   const lieu    = gv('conv_lieu')   || gv('f_lieu') || 'Val Suran';
   const cons    = gv('f_cons')      || 'Rodrigue Poncet';
-  const montant = gv('conv_montant')|| '2 000';
+  const montant = gv('conv_montant')|| getMontantDefaut();
   const finMode = gv('conv_fin_mode')|| gv('f_fin') || 'CPF';
   const dateSign= fmtDate(gv('conv_date_sign')) || today();
   const faitA   = gv('conv_fait_a') || gv('f_lieu') || 'Val Suran';
@@ -26382,16 +26522,16 @@ async function generateENR023() {
     makeTable(
       ['Phase','Contenu','Durée indicative'],
       [
-        ['Phase préliminaire',"Analyse de la demande, vérification de l'engagement volontaire, définition des objectifs, planification",'~1 h'],
-        ["Phase d'investigation","Analyse des compétences, aptitudes, motivations, valeurs ; exploration des pistes professionnelles ; étude de faisabilité",'~10 h'],
-        ['Phase de conclusion',"Restitution des résultats, formalisation du projet professionnel, plan d'action, remise de la synthèse exclusivement au bénéficiaire",'~2 h'],
+        ['Phase préliminaire',"Analyse de la demande, vérification de l'engagement volontaire, définition des objectifs, planification",getPhasesFormule().prelim],
+        ["Phase d'investigation","Analyse des compétences, aptitudes, motivations, valeurs ; exploration des pistes professionnelles ; étude de faisabilité",getPhasesFormule().invest],
+        ['Phase de conclusion',"Restitution des résultats, formalisation du projet professionnel, plan d'action, remise de la synthèse exclusivement au bénéficiaire",getPhasesFormule().concl],
       ],
       [2000,5800,1838]
     ),
     space(80),
-    P([bold('Durée totale : '+dureeTotale+', dont :')]),
-    makeBullet(dureeEntretiens+" d'entretiens individuels en face à face (présentiel ou distanciel)",'bullets'),
-    makeBullet(dureeTp+" de travaux personnels guidés",'bullets'),
+    P([bold('Durée du bilan : '), B(dureeEntretiens+" d'entretiens individuels en face à face (présentiel ou distanciel)")]),
+    P([bold('Travail personnel guidé estimé : '), B(dureeTp+' (non facturé)')]),
+    P([B(MENTION_TP_NON_FACTURE,{italics:true})]),
     space(80),
     fieldG2(['Période — du',debut,'au',fin2]),
     new docx.Paragraph({spacing:{after:100},children:[
@@ -26436,9 +26576,9 @@ async function generateENR023() {
     makeTable(
       ['Mode de financement','Montant TTC','Modalités'],
       [
-        ['CPF (EDOF)','2 000 €','Inscription et validation via Mon Compte Formation, délai de rétractation de 14 jours'],
+        ['CPF (EDOF)',getMontantDefaut()+' €','Inscription et validation via Mon Compte Formation, délai de rétractation de 14 jours'],
         ['Financement employeur / OPCO',montant+' €','Convention tripartite, facture à l\'employeur en fin d\'accompagnement'],
-        ['Financement personnel','2 000 €','Acompte de 30 % à la signature, solde à mi-parcours'],
+        ['Financement personnel',getMontantDefaut()+' €','Acompte de 30 % à la signature, solde à mi-parcours'],
       ],
       [2400,1400,5238]
     ),
@@ -26746,7 +26886,7 @@ async function generateEmargement() {
     rows: [
       ['Entretiens individuels face à face', totalFace],
       ['Recherche personnelle dont tests',   totalPerso],
-      ['Durée totale du bilan',              totalAll],
+      [LIBELLE_TOTAL_AVEC_TP,              totalAll],
     ].map(([label,val],ri) => new docx.TableRow({children:[
       new docx.TableCell({width:{size:7000,type:docx.WidthType.DXA},
         borders:{top:bD,bottom:bD,left:bD,right:bD},
@@ -26934,7 +27074,7 @@ async function generateCompteRendu() {
     rows: [
       ['Entretiens individuels face à face', totalFace],
       ['Recherche personnelle dont tests', totalPerso],
-      ['Durée totale du bilan', totalAll],
+      [LIBELLE_TOTAL_AVEC_TP, totalAll],
     ].map(([label, val], ri) => new docx.TableRow({children:[
       new docx.TableCell({width:{size:7000,type:docx.WidthType.DXA},
         borders:{top:bD,bottom:bD,left:bD,right:bD},
