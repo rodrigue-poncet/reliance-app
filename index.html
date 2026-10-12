@@ -20727,6 +20727,9 @@ window.addEventListener('load', () => {
       <div class="fg"><div class="fl">&nbsp;</div><div style="font-size:11px;color:var(--muted);line-height:1.5;padding-top:4px">Mis en copie cachée (Cci) des mails de convocation et de confirmation de séance, avec contact@rodrigueponcet.fr — preuve d'envoi archivée.</div></div>
     </div>
     <div class="g2">
+      <div class="fg"><div class="fl">Date de l'entretien d'information</div><input class="fi" type="date" id="f_date_entretien_info" title="Entretien d'information gratuit, avant la convention (jj/mm/aaaa)"></div>
+    </div>
+    <div class="g2">
       <div class="fg"><div class="fl">Date de début</div><input class="fi" type="date" id="f_date_debut"></div>
       <div class="fg"><div class="fl">Date de fin</div><input class="fi" type="date" id="f_date_fin"></div>
     </div>
@@ -22539,7 +22542,7 @@ function scheduleRestoreAllSignatures(d){
 
 function collectData(opts){
   const includeSignatures=opts?.includeSignatures!==false;
-  const fields=['f_nom','f_poste','f_secteur','f_anc','f_cons','f_cons_email','f_formule','f_orga','f_date_debut','f_date_fin','f_fin','f_mod','f_lieu','f_ctx','f_o1','f_o2','f_o3',
+  const fields=['f_nom','f_poste','f_secteur','f_anc','f_cons','f_cons_email','f_formule','f_orga','f_date_debut','f_date_fin','f_date_entretien_info','f_fin','f_mod','f_lieu','f_ctx','f_o1','f_o2','f_o3',
     'e1c','e1r','e1o','e1d','e2c','e2r','e2o','e2d','e3c','e3r','e3o','e3d','e4c','e4r','e4o','e4d',
     'se1','se2','se3','se4','se5','sf1','sf2','sf3','sf4','sf5','sv1','sv2','sv3','sv4','sv5',
     'f_pts','f_vig','f_val','f_mot','f_proj','f_pdesc','f_arg','f_fais','f_proj_sec','f_proj_sec_desc','f_proj_sec_arg','f_proj_sec_fais','f_proj_nr','f_proj_nr_raison',
@@ -23748,7 +23751,7 @@ function getCtx(){
   const finMode=gv('f_fin');
   return{nom:gv('f_nom'),poste:gv('f_poste'),secteur:gv('f_secteur'),anc:gv('f_anc'),
     cons:gv('f_cons'),orga:gv('f_orga'),ctx:gv('f_ctx'),o1:gv('f_o1'),o2:gv('f_o2'),o3:gv('f_o3'),
-    lieu:gv('f_lieu'),dateDebut:gv('f_date_debut'),dateFin:gv('f_date_fin'),
+    lieu:gv('f_lieu'),dateDebut:gv('f_date_debut'),dateFin:gv('f_date_fin'),dateEntretienInfo:fmtDate(gv('f_date_entretien_info')),
     mod:gv('f_mod'),fin:finMode,finDetail:finMode==='Autre'?gv('f_fin_autre'):finMode,
     dureeFace:document.getElementById('recap-entretiens')?.textContent||'',
     dureeTp:document.getElementById('recap-tp')?.value||'',
@@ -23855,7 +23858,8 @@ Tableau deux colonnes : Titre | Page (approximative). Lister toutes les sections
 
 3. PARCOURS ET DÉROULÉ DES SÉANCES — tableau 3 phases (Préliminaire / Investigation / Conclusion)
 Pour chaque phase : programme, contenu, outils utilisés (et séances du calendrier le cas échéant).
-Données RELIANCE® :
+${d.dateEntretienInfo?`Ajouter une ligne AVANT la phase préliminaire, avec exactement ce libellé : « Entretien d'information gratuit, avant la convention – ${d.dateEntretienInfo} ». Cette ligne n'est PAS comptée dans le total des heures (ne l'ajouter à aucune durée ni à aucun total).
+`:''}Données RELIANCE® :
 ${d.phasesParcoursTxt||'—'}
 Texte IA parcours (si disponible) : ${ia('parcours')||'—'}
 
