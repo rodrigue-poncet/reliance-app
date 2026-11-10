@@ -21704,7 +21704,7 @@ window.addEventListener('load', () => {
       </div>
       <div style="padding:13px 15px">
         <div style="font-size:12px;line-height:1.75;color:var(--text);margin-bottom:12px;background:#f9f9f9;padding:10px 12px;border-radius:6px;border-left:3px solid var(--c1)">
-          Conformément à l'article L.900-4-1 du Code du travail, le bénéficiaire est le seul destinataire des résultats et du document de synthèse. Ces éléments ne peuvent être communiqués à un tiers qu'avec son accord exprès. Notre organisme est tenu au secret professionnel (art. 378 du Code pénal).
+          Conformément à l'article L6313-4 du Code du travail, le bénéficiaire est le seul destinataire des résultats et du document de synthèse. Ces éléments ne peuvent être communiqués à un tiers qu'avec son accord exprès. Notre organisme est tenu au secret professionnel (art. 378 du Code pénal).
         </div>
         <div class="fg"><div class="fl">Je soussigné(e) — Nom du bénéficiaire</div><input class="fi synced-ro" id="att_nom" readonly style="background:#f5f5f5"></div>
         <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:12px;font-size:13px">
@@ -25062,7 +25062,8 @@ accord, en fonction de l'évolution du parcours (Art. R6313-4).
 • Indisponibilité         : nous prévenir 48h à l'avance minimum
 • Espace stagiaire en ligne : vous pouvez retrouver l'ensemble des documents suivants dans cet espace :
   https://drive.google.com/drive/folders/1uKL48P9YePwpy6eAk3U7xenztNc8VwXC?usp=drive_link
-  RGPD, Règlement intérieur, Charte qualité, livret d'accueil, CGU, Charte IA.
+  Politique RGPD, règlement intérieur, charte qualité et déontologie, livret d'accueil,
+  conditions générales de vente, charte d'utilisation de l'IA.
 
 \u2501\u2501\u2501 CONFIDENTIALITÉ ET RGPD \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
 
@@ -26112,7 +26113,7 @@ async function generateENR013() {
       border: { left: { style: docx.BorderStyle.SINGLE, size: 16, color: RP_COLORS.bleu } },
       indent: { left: 200 },
       children: [new docx.TextRun({
-        text: "Conformément à l'article L.900-4-1 du Code du travail, le bénéficiaire est le seul destinataire des résultats et du document de synthèse. Ces éléments ne peuvent être communiqués à un tiers qu'avec son accord exprès. Notre organisme est tenu au secret professionnel (art. 378 du Code pénal).",
+        text: "Conformément à l'article L6313-4 du Code du travail, le bénéficiaire est le seul destinataire des résultats et du document de synthèse. Ces éléments ne peuvent être communiqués à un tiers qu'avec son accord exprès. Notre organisme est tenu au secret professionnel (art. 378 du Code pénal).",
         font: RP_FONT, size: RP_FONT_BODY
       })]
     }),
@@ -26742,7 +26743,7 @@ async function generateENR023() {
     P("Conformément à l'article L6313-4 du Code du travail :"),
     ...["Les résultats détaillés et le document de synthèse sont la propriété exclusive du bénéficiaire",
         "Ils ne peuvent être communiqués à un tiers (employeur, financeur, etc.) qu'avec l'accord exprès et écrit du bénéficiaire",
-        "L'Organisme est tenu au secret professionnel (Art. 378 du Code pénal)",
+        "L'Organisme et ses intervenants sont tenus au secret professionnel (art. 226-13 et 226-14 du Code pénal)",
         "Les documents de travail du bilan sont détruits à l'issue du suivi à 6 mois, au plus tard 1 an après la fin du bilan (Code du travail, art. R6313-7)",
         "Les pièces justifiant la réalisation du bilan (convention, émargements, certificat de réalisation, évaluations) sont conservées 5 ans (CG Mon Compte Formation, art. 7.3)",
     ].map(t=>makeBullet(t,'bullets')),
@@ -26754,7 +26755,7 @@ async function generateENR023() {
       [
         ['CPF (EDOF)',getMontantDefaut()+' €','Inscription et validation via Mon Compte Formation, délai de rétractation de 14 jours'],
         ['Financement employeur / OPCO',montant+' €','Convention tripartite, facture à l\'employeur en fin d\'accompagnement'],
-        ['Financement personnel',getMontantDefaut()+' €','Acompte de 30 % à la signature, solde à mi-parcours'],
+        ['Financement personnel',getMontantDefaut()+' €','30 % maximum à l\'issue du délai de rétractation de 14 jours, solde échelonné au fil du bilan (C. trav. L6353-6)'],
       ],
       [2400,1400,5238]
     ),
@@ -26804,12 +26805,12 @@ async function generateENR023() {
         ['Annexe 1','Calendrier ENR003'],
         ['Annexe 2','Questionnaire ENR002'],
         ['Annexe 3','Formulaire de rétractation'],
-        ['Annexe 4','RGPD'],
+        ['Annexe 4','Politique et charte RGPD'],
         ['Annexe 5','Règlement intérieur'],
-        ['Annexe 6','Charte qualité'],
-        ['Annexe 7','Livret accueil'],
-        ['Annexe 8','CGU'],
-        ['Annexe 9','Charte IA'],
+        ['Annexe 6','Charte qualité et déontologie (REF010)'],
+        ['Annexe 7','Livret d\'accueil (REF011)'],
+        ['Annexe 8','Conditions générales de vente (REF009)'],
+        ['Annexe 9','Charte d\'utilisation de l\'IA (REF020)'],
       ],
       [1400,8238]
     ),
