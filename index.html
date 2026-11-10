@@ -20688,7 +20688,7 @@ window.addEventListener('load', () => {
     <div class="tab" onclick="sw(2)" id="tab-rgpd" style="display:none;position:relative"><span class="tab-ic">🛡️</span><span class="tab-lb">RGPD</span><span id="rgpd-alert-dot" style="position:absolute;top:7px;right:8px;width:8px;height:8px;border-radius:50%;background:#c62828;display:none;box-shadow:0 0 0 2px white;animation:pulse 2s infinite" title="Données à supprimer !"></span></div>
     <div class="tab" onclick="sw(3)"><span class="tab-ic">📝</span><span class="tab-lb">Recueil besoins</span></div>
     <div class="tab" onclick="sw(4)"><span class="tab-ic">📄</span><span class="tab-lb">Convention</span></div>
-    <div class="tab" onclick="sw(5)" id="tab-convoc" style="position:relative"><span class="tab-ic">✉️</span><span class="tab-lb">Convocation</span><span id="convoc-alert-dot" style="position:absolute;top:7px;right:8px;width:8px;height:8px;border-radius:50%;background:#E97132;display:none;box-shadow:0 0 0 2px white;animation:pulse 2s infinite"></span></div>
+    <div class="tab" onclick="sw(5)" id="tab-convoc" style="position:relative"><span class="tab-ic">✉️</span><span class="tab-lb">Convocation & inscription</span><span id="convoc-alert-dot" style="position:absolute;top:7px;right:8px;width:8px;height:8px;border-radius:50%;background:#E97132;display:none;box-shadow:0 0 0 2px white;animation:pulse 2s infinite"></span></div>
     <div class="tab" onclick="sw(6)"><span class="tab-ic">📅</span><span class="tab-lb">Calendrier</span></div>
     <div class="tab" onclick="sw(7)"><span class="tab-ic">✅</span><span class="tab-lb">Émargements</span></div>
     <div class="tab" onclick="sw(8)"><span class="tab-ic">🔮</span><span class="tab-lb">Valeurs & Tests</span></div>
@@ -20812,7 +20812,7 @@ window.addEventListener('load', () => {
                 <td style="padding:7px 9px;border:1px solid var(--border)">Réalisation du bilan, suivi, traçabilité Qualiopi</td>
                 <td style="padding:7px 9px;border:1px solid var(--border)">Identité, coordonnées, parcours pro, résultats tests, objectifs</td>
                 <td style="padding:7px 9px;border:1px solid var(--border)">Exécution du contrat (Art. 6.1.b RGPD)</td>
-                <td style="padding:7px 9px;border:1px solid var(--border);font-weight:700;color:var(--c2)">5 ans après fin du bilan</td>
+                <td style="padding:7px 9px;border:1px solid var(--border);font-weight:700;color:var(--c2)">Preuves de réalisation : 5 ans<br><span style="font-weight:400;font-size:11px;color:var(--muted)">CG Mon Compte Formation, art. 7.3</span><br>Documents de travail : 1 an max<br><span style="font-weight:400;font-size:11px;color:var(--muted)">Code du travail, art. R6313-7</span></td>
                 <td style="padding:7px 9px;border:1px solid var(--border)">Bénéficiaire uniquement. OPCO si financement.</td>
               </tr>
               <tr style="background:var(--tbl-bg)">
@@ -20828,7 +20828,7 @@ window.addEventListener('load', () => {
                 <td style="padding:7px 9px;border:1px solid var(--border)">Amélioration continue, indicateur Qualiopi</td>
                 <td style="padding:7px 9px;border:1px solid var(--border)">Nom, notes, commentaires</td>
                 <td style="padding:7px 9px;border:1px solid var(--border)">Intérêt légitime (Art. 6.1.f RGPD)</td>
-                <td style="padding:7px 9px;border:1px solid var(--border);font-weight:700;color:var(--c2)">3 ans</td>
+                <td style="padding:7px 9px;border:1px solid var(--border);font-weight:700;color:var(--c2)">5 ans<br><span style="font-weight:400;font-size:11px;color:var(--muted)">CG Mon Compte Formation, art. 7.3</span></td>
                 <td style="padding:7px 9px;border:1px solid var(--border)">Responsable de traitement (Rodrigue Poncet)</td>
               </tr>
             </tbody>
@@ -20837,7 +20837,7 @@ window.addEventListener('load', () => {
 
         <div style="margin-top:12px;font-size:11px;color:var(--muted)">
           <strong>Responsable de traitement :</strong> Rodrigue Poncet · RP Coaching & Formation · SIRET 851 939 322 00042<br>
-          <strong>Contact RGPD :</strong> <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="71121e1f0510120531031e150318160414011e1f1214055f1703">[email&#160;protected]</a> · 06 74 03 59 37<br>
+          <strong>Contact RGPD :</strong> <a href="mailto:contact@rodrigueponcet.fr">contact@rodrigueponcet.fr</a> · 06 74 03 59 37<br>
           <strong>Hébergement des données :</strong> Local (localStorage navigateur) — Pas de serveur tiers pour les données bilan.<br>
           <strong>Transfert hors UE :</strong> Les prompts IA envoyés à Claude.ai (Anthropic, USA) ne doivent pas contenir de nom complet ou d'adresse du bénéficiaire.
         </div>
@@ -20859,7 +20859,7 @@ window.addEventListener('load', () => {
           </div>
           <div style="display:flex;align-items:flex-start;gap:10px">
             <span style="font-size:16px;flex-shrink:0">✅</span>
-            <div><strong style="font-size:12px">Supprimer les données après 5 ans</strong><br><span style="font-size:11px;color:var(--muted)">Créez un rappel dans votre agenda pour supprimer les fichiers .reliance 5 ans après la fin de chaque bilan.</span></div>
+            <div><strong style="font-size:12px">Conservation : 1 an / 5 ans</strong><br><span style="font-size:11px;color:var(--muted)">Documents de travail du bilan (tests, analyses, notes, fichier .reliance) : à supprimer au plus tard 1 an après la fin (Code du travail, art. R6313-7). Preuves de réalisation (convention, émargements, certificat, évaluations) : à garder 5 ans (CG Mon Compte Formation, art. 7.3).</span></div>
           </div>
           <div style="display:flex;align-items:flex-start;gap:10px">
             <span style="font-size:16px;flex-shrink:0">✅</span>
@@ -20885,7 +20885,7 @@ window.addEventListener('load', () => {
           <div style="font-size:14px;font-weight:700;color:#b71c1c;margin-bottom:6px">Données à supprimer — Action requise</div>
           <div style="font-size:12px;color:#c62828;line-height:1.7" id="rgpd-deletion-msg">La date de destruction des données est dépassée.</div>
           <div style="margin-top:10px;font-size:11px;color:#7f0000;background:rgba(255,255,255,.5);padding:8px 10px;border-radius:6px">
-            📋 <strong>Actions à effectuer :</strong> Supprimez le dossier .reliance, les documents Word associés, et les données dans votre Drive. Conservez uniquement les pièces comptables si financement.
+            📋 <strong>Actions à effectuer :</strong> Supprimez le fichier .reliance et les documents de travail (tests, analyses, notes) de votre poste et de votre Drive. Gardez 5 ans les preuves de réalisation : convention, émargements, certificat, évaluations (CG Mon Compte Formation, art. 7.3).
           </div>
         </div>
       </div>
@@ -21108,7 +21108,7 @@ window.addEventListener('load', () => {
         <div><span style="color:var(--muted)">SIRET : </span><strong>851 939 322 00042</strong></div>
         <div><span style="color:var(--muted)">Adresse : </span>174 hameau de la chapelle – St Julien 39320 Val Suran</div>
         <div><span style="color:var(--muted)">N° déclaration : </span>27390135539</div>
-        <div><span style="color:var(--muted)">Email / Tél : </span><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="c4a7abaab0a5a7b084b6aba0b6ada3b1a1b4abaaa7a1b0eaa2b6">[email&#160;protected]</a> / 06 74 03 59 37</div>
+        <div><span style="color:var(--muted)">Email / Tél : </span><a href="mailto:contact@rodrigueponcet.fr">contact@rodrigueponcet.fr</a> / 06 74 03 59 37</div>
         <div><span style="color:var(--muted)">Représentant légal : </span><strong>Rodrigue Poncet</strong></div>
       </div>
     </div>
@@ -21175,7 +21175,7 @@ window.addEventListener('load', () => {
     <!-- RGPD dans convention -->
     <div style="background:#FFF3E0;border-radius:8px;padding:13px 15px;margin-bottom:14px;border-left:4px solid var(--c2)">
       <div style="font-size:11px;font-weight:700;color:var(--c2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px">10. Données personnelles (RGPD)</div>
-      <div style="font-size:12px;line-height:1.7;color:var(--text)">Les données personnelles collectées dans le cadre du bilan sont traitées conformément à la Politique et charte RGPD de l'organisme disponible sur <a href="https://drive.google.com/drive/folders/1uKL48P9YePwpy6eAk3U7xenztNc8VwXC" target="_blank" style="color:var(--c1)">ce lien</a>. Base légale : exécution du contrat. Durée de conservation : 5 ans. Responsable de traitement : Rodrigue Poncet.</div>
+      <div style="font-size:12px;line-height:1.7;color:var(--text)">Les données personnelles collectées dans le cadre du bilan sont traitées conformément à la Politique et charte RGPD de l'organisme disponible sur <a href="https://drive.google.com/drive/folders/1uKL48P9YePwpy6eAk3U7xenztNc8VwXC" target="_blank" style="color:var(--c1)">ce lien</a>. Base légale : exécution du contrat. Durée de conservation : 5 ans pour les preuves de réalisation (CG Mon Compte Formation, art. 7.3), 1 an maximum pour les documents de travail du bilan (Code du travail, art. R6313-7). Responsable de traitement : Rodrigue Poncet.</div>
       <div style="margin-top:9px">
         <label style="display:flex;align-items:flex-start;gap:9px;font-size:12px;cursor:pointer">
           <input type="checkbox" id="conv_rgpd_ok" style="margin-top:2px">
@@ -21212,6 +21212,15 @@ window.addEventListener('load', () => {
   <!-- TAB 10 DOCUMENTS LÉGAUX (ENR013 + ENR015 + ENR014) -->
   <!-- ═══ CONVOCATION p5 ═══ -->
 <div class="pane" id="p5">
+    <!-- MAIL D'INSCRIPTION (nov. 2026) — à envoyer après le 1er RDV -->
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:white;border:2px solid var(--c3);border-radius:9px;padding:12px 16px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:10px"><div style="font-size:22px">📝</div>
+        <div><div style="font-size:13px;font-weight:700;color:var(--dk2)">Mail d'inscription</div>
+          <div style="font-size:11px;color:var(--muted)">À envoyer après le premier rendez-vous · EDOF, documents à signer, documents réglementaires, créneaux. Pensez à remplacer les liens entre crochets.</div></div>
+      </div>
+      <button onclick="openMailInscription()" style="padding:8px 16px;background:var(--c3);color:white;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif">✉️ Ouvrir dans la messagerie</button>
+    </div>
+
     <div id="convoc-banner" style="display:none;border-radius:10px;padding:16px 20px;margin-bottom:18px;border:2px solid #E97132;background:linear-gradient(135deg,#FFF3E0,#FFE0CC)">
       <div style="display:flex;align-items:flex-start;gap:14px"><div style="font-size:28px;line-height:1">🔔</div>
         <div style="flex:1"><div style="font-size:14px;font-weight:700;color:#7A3000;margin-bottom:4px">Action requise — Convocation à envoyer</div>
@@ -21319,8 +21328,18 @@ window.addEventListener('load', () => {
       <div class="fg"><div class="fl">Formateur</div><input class="fi" id="cal_form" value="Rodrigue Poncet"></div>
     </div>
     <div class="g2" style="margin-bottom:14px">
-      <div class="fg"><div class="fl">Début de la période</div><input class="fi" type="date" id="cal_debut"></div>
+      <div class="fg"><div class="fl">Début de la période</div><input class="fi" type="date" id="cal_debut" onchange="calcDebutAuPlusTot()"></div>
       <div class="fg"><div class="fl">Modalité</div><select class="fs" id="cal_modal"><option>Présentiel</option><option>Distanciel</option><option>Mixte</option></select></div>
+    </div>
+    <!-- CALCULATEUR DÉMARRAGE EDOF (nov. 2026) -->
+    <div style="background:var(--tbl-bg);border-left:4px solid var(--c1);border-radius:7px;padding:10px 14px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;color:var(--c1);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">📆 Date de démarrage au plus tôt (CPF / EDOF)</div>
+      <div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap">
+        <div class="fg" style="margin:0"><div class="fl">Envoi de la proposition de commande</div><input class="fi" type="date" id="cal_envoi_commande" onchange="calcDebutAuPlusTot()" style="width:170px"></div>
+        <div style="font-size:13px;padding-bottom:8px">Début au plus tôt : <strong id="cal_debut_min" style="color:var(--c1)">—</strong></div>
+      </div>
+      <div id="cal_debut_min_warn" style="display:none;margin-top:6px;font-size:12px;font-weight:700;color:#c62828"></div>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px">11 jours ouvrés après l'envoi (lundi au vendredi, hors jours fériés légaux — CG Mon Compte Formation, art. 5.1).</div>
     </div>
     <div style="font-size:12px;font-weight:700;color:var(--tbl-hdr);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Tableau des séances — Phase d'investigation et phase de conclusion</div>
     <div style="overflow-x:auto">
@@ -21353,8 +21372,8 @@ window.addEventListener('load', () => {
       <div class="cal-recap-title">📊 Récapitulatif des durées</div>
       <table class="recap-table">
         <tr><td>Entretiens individuels en face à face</td><td style="text-align:right;font-weight:700" id="recap-entretiens">0 h 00</td></tr>
-        <tr><td>Travaux personnels (dont tests)</td><td style="text-align:right"><input style="width:80px;text-align:right;border:none;border-bottom:1px solid var(--border);background:transparent;font-size:12px" id="recap-tp" value="8 h 00" oninput="calcRecap();calcEmargTotal()"></td></tr>
-        <tr><td><strong>Durée totale du bilan de compétences</strong></td><td style="text-align:right;font-weight:700" id="recap-total">0 h 00</td></tr>
+        <tr><td>Travaux personnels (dont tests) <span style="font-size:11px;color:var(--muted);font-style:italic">— estimé, non compris dans les heures d’accompagnement facturées</span></td><td style="text-align:right"><input style="width:80px;text-align:right;border:none;border-bottom:1px solid var(--border);background:transparent;font-size:12px" id="recap-tp" value="8 h 00" oninput="calcRecap();calcEmargTotal()"></td></tr>
+        <tr><td><strong>Total à titre indicatif</strong> <span style="font-size:11px;color:var(--muted);font-style:italic">(accompagnement + travail personnel estimé)</span></td><td style="text-align:right;font-weight:700" id="recap-total">0 h 00</td></tr>
       </table>
     </div>
 
@@ -21482,8 +21501,8 @@ window.addEventListener('load', () => {
     <div style="background:var(--tbl-bg);border-radius:8px;padding:12px 14px;margin-top:14px">
       <table style="width:100%;font-size:12px;border-collapse:collapse">
         <tr><td style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,.4)">Total entretiens face à face</td><td style="text-align:right;font-weight:700;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.4)" id="em-total-face">0 h 00</td></tr>
-        <tr><td style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,.4)">Recherche personnelle dont tests</td><td style="text-align:right;font-weight:700;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.4)" id="em-total-perso">8 h 00</td></tr>
-        <tr><td style="padding:6px 0;font-weight:700">Total incluant le travail personnel estimé (non facturé)</td><td style="text-align:right;font-weight:700;padding:6px 0" id="em-total">0 h 00</td></tr>
+        <tr><td style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,.4)">Recherche personnelle dont tests <span style="font-size:11px;font-style:italic">(estimé, non compris dans les heures d’accompagnement facturées)</span></td><td style="text-align:right;font-weight:700;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.4)" id="em-total-perso">8 h 00</td></tr>
+        <tr><td style="padding:6px 0;font-weight:700">Total à titre indicatif (accompagnement + travail personnel estimé)</td><td style="text-align:right;font-weight:700;padding:6px 0" id="em-total">0 h 00</td></tr>
       </table>
     </div>
 
@@ -21730,7 +21749,7 @@ window.addEventListener('load', () => {
       <button onclick="envoyerCertificatSignature()" style="padding:5px 10px;background:var(--orange);color:white;border:none;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif;white-space:nowrap" title="Informe Rodrigue que le BC est terminé et lui envoie un récapitulatif avant signature — joindre le Word téléchargé">📧 Envoyer pour signature</button>
     </div>
       <div style="padding:13px 15px">
-        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">SIRET 851 939 322 00042 · N° OF 27390135539 · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="fa9995948e9b998eba88959e88939d8f9f8a9594999f8ed49c88">[email&#160;protected]</a> · 06 74 03 59 37</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">SIRET 851 939 322 00042 · N° OF 27390135539 · <a href="mailto:contact@rodrigueponcet.fr">contact@rodrigueponcet.fr</a> · 06 74 03 59 37</div>
         <div class="g2">
           <div class="fg"><div class="fl">Nom et prénom</div><input class="fi synced-ro" id="cert_nom" readonly style="background:#f5f5f5"></div>
           <div class="fg"><div class="fl">Date de naissance</div><input class="fi synced-ro" id="cert_dob" readonly style="background:#f5f5f5"></div>
@@ -21804,14 +21823,14 @@ window.addEventListener('load', () => {
           <div class="fg"><div class="fl">Email</div><input class="fi" id="reseau_email"></div>
           <div class="fg"><div class="fl">Téléphone</div><input class="fi" id="reseau_tel"></div>
         </div>
-        <div style="font-size:11px;color:var(--muted);margin-top:6px;font-style:italic">Contact organisme : <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3e5d51504a5f5d4a7e4c515a4c57594b5b4e51505d5b4a10584c">[email&#160;protected]</a> / 0674035937 — Vous pouvez vous retirer du réseau à tout moment.</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px;font-style:italic">Contact organisme : <a href="mailto:contact@rodrigueponcet.fr">contact@rodrigueponcet.fr</a> / 0674035937 — Vous pouvez vous retirer du réseau à tout moment.</div>
       </div>
     </div>
 
     <div class="section-title" style="color:#074F6A;margin:16px 0 10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">📅 Conservation et destruction des données</div>
     <div class="fg">
-      <label class="fl" style="display:block;margin-bottom:6px">Date de destruction planifiée des documents
-        <span style="font-size:11px;color:#888;font-weight:400">R. 6313-7 — généralement date fin bilan + 1 an</span>
+      <label class="fl" style="display:block;margin-bottom:6px">Date de destruction planifiée des documents de travail
+        <span style="font-size:11px;color:#888;font-weight:400">documents de travail : fin du bilan + 1 an max (Code du travail, art. R6313-7) · les preuves de réalisation restent conservées 5 ans</span>
       </label>
       <input class="fi" type="date" id="rgpd_date" onchange="checkRgpdAlert()">
       <button type="button" onclick="setRgpdDateAuto()" style="margin-top:6px;padding:6px 12px;background:var(--c3);color:white;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:Calibri,Arial,sans-serif" class="btn-small">📅 Calculer automatiquement (fin bilan + 1 an)</button>
@@ -22018,7 +22037,7 @@ window.addEventListener('load', () => {
           </div>
         </div>
         <div style="font-size:11px;color:var(--muted);margin-top:6px;font-style:italic">
-          ⚠️ La date du RDV à 6 mois doit être saisie dans le planning Digiforma/Drive. Les documents élaborés ne peuvent être conservés au-delà d'un an (R.6313-8).
+          ⚠️ La date du RDV à 6 mois doit être saisie dans le planning Digiforma/Drive. Les documents de travail du bilan ne peuvent être conservés au-delà d'un an (Code du travail, art. R6313-7).
         </div>
       </div>
     </div>
@@ -22179,7 +22198,7 @@ window.addEventListener('load', () => {
   </div>
 
   <!-- TAB 8 PREVIEW -->
-  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  <script>
 // ════════════ AUTH ════════════
 const PK='reliance_pwd',SK='reliance_sess',AK='reliance_admin',DK='reliance_data';
 const APP_VERSION='7.4';
@@ -22547,11 +22566,12 @@ function collectData(opts){
     'se1','se2','se3','se4','se5','sf1','sf2','sf3','sf4','sf5','sv1','sv2','sv3','sv4','sv5',
     'f_pts','f_vig','f_val','f_mot','f_proj','f_pdesc','f_arg','f_fais','f_proj_sec','f_proj_sec_desc','f_proj_sec_arg','f_proj_sec_fais','f_proj_nr','f_proj_nr_raison',
     'f_form','f_acc',
-    'cal_benef','cal_form','cal_debut','cal_modal','recap-tp','cal_ajustement',
+    'cal_benef','cal_form','cal_debut','cal_modal','recap-tp','cal_ajustement','cal_envoi_commande',
     'conv_nom','conv_dob','conv_adresse','conv_email','conv_tel','conv_situation','conv_lieu','conv_montant','conv_fait_a','conv_date_sign',
     'att_lieu','att_date','cert_intitule','cert_lieu','cert_date',
     'eval_date_b','eval_att_autre','eval_pts_forts_b','eval_pts_faibles_b','eval_comment_b','eval_nb_enquetes',
     'form17_obs1','form17_obs2','form17_engagement','form17_nb_enq','form17_type_enq','form17_handicap_desc',
+    'form17_eval_0','form17_eval_1','form17_eval_2','form17_eval_3','form17_eval_4','form17_eval_5','form17_eval_6',
     'reseau_email','reseau_tel','rgpd_lieu','rgpd_date',
     'f_dob','f_situation','f_adresse','f_email','f_tel','f_fin_autre',
     'suivi_date_bilan','suivi_date_rdv','suivi_modal','suivi_statut','suivi_projet_statut','suivi_situation','suivi_bilan_6mois','suivi_points_pos','suivi_formation','suivi_plan','suivi_obs','suivi_actions','suivi_comment','suivi_note',
@@ -22623,7 +22643,9 @@ function collectData(opts){
   d.suivi_reco=getCheckRadio('suivi_reco');
   d.suiviStars=typeof suiviStars!=='undefined'?suiviStars:0;
   const inc_oui=document.getElementById('incident_oui');d.incident_oui_checked=inc_oui?inc_oui.checked:false;
-  ['conv_rgpd_ok','att_autorise','att_n_autorise','reseau_oui','reseau_non','rgpd_consent','form17_handicap'].forEach(id=>{const e=document.getElementById(id);if(e)d[id+'_checked']=e.checked;});
+  ['conv_rgpd_ok','att_autorise','att_n_autorise','reseau_oui','reseau_non','rgpd_consent','form17_handicap','form17_entretiens','form17_travaux','form17_tests','form17_enquetes'].forEach(id=>{const e=document.getElementById(id);if(e)d[id+'_checked']=e.checked;});
+  d.form17_prelim_radio=document.querySelector('[name="form17_prelim"]:checked')?.value||'';
+  d.form17_synthese_radio=document.querySelector('[name="form17_synthese"]:checked')?.value||'';
   d.convoc_sent=localStorage.getItem('reliance_convoc_sent')||'';
   d.convoc_sent_at=localStorage.getItem('reliance_convoc_sent_at')||'';
   return d;
@@ -22715,12 +22737,15 @@ function restoreData(d){
     else if(d.suiviStars&&typeof setSuiviStar==='function')setSuiviStar(d.suiviStars);
     else if(d.froidStars&&typeof setSuiviStar==='function')setSuiviStar(d.froidStars);
     const inc_oui2=document.getElementById('incident_oui');if(inc_oui2&&d.incident_oui_checked!==undefined){inc_oui2.checked=d.incident_oui_checked;toggleIncident();}
-    ['conv_rgpd_ok','att_autorise','att_n_autorise','reseau_oui','reseau_non','rgpd_consent','form17_handicap'].forEach(id=>{const e=document.getElementById(id);if(e&&d[id+'_checked']!==undefined)e.checked=d[id+'_checked'];});
+    ['conv_rgpd_ok','att_autorise','att_n_autorise','reseau_oui','reseau_non','rgpd_consent','form17_handicap','form17_entretiens','form17_travaux','form17_tests','form17_enquetes'].forEach(id=>{const e=document.getElementById(id);if(e&&d[id+'_checked']!==undefined)e.checked=d[id+'_checked'];});
+    ['form17_prelim','form17_synthese'].forEach(n=>{const v=d[n+'_radio'];if(v){const r=document.querySelector('[name="'+n+'"][value="'+v+'"]');if(r)r.checked=true;}});
+    if(typeof toggleHandicapForm17==='function')toggleHandicapForm17();
     if(d.convoc_sent)localStorage.setItem('reliance_convoc_sent',d.convoc_sent);else localStorage.removeItem('reliance_convoc_sent');
     if(d.convoc_sent_at)localStorage.setItem('reliance_convoc_sent_at',d.convoc_sent_at);else localStorage.removeItem('reliance_convoc_sent_at');
     if(typeof prefillConsEmail==='function')prefillConsEmail();
     if(!d.f_formule&&typeof inferFormuleFromCalendar==='function')inferFormuleFromCalendar();
     if(typeof checkConvocAlert==='function')checkConvocAlert();
+    if(typeof calcDebutAuPlusTot==='function')calcDebutAuPlusTot();
   }, 500);
   // Fill cal_benef from f_nom if empty
   const cb=document.getElementById('cal_benef');
@@ -23495,8 +23520,9 @@ const FORMULE_PHASES={
   Essentiel:{prelim:'1 h',invest:'10 h',concl:'2 h'}
 };
 const FORMULE_MONTANT={Complet:'2 000',Essentiel:'1 750'};
-const MENTION_TP_NON_FACTURE="Les heures de travail personnel guidé (tests, recherches) sont des heures estimées, prévues entre les séances. Elles ne sont pas facturées.";
-const LIBELLE_TOTAL_AVEC_TP='Total incluant le travail personnel estimé (non facturé)';
+const MENTION_TP_NON_FACTURE="Les heures de travail personnel guidé (tests, recherches) sont des heures estimées, prévues entre les séances. Elles ne sont pas comprises dans les heures d’accompagnement facturées.";
+const NOTE_TP_NON_FACTURE='estimé, non compris dans les heures d’accompagnement facturées';
+const LIBELLE_TOTAL_AVEC_TP='Total à titre indicatif (accompagnement + travail personnel estimé)';
 function getFormule(){
   const v=document.getElementById('f_formule')?.value;
   return FORMULE_PHASES[v]?v:'Complet';
@@ -23647,6 +23673,47 @@ function calcRecap(){
   const convDuree=document.getElementById('conv_duree');
   if(convDuree)convDuree.value=fmt(total)+" d'entretiens individuels";
 }
+// ════════════ CALCULATEUR DÉMARRAGE EDOF (nov. 2026) ════════════
+// CG Mon Compte Formation v16, art. 5.1 : 11 jours ouvrés entre l'envoi de la proposition de commande
+// et la date de début. Art. 1 : jours ouvrés = lundi-vendredi hors jours fériés légaux (C. trav. L3133-1),
+// calendrier national identique pour tous.
+const DELAI_EDOF_JOURS_OUVRES=11;
+function isoDateLocal(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function joursFeriesFR(y){
+  const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3);
+  const h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451);
+  const mois=Math.floor((h+l-7*m+114)/31),jour=((h+l-7*m+114)%31)+1;
+  const paques=new Date(y,mois-1,jour,12);
+  const apres=n=>{const x=new Date(paques);x.setDate(x.getDate()+n);return isoDateLocal(x);};
+  // 1er janv., lundi de Pâques, 1er mai, 8 mai, Ascension, lundi de Pentecôte, 14 juil., 15 août, 1er nov., 11 nov., 25 déc.
+  return new Set([y+'-01-01',apres(1),y+'-05-01',y+'-05-08',apres(39),apres(50),y+'-07-14',y+'-08-15',y+'-11-01',y+'-11-11',y+'-12-25']);
+}
+function ajouterJoursOuvres(dateIso,n){
+  const d=new Date(dateIso+'T12:00:00');
+  let compte=0,annee=d.getFullYear(),feries=joursFeriesFR(annee);
+  while(compte<n){
+    d.setDate(d.getDate()+1);
+    if(d.getFullYear()!==annee){annee=d.getFullYear();feries=joursFeriesFR(annee);}
+    const j=d.getDay();
+    if(j!==0&&j!==6&&!feries.has(isoDateLocal(d)))compte++;
+  }
+  return d;
+}
+function calcDebutAuPlusTot(){
+  const out=document.getElementById('cal_debut_min'),warn=document.getElementById('cal_debut_min_warn');
+  if(!out)return;
+  const envoi=gv('cal_envoi_commande');
+  if(warn)warn.style.display='none';
+  if(!envoi){out.textContent='—';return;}
+  const min=ajouterJoursOuvres(envoi,DELAI_EDOF_JOURS_OUVRES),minIso=isoDateLocal(min);
+  out.textContent=min.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const debut=gv('cal_debut')||gv('f_date_debut');
+  if(debut&&warn&&debut<minIso){
+    warn.textContent='⚠️ La date de début prévue ('+fmtDate(debut)+') est avant la date au plus tôt : à décaler.';
+    warn.style.display='block';
+  }
+}
+
 function exportCalendrier(){
   const benef=gv('cal_benef')||gv('f_nom')||'—';
   const form=gv('cal_form')||'—';
@@ -23665,7 +23732,7 @@ function exportCalendrier(){
   const ajustement=gv('cal_ajustement')||'';
   const ajustSection=ajustement?`\\n\\nAJUSTEMENT DE L'ACCOMPAGNEMENT (Indicateur 9 Qualiopi) :\\n${ajustement}`:'';
   // Generate prompt for Word export
-  const prompt=`Tu es expert en rédaction de documents professionnels. Génère le contenu d'un document Word "Calendrier et Programme Prévisionnel" au format exact suivant :\n\nTitre : CALENDRIER ET PROGRAMME PREVISIONNEL\nBénéficiaire : ${benef}\nOrganisme : Rodrigue Poncet | Formateur : ${form}\nPériode : ${debut} · Modalité : ${modal}\n\nTableau des séances :\n${seances.map(s=>`Séance ${s.num} | ${s.date} | ${s.horaires} | ${s.duree} | ${s.obj} | ${s.outils}`).join('\n')}\n\nTravaux personnels : Du début au ${debut} | ${tp} | Recherches, tests, enquêtes métiers, formalisation\nEntretiens : ${ent} | Travaux personnels : ${tp} | Total : ${tot}${ajustSection}\n\nFait à : ${lieu} · Date de signature\nPolice : Calibri · Couleurs : #074F6A (en-têtes) · #C1E4F5 (fond tableau)\n\nFormate en tableau structuré professionnel conforme Qualiopi.`;
+  const prompt=`Tu es expert en rédaction de documents professionnels. Génère le contenu d'un document Word "Calendrier et Programme Prévisionnel" au format exact suivant :\n\nTitre : CALENDRIER ET PROGRAMME PREVISIONNEL\nBénéficiaire : ${benef}\nOrganisme : Rodrigue Poncet | Formateur : ${form}\nPériode : ${debut} · Modalité : ${modal}\n\nTableau des séances :\n${seances.map(s=>`Séance ${s.num} | ${s.date} | ${s.horaires} | ${s.duree} | ${s.obj} | ${s.outils}`).join('\n')}\n\nTravaux personnels : Du début au ${debut} | ${tp} (estimé, non compris dans les heures d’accompagnement facturées) | Recherches, tests, enquêtes métiers, formalisation\nEntretiens : ${ent} | Travaux personnels : ${tp} (estimé, non compris dans les heures d’accompagnement facturées) | Total à titre indicatif : ${tot}${ajustSection}\n\nFait à : ${lieu} · Date de signature\nPolice : Calibri · Couleurs : #074F6A (en-têtes) · #C1E4F5 (fond tableau)\n\nFormate en tableau structuré professionnel conforme Qualiopi.`;
   navigator.clipboard.writeText(prompt).then(()=>showToast('📋 Prompt copié — Coller dans Claude.ai','green'));
 }
 
@@ -23849,7 +23916,7 @@ STRUCTURE DU DOCUMENT (respecter strictement cet ordre et cette numérotation �
 En haut : à gauche [LOGO CONSULTANT — à insérer manuellement], à droite [LOGO RP COACHING & FORMATION — à insérer manuellement]. Titre SYNTHÈSE DU BILAN DE COMPÉTENCES centré en #074F6A gras.
 Nom bénéficiaire : ${d.nom||'—'} · Consultant : ${d.cons||'—'} · Organisme : ${d.orga||'—'}
 Lieu : ${d.lieu||'—'} · Dates : du ${d.dateDebut||'—'} au ${d.dateFin||'—'}
-Durée totale : ${d.dureeTotal||'—'} (face-à-face : ${d.dureeFace||'—'} · travail individuel : ${d.dureeTp||'—'})
+Durée totale à titre indicatif : ${d.dureeTotal||'—'} (face-à-face : ${d.dureeFace||'—'} · travail individuel : ${d.dureeTp||'—'}, estimé, non compris dans les heures d’accompagnement facturées)
 Modalité : ${d.mod||'—'} · Financement : ${finLabel}
 Justifier brièvement le choix de cette modalité en lien avec la situation du bénéficiaire.
 
@@ -23918,7 +23985,7 @@ Insérer exactement ce texte (placeholder) : « Carte mentale à insérer ici �
 - Document strictement confidentiel (art. 226-13 et 226-14 du Code pénal)
 - Communication à un tiers uniquement avec l'accord écrit du bénéficiaire
 - Le bénéficiaire peut demander la transmission de ce document au Conseil en Évolution Professionnelle (CEP)
-- Conservation possible 3 ans avec accord écrit du bénéficiaire (R. 6313-7)
+- Conservation par l'organisme possible 1 an maximum, avec accord écrit du bénéficiaire (Code du travail, art. R6313-7)
 
 13. SIGNATURES — Fait à [lieu], le [date] — espace signature consultant + bénéficiaire
 « Fait à ${d.lieu||'………………'}, le ${d.dateFin||'………………'} »
@@ -24240,8 +24307,9 @@ function rebuildEmargRows(n) {
         <div class="em-dist-fields" id="em_dist_${i}" style="display:none;margin-top:4px;padding:4px 5px;background:#EBF4FF;border-radius:4px;border:1px solid #B3D4F5">
           <div style="font-size:9px;font-weight:700;color:#074F6A;margin-bottom:3px">DISTANCIEL TEAMS</div>
           <input class="em-teams-id" placeholder="ID réunion Teams" style="width:100%;border:1px solid #B3D4F5;border-radius:3px;font-size:10px;padding:2px 4px;margin-bottom:3px;font-family:Calibri,Arial,sans-serif;box-sizing:border-box">
-          <label style="display:flex;align-items:center;gap:4px;font-size:10px;cursor:pointer;margin-bottom:2px"><input type="checkbox" class="em-rapport-ok"><span>Rapport présence archivé</span></label>
-          <label style="display:flex;align-items:center;gap:4px;font-size:10px;cursor:pointer"><input type="checkbox" class="em-email-ok"><span>Email confirmation envoyé</span></label>
+          <div style="font-size:9px;color:#074F6A;margin-bottom:2px">Preuve de présence archivée :</div>
+          <label style="display:flex;align-items:center;gap:4px;font-size:10px;cursor:pointer;margin-bottom:2px"><input type="checkbox" class="em-email-ok"><span>Mail de confirmation</span></label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:10px;cursor:pointer"><input type="checkbox" class="em-rapport-ok"><span>ou tracking plateforme</span></label>
         </div>
       </td>
       <td style="padding:4px 6px;border:1px solid var(--border)"><input class="em-horaire-input" style="width:100%;border:none;background:transparent;font-size:11px;text-align:center;font-family:Calibri,Arial,sans-serif" placeholder="xxhxx — xxhxx"></td>
@@ -24369,7 +24437,7 @@ ORGANISME : ${gv('f_orga')||'Rodrigue Poncet'} | MODALITÉ : ${gv('f_mod')}
 SÉANCES :
 ${seances.join('\n')}
 
-TOTAUX : Face à face ${document.getElementById('em-total-face')?.textContent} · Recherches : ${gv('recap-tp')||'8 h 00'} · Total : ${document.getElementById('em-total')?.textContent}
+TOTAUX : Face à face ${document.getElementById('em-total-face')?.textContent} · Recherches : ${gv('recap-tp')||'8 h 00'} (estimé, non compris dans les heures d’accompagnement facturées) · Total à titre indicatif : ${document.getElementById('em-total')?.textContent}
 
 SIGNATURE FORMATEUR : ${sigFormGlobal}
 SIGNATURE BÉNÉFICIAIRE : ${sigBenefGlobal}`;
@@ -24584,7 +24652,7 @@ Adresse : 174 hameau de la chapelle – St Julien 39320 Val Suran · N° déclar
 BÉNÉFICIAIRE : ${nom} · Né(e) le : ${gv('conv_dob')} · Adresse : ${gv('conv_adresse')} · Email : ${gv('conv_email')} · Tél : ${gv('conv_tel')} · Situation : ${gv('conv_situation')}
 
 PRESTATION : Bilan de compétences (Articles L6313-4, R6313-4 à R6313-8)
-Durée du bilan : ${gv('conv_duree')} · Travail personnel guidé estimé : ${gv('recap-tp')||'—'} (non facturé) · Modalité : ${gv('f_mod')} · Lieu : ${gv('conv_lieu')}
+Durée du bilan : ${gv('conv_duree')} · Travail personnel guidé : ${gv('recap-tp')||'—'} (estimé, non compris dans les heures d’accompagnement facturées) · Modalité : ${gv('f_mod')} · Lieu : ${gv('conv_lieu')}
 Du : ${gv('f_date_debut')} au : ${gv('f_date_fin')}
 
 OBJECTIFS : ${[gv('f_o1'),gv('f_o2'),gv('f_o3')].filter(Boolean).join(' / ')}
@@ -24667,9 +24735,9 @@ SIRET : 851 939 322 00042 · contact@rodrigueponcet.fr · 06 74 03 59 37
 Adresse : 174 hameau de la chapelle – St Julien 39320 Val Suran
 
 TRAITEMENTS :
-1. Bilan de compétences | Finalité : réalisation, suivi, traçabilité Qualiopi | Données : identité, coordonnées, parcours, tests, objectifs | Base légale : exécution du contrat (Art. 6.1.b) | Conservation : 5 ans | Destinataires : bénéficiaire + OPCO si CPF
+1. Bilan de compétences | Finalité : réalisation, suivi, traçabilité Qualiopi | Données : identité, coordonnées, parcours, tests, objectifs | Base légale : exécution du contrat (Art. 6.1.b) | Conservation : preuves de réalisation 5 ans (CG Mon Compte Formation, art. 7.3), documents de travail du bilan 1 an max (Code du travail, art. R6313-7) | Destinataires : bénéficiaire + OPCO si CPF
 2. Réseau personnes ressources | Finalité : mise en relation professionnelle | Données : email, téléphone, métier | Base légale : consentement (Art. 6.1.a) | Conservation : jusqu'au retrait consentement
-3. Questionnaires satisfaction | Finalité : amélioration continue, Qualiopi | Données : nom, notes, commentaires | Base légale : intérêt légitime (Art. 6.1.f) | Conservation : 3 ans
+3. Questionnaires satisfaction | Finalité : amélioration continue, Qualiopi | Données : nom, notes, commentaires | Base légale : intérêt légitime (Art. 6.1.f) | Conservation : 5 ans (CG Mon Compte Formation, art. 7.3)
 
 MESURES DE SÉCURITÉ : données stockées localement (localStorage navigateur), pas de serveur tiers, mot de passe session activé, export fichiers .reliance dans dossier sécurisé.
 TRANSFERTS HORS UE : utilisation de Claude.ai (Anthropic USA) pour rédaction IA — données anonymisées (pas de nom complet transmis).
@@ -24699,6 +24767,7 @@ const CHECKLIST = [
     { id: 'cl_16p', label: "Signature Comportementale réalisée", enr: 'Onglet Valeurs & Tests', oblig: false },
     { id: 'cl_fiches', label: "Enquêtes métiers / Fiches ROME réalisées", enr: 'Onglet Fiches Métiers', oblig: false },
     { id: 'cl_emarg_inv', label: "Émargements signés séances 2 à 7", enr: 'Onglet Émargements', oblig: true },
+    { id: 'cl_preuve_visio', label: "Séances en visio : preuve de présence archivée (mail de confirmation ou tracking plateforme)", enr: 'Onglet Émargements', oblig: false },
     { id: 'cl_comp', label: "Compétences identifiées et analysées", enr: 'Onglet Analyse & Projet', oblig: true },
     { id: 'cl_plan_inv', label: "Plan d'action ébauché", enr: 'Onglet Plan d\'action', oblig: false },
   ]},
@@ -24720,7 +24789,7 @@ const CHECKLIST = [
     { id: 'cl_froid', label: "Suivi à 6 mois documenté (CR + satisfaction)", enr: 'Onglet Suivi 6 mois', oblig: true },
     { id: 'cl_sig_suivi', label: "Compte-rendu de suivi à 6 mois signé (consultant + bénéficiaire)", enr: 'Onglet Suivi 6 mois', oblig: true },
     { id: 'cl_archivage', label: "Dossier client archivé (fichier .reliance + documents Word)", enr: 'Bouton 💾 Sauvegarder', oblig: true },
-    { id: 'cl_destruction', label: "Date de destruction des données planifiée (max 1 an)", enr: 'Onglet RGPD', oblig: true },
+    { id: 'cl_destruction', label: "Date de destruction des documents de travail planifiée (max 1 an — R6313-7)", enr: 'Onglet RGPD', oblig: true },
   ]},
 ];
 
@@ -24939,7 +25008,7 @@ function buildMailCompletText(){
       planningLines.push(n+' '+fmtDate(s.date).padEnd(14)+(s.horaires||'xx h \u2013 xx h').padEnd(18)+(s.duree||'2 h 00').padEnd(8)+lieu);
     });
   }else{
-    planningLines.push('du '+debut+' au '+fin+'   Travail en autonomie (distanciel)');
+    planningLines.push('du '+debut+' au '+fin+'   Travail en autonomie (distanciel) — '+NOTE_TP_NON_FACTURE);
     planningLines.push("(Complétez l'onglet Calendrier pour le planning complet)");
   }
   const planning=planningLines.join('\n');
@@ -24960,7 +25029,7 @@ Date d'émission    : ${today}
 Intitulé           : Bilan de compétences — Méthode RELIANCE®
 Période            : du ${debut} au ${fin}
 Durée du bilan     : ${dureeEntretiens} d'entretiens individuels (présentiel ou distanciel)
-Travail personnel  : ${dureeTp} estimées (non facturées)
+Travail personnel  : ${dureeTp} (estimé, non compris dans les heures d’accompagnement facturées)
                      ${MENTION_TP_NON_FACTURE}
 Modalité           : ${modal}
 Lieu               : ${lieu}
@@ -25001,8 +25070,10 @@ Conformément à l'article L6313-4 du Code du travail, les résultats du bilan
 sont votre propriété exclusive et ne peuvent être communiqués à un tiers sans
 votre accord exprès et écrit.
 
-Vos données personnelles sont traitées conformément au RGPD (Art. 6.1.b) et
-conservées au maximum 1 an après la fin du bilan puis détruites (Art. R6313-8).
+Vos données personnelles sont traitées conformément au RGPD (Art. 6.1.b).
+Conservation : documents de travail du bilan détruits au plus tard 1 an après
+la fin (Code du travail, art. R6313-7) ; preuves de réalisation (convention,
+émargements, certificat) conservées 5 ans (CG Mon Compte Formation, art. 7.3).
 Politique RGPD : https://drive.google.com/drive/folders/1uKL48P9YePwpy6eAk3U7xenztNc8VwXC
 
 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
@@ -25114,6 +25185,48 @@ function openMailto(){
   const mailto = 'mailto:' + (email || '') + '?subject=' + objet + buildBccParam() + '&body=' + body;
   window.open(mailto, '_blank');
   showToast('📧 Cci : ' + getMailBccList().join(', '),'green');
+}
+
+// ════════════ MAIL D'INSCRIPTION (nov. 2026) ════════════
+const LIEN_DOCS_REGLEMENTAIRES='https://drive.google.com/drive/folders/1uKL48P9YePwpy6eAk3U7xenztNc8VwXC?usp=drive_link';
+function buildMailInscriptionText(){
+  const prenom=(gv('f_nom').split(' ')[0])||'[Prénom]';
+  const cons=gv('f_cons')||'Rodrigue Poncet';
+  return `Bonjour ${prenom},
+
+Suite à notre premier rendez-vous, voici les informations et les étapes pour officialiser votre accompagnement :
+
+1. Inscription sur Mon Compte Formation (EDOF)
+Vous pouvez dès à présent vous inscrire pour demander un devis. Puis il faudra valider votre dossier. La démarche est à réaliser sur la plateforme via ce lien :
+👉 [Insérer le lien EDOF]
+(Attention : vous disposez d'un délai de 4 jours maximum pour valider l'offre après sa réception.)
+À noter : une participation forfaitaire obligatoire selon la réglementation en vigueur vous sera demandée par Mon Compte Formation lors de la validation.
+
+2. Documents d'accompagnement (Recueil des besoins & Calendrier)
+Je vous invite à consulter et signer numériquement vos documents prévisionnels via ce lien :
+👉 [Insérer le lien de signature des documents]
+Petite précision : ces documents sont volontairement prévisionnels. Nous pourrons tout à fait faire évoluer les objectifs et modifier les dates en cours de route. C'est tout à fait normal, car le bilan de compétences est un accompagnement sur-mesure.
+
+3. Informations réglementaires
+Conformément à la législation, vous trouverez également via ce lien notre Règlement Intérieur, nos Conditions Générales et l'ensemble des documents contractuels, dont je vous invite à prendre connaissance :
+👉 ${LIEN_DOCS_REGLEMENTAIRES}
+
+4. Planification des séances
+Profitez-en pour me confirmer les créneaux de rendez-vous que nous avons évoqués, afin que nous puissions les bloquer définitivement dans nos agendas.
+
+Je reste à votre entière disposition si vous avez la moindre question ou besoin d'aide sur l'une de ces étapes.
+
+Bien cordialement,
+${cons}
+RP Coaching & Formation
+contact@rodrigueponcet.fr — 06 74 03 59 37`;
+}
+function openMailInscription(){
+  const email=gv('f_email')||'';
+  const subject=encodeURIComponent('Votre parcours de Bilan de compétences – Inscription et documents');
+  const body=encodeURIComponent(buildMailInscriptionText());
+  window.open('mailto:'+email+'?subject='+subject+buildBccParam()+'&body='+body,'_blank');
+  showToast('📧 Cci : '+getMailBccList().join(', '),'green');
 }
 
 function copyMailObjet(){
@@ -25244,7 +25357,7 @@ function checkRgpdAlert(){
     // Overdue — red alert
     dot.style.display='block';banner.style.display='block';
     const nom=gv('f_nom')||'ce bénéficiaire';
-    msg.innerHTML='<strong>Les données de '+nom+' doivent être supprimées</strong> — Date limite dépassée le '+deadline.toLocaleDateString('fr-FR')+'.<br>Obligation légale : Art. R6313-8 du Code du travail (max 1 an après fin du bilan).';
+    msg.innerHTML='<strong>Les données de '+nom+' doivent être supprimées</strong> — Date limite dépassée le '+deadline.toLocaleDateString('fr-FR')+'.<br>Documents de travail : 1 an max après la fin du bilan (Code du travail, art. R6313-7). Preuves de réalisation : à garder 5 ans (CG Mon Compte Formation, art. 7.3).';
     banner.style.borderColor='#c62828';banner.style.background='linear-gradient(135deg,#FFEBEE,#FFCDD2)';
   } else if(diffDays<=30){
     // Warning — orange
@@ -25312,6 +25425,57 @@ const RP_FONT_SMALL = 18; // 9pt
 const RP_FONT_H1 = 28;   // 14pt
 const RP_FONT_H2 = 24;   // 12pt
 const RP_FONT_TITLE = 52; // 26pt
+
+// ════════════ POLICE DES SYMBOLES WORD (nov. 2026) ════════════
+// ★ ☆ ☐ ☑ ☒ n'existent pas dans Cambria/Arial → Word affichait ↪ / ↵.
+// On force « Segoe UI Symbol » sur ces seuls caractères, pour TOUS les documents
+// (BC et BOS) : interception de docx.TextRun / docx.Paragraph côté appli,
+// sans modifier reliance_docx_lib.js. Le texte mixte (« ☑  Présentiel ») est
+// découpé : le symbole en Segoe UI Symbol, le reste garde sa police.
+const DOCX_SYM_FONT='Segoe UI Symbol';
+const DOCX_SYM_TEST=/[★☆☐☑☒]/;
+const DOCX_SYM_SPLIT=/([★☆☐☑☒]+)/;
+(function patchDocxSymbolFont(){
+  if(typeof docx==='undefined'||!docx.TextRun||!docx.Paragraph||docx.__relianceSymPatch)return;
+  const BaseRun=docx.TextRun, BasePara=docx.Paragraph;
+  const runOpts=(opts,t)=>{
+    const o=Object.assign({},opts,{text:t});
+    if(DOCX_SYM_TEST.test(t))o.font=DOCX_SYM_FONT;
+    return o;
+  };
+  class SymTextRun extends BaseRun{
+    constructor(opts){
+      if(typeof opts==='string')opts={text:opts};
+      const txt=(opts&&typeof opts.text==='string')?opts.text:null;
+      if(txt===null||!DOCX_SYM_TEST.test(txt)){super(opts);return;}
+      const parts=txt.split(DOCX_SYM_SPLIT).filter(s=>s!=='');
+      super(runOpts(opts,parts[0]));
+      if(parts.length>1){
+        const rest=Object.assign({},opts);delete rest.break;
+        this.__relianceSymRest=parts.slice(1).map(t=>new BaseRun(runOpts(rest,t)));
+      }
+    }
+  }
+  class SymParagraph extends BasePara{
+    constructor(opts){
+      if(typeof opts==='string')opts={children:[new SymTextRun(opts)]};
+      else if(opts&&typeof opts.text==='string'&&DOCX_SYM_TEST.test(opts.text)){
+        const o=Object.assign({},opts);
+        o.children=[new SymTextRun(o.text)].concat(o.children||[]);
+        delete o.text;opts=o;
+      }
+      if(opts&&Array.isArray(opts.children)){
+        const kids=[];
+        opts.children.forEach(c=>{kids.push(c);if(c&&c.__relianceSymRest)c.__relianceSymRest.forEach(r=>kids.push(r));});
+        opts=Object.assign({},opts,{children:kids});
+      }
+      super(opts);
+    }
+  }
+  docx.TextRun=SymTextRun;
+  docx.Paragraph=SymParagraph;
+  docx.__relianceSymPatch=true;
+})();
 
 // ═══════════════════════════════════════════════════════════════════
 // HELPER FUNCTIONS
@@ -25787,6 +25951,7 @@ async function generateENR003() {
       [['Du ' + (debut||'[xx/xx/xxxx]') + ' au ' + (fin||'[xx/xx/xxxx]'), 'À définir', dureeTp, 'Recherches personnelles · Passation de tests · Enquêtes métiers · Formalisation des projets']],
       [2400, 1400, 1000, 4238]
     ),
+    P([B('Travail personnel '+NOTE_TP_NON_FACTURE+'.',{italics:true})]),
     space(),
     
     h1('RÉCAPITULATIF DES DURÉES'),
@@ -25794,7 +25959,7 @@ async function generateENR003() {
       ['Nature des actions', 'Durée'],
       [
         ['Durée du bilan — entretiens individuels en face à face', dureeEntretiens],
-        ['Travail personnel guidé estimé (dont tests) — non facturé', dureeTp],
+        ['Travail personnel guidé (dont tests) — '+NOTE_TP_NON_FACTURE, dureeTp],
         [LIBELLE_TOTAL_AVEC_TP, dureeTotale],
       ],
       [7500, 2138]
@@ -26133,6 +26298,11 @@ async function generateENR017() {
   const lieu = gv('f_lieu')||'Val Suran';
   const obs1 = gv('form17_obs1'), obs2 = gv('form17_obs2');
   const obj = gv('form17_obj');
+  // Valeurs cochées à l'écran (nov. 2026 : reprises dans le Word)
+  const ck17 = id => !!document.getElementById(id)?.checked;
+  const radio17 = name => document.querySelector('[name="'+name+'"]:checked')?.value || '';
+  const ouiNon17 = v => B((v==='oui'?'\u2611':'\u2610')+'  Oui     '+(v==='non'?'\u2611':'\u2610')+'  Non');
+  const eval17 = i => gv('form17_eval_'+i);
 
   const children = [
     titlePara('QUESTIONNAIRE À CHAUD FORMATEUR'),
@@ -26154,13 +26324,13 @@ async function generateENR017() {
     P([bold("Objectifs identifiés au démarrage\u00a0:")]),
     new docx.Paragraph({ spacing:{after:60}, border:{bottom:{style:docx.BorderStyle.SINGLE,size:4,color:'CCCCCC'}}, children:[B(obj||'')] }),
     new docx.Paragraph({ spacing:{after:200}, border:{bottom:{style:docx.BorderStyle.SINGLE,size:4,color:'CCCCCC'}}, children:[B('')] }),
-    P([bold("Phase préliminaire réalisée\u00a0: "), B('\u2610  Oui     \u2610  Non')]),
+    P([bold("Phase préliminaire réalisée\u00a0: "), ouiNon17(radio17('form17_prelim'))]),
     fieldRow("Commentaires / observations", obs1),
     space(),
 
     h1("2. PHASE D'INVESTIGATION"),
     P([bold("Actions réalisées\u00a0: (cocher et compléter)")]),
-    ...["Entretiens individuels","Travaux personnels guidés","Tests / questionnaires","Enquêtes terrain / rencontres / visites"].map(t => makeCheckRow(t)),
+    ...[["Entretiens individuels",'form17_entretiens'],["Travaux personnels guidés",'form17_travaux'],["Tests / questionnaires",'form17_tests'],["Enquêtes terrain / rencontres / visites",'form17_enquetes']].map(([t,id]) => makeCheckRow(t, ck17(id))),
     P([B('\u2610\u00a0 Autres\u00a0: '), B('_______________________________________________', {color:'AAAAAA'})]),
     fieldRow("Nombre d'enquêtes réalisées", gv('form17_nb_enq')),
     fieldRow("Types d'enquêtes détaillés", gv('form17_type_enq')),
@@ -26168,30 +26338,31 @@ async function generateENR017() {
     space(),
 
     h1('3. PHASE DE CONCLUSION'),
-    P([bold("Synthèse remise au bénéficiaire\u00a0: "), B('\u2610  Oui     \u2610  Non')]),
+    P([bold("Synthèse remise au bénéficiaire\u00a0: "), ouiNon17(radio17('form17_synthese'))]),
     fieldRow("Plan d'action / projet validé", gv('form17_projet')),
-    fieldRow("Commentaires sur la compréhension et l'engagement du bénéficiaire", ''),
+    fieldRow("Commentaires sur la compréhension et l'engagement du bénéficiaire", gv('form17_engagement')),
     space(),
 
     h1('4. ÉVALUATION PAR LE FORMATEUR'),
     makeTable(
       ['Critère', 'Commentaire / Observation'],
       [
-        ["Compréhension de la demande du bénéficiaire", ''],
-        ["Implication et participation", ''],
-        ["Réalisation des objectifs", ''],
-        ["Pertinence des enquêtes", ''],
-        ["Qualité de l'accompagnement", ''],
-        ["Points forts observés", ''],
-        ["Points à améliorer", ''],
+        ["Compréhension de la demande du bénéficiaire", eval17(0)],
+        ["Implication et participation", eval17(1)],
+        ["Réalisation des objectifs", eval17(2)],
+        ["Pertinence des enquêtes", eval17(3)],
+        ["Qualité de l'accompagnement", eval17(4)],
+        ["Points forts observés", eval17(5)],
+        ["Points à améliorer", eval17(6)],
       ],
       [3800, 5238]
     ),
     space(),
 
     h1('5. HANDICAP ET ADAPTATION (si applicable)'),
-    P([bold("Bénéficiaire en situation de handicap\u00a0: "), B('\u2610  Oui     \u2610  Non')]),
+    P([bold("Bénéficiaire en situation de handicap\u00a0: "), ouiNon17(ck17('form17_handicap')?'oui':'non')]),
     P([bold("Dispositifs spécifiques mis en place\u00a0:")]),
+    ...(gv('form17_handicap_desc') ? [P([B(gv('form17_handicap_desc'))])] : []),
     ...["Repérage contraintes physiques / sensorielles","Procédés d'adaptation / compensation","Mise en relation avec partenaires spécialisés","Mise en situation professionnelle"].map(t => makeCheckRow(t)),
     space(),
 
@@ -26238,7 +26409,7 @@ async function generateCONVOC() {
 
   const seanceRows = seances.length > 0
     ? seances.map(s => [String(s.num), fmtDate(s.date), s.horaires||'', s.duree||'', lieu])
-    : [['–','','','',''], ['du '+debut+' au '+fin,'—','Travail en autonomie (distanciel)','8 h 00','—']];
+    : [['–','','','',''], ['du '+debut+' au '+fin,'—','Travail en autonomie (distanciel) — '+NOTE_TP_NON_FACTURE,dureeTp,'—']];
 
   const children = [
     titlePara('CONVOCATION — BILAN DE COMPÉTENCES'),
@@ -26260,7 +26431,7 @@ async function generateCONVOC() {
     fieldRow("Intitulé de la prestation", "Bilan de compétences — Méthode RELIANCE®"),
     fieldG2(['Période — du', debut, 'au', fin]),
     P([bold("Durée du bilan\u00a0: "), B(dureeEntretiens+" d'entretiens individuels en face à face (présentiel ou distanciel)")]),
-    P([bold("Travail personnel guidé estimé\u00a0: "), B(dureeTp+" (non facturé)")]),
+    P([bold("Travail personnel guidé\u00a0: "), B(dureeTp+" ("+NOTE_TP_NON_FACTURE+")")]),
     P([B(MENTION_TP_NON_FACTURE,{italics:true})]),
     P([bold("Modalité\u00a0: "), B(modal)]),
     fieldRow('Lieu', lieu),
@@ -26302,7 +26473,7 @@ async function generateCONVOC() {
     h1('CONFIDENTIALITÉ ET RGPD'),
     ...attestationBox([
       "Conformément à l'article L6313-4 du Code du travail, les résultats du bilan sont votre propriété exclusive et ne peuvent être communiqués à un tiers sans votre accord exprès et écrit.",
-      "Vos données personnelles sont traitées conformément au RGPD (Art. 6.1.b) et conservées au maximum 1 an après la fin du bilan, puis détruites (Art. R6313-8).",
+      "Vos données personnelles sont traitées conformément au RGPD (Art. 6.1.b). Conservation : documents de travail du bilan détruits au plus tard 1 an après la fin (Code du travail, art. R6313-7) ; preuves de réalisation (convention, émargements, certificat) conservées 5 ans (CG Mon Compte Formation, art. 7.3).",
       "Politique RGPD complète\u00a0: https://drive.google.com/drive/folders/1uKL48P9YePwpy6eAk3U7xenztNc8VwXC",
     ]),
     space(400),
@@ -26534,7 +26705,7 @@ async function generateENR023() {
     ),
     space(80),
     P([bold('Durée du bilan : '), B(dureeEntretiens+" d'entretiens individuels en face à face (présentiel ou distanciel)")]),
-    P([bold('Travail personnel guidé estimé : '), B(dureeTp+' (non facturé)')]),
+    P([bold('Travail personnel guidé : '), B(dureeTp+' ('+NOTE_TP_NON_FACTURE+')')]),
     P([B(MENTION_TP_NON_FACTURE,{italics:true})]),
     space(80),
     fieldG2(['Période — du',debut,'au',fin2]),
@@ -26572,7 +26743,8 @@ async function generateENR023() {
     ...["Les résultats détaillés et le document de synthèse sont la propriété exclusive du bénéficiaire",
         "Ils ne peuvent être communiqués à un tiers (employeur, financeur, etc.) qu'avec l'accord exprès et écrit du bénéficiaire",
         "L'Organisme est tenu au secret professionnel (Art. 378 du Code pénal)",
-        "Les documents élaborés dans le cadre du bilan sont détruits à l'issue du suivi à 6 mois ou au plus tard 1 an après la fin du bilan, sauf demande de conservation par le bénéficiaire",
+        "Les documents de travail du bilan sont détruits à l'issue du suivi à 6 mois, au plus tard 1 an après la fin du bilan (Code du travail, art. R6313-7)",
+        "Les pièces justifiant la réalisation du bilan (convention, émargements, certificat de réalisation, évaluations) sont conservées 5 ans (CG Mon Compte Formation, art. 7.3)",
     ].map(t=>makeBullet(t,'bullets')),
 
     // 6. TARIF
@@ -26840,7 +27012,7 @@ async function generateEmargement() {
             ...(row.distanciel ? [
               new docx.Paragraph({spacing:{before:40},children:[new docx.TextRun({text:'Distanciel Teams',font:RP_FONT,size:14,color:'074F6A',bold:true})]}),
               ...(row.teamsId?[new docx.Paragraph({children:[new docx.TextRun({text:'ID: '+row.teamsId,font:RP_FONT,size:14,color:'555555'})]})]:[]),
-              new docx.Paragraph({children:[new docx.TextRun({text:(row.rapportOk?'✓':'○')+' Rapport  '+(row.emailOk?'✓':'○')+' Email confirm.',font:RP_FONT,size:14,color:row.rapportOk&&row.emailOk?'196B24':'C62828'})]})
+              new docx.Paragraph({children:[new docx.TextRun({text:'Preuve archivée : '+(row.emailOk?'☑':'☐')+' mail  '+(row.rapportOk?'☑':'☐')+' tracking plateforme',font:RP_FONT,size:14,color:(row.rapportOk||row.emailOk)?'196B24':'C62828'})]})
             ] : [])
           ]
         }),
@@ -26889,7 +27061,7 @@ async function generateEmargement() {
     columnWidths: [7000, CONTENT_WIDTH-7000],
     rows: [
       ['Entretiens individuels face à face', totalFace],
-      ['Recherche personnelle dont tests',   totalPerso],
+      ['Recherche personnelle dont tests ('+NOTE_TP_NON_FACTURE+')',   totalPerso],
       [LIBELLE_TOTAL_AVEC_TP,              totalAll],
     ].map(([label,val],ri) => new docx.TableRow({children:[
       new docx.TableCell({width:{size:7000,type:docx.WidthType.DXA},
@@ -27077,7 +27249,7 @@ async function generateCompteRendu() {
     columnWidths: [7000, CONTENT_WIDTH-7000],
     rows: [
       ['Entretiens individuels face à face', totalFace],
-      ['Recherche personnelle dont tests', totalPerso],
+      ['Recherche personnelle dont tests ('+NOTE_TP_NON_FACTURE+')', totalPerso],
       [LIBELLE_TOTAL_AVEC_TP, totalAll],
     ].map(([label, val], ri) => new docx.TableRow({children:[
       new docx.TableCell({width:{size:7000,type:docx.WidthType.DXA},
@@ -27508,7 +27680,7 @@ function renderGuideUser(){
       ${guideH2('Incident qualité')}
       ${guidePara('Si un problème survient (réclamation, abandon, dysfonctionnement…), renseignez l\'onglet <strong>Incident qualité</strong>. Un voyant 🚨 apparaît dans le menu.')}
       ${guideH2('RGPD')}
-      ${guidePara('Onglet <strong>RGPD</strong> : consentement, durée de conservation, alerte pour planifier la destruction des données (max 1 an après le bilan pour les documents de suivi, 5 ans pour le dossier selon votre procédure).')}
+      ${guidePara('Onglet <strong>RGPD</strong> : consentement, durée de conservation, alerte pour planifier la destruction des documents de travail (1 an max — Code du travail, art. R6313-7) ; les preuves de réalisation sont conservées 5 ans (CG Mon Compte Formation, art. 7.3).')}
       ${guideCapture('Onglet RGPD avec date de destruction')}
     `)}
 
@@ -27641,10 +27813,9 @@ function renderGuideAdmin(){
       ${guidePara('<strong>RP Coaching & Formation</strong> est responsable du traitement. Les consultants agissent sur instruction, dans le cadre du bilan.')}
       ${guideH2('Durées de conservation (rappel)')}
       ${guideLi([
-        'Dossier bénéficiaire (fichier dossier + Word) — jusqu\'à 5 ans après fin du suivi selon votre procédure interne',
-        'Données comptables — 10 ans',
-        'Certificats, émargements, évaluations — 3 ans minimum (Qualiopi)',
-        'Documents suivi 6 mois — destruction planifiée (max 1 an après le bilan pour les pièces de suivi détaillé)'
+        'Preuves de réalisation (convention, émargements, certificat, évaluations) — 5 ans (CG Mon Compte Formation, art. 7.3)',
+        'Documents de travail du bilan (tests, analyses, notes, suivi 6 mois, fichier .reliance) — 1 an max après la fin (Code du travail, art. R6313-7)',
+        'Données comptables — 10 ans'
       ])}
       ${guideH2('Droits des personnes')}
       ${guidePara('Accès, rectification, effacement après délais légaux : fournir une copie du fichier dossier ou des exports Word sur demande.')}
@@ -27653,7 +27824,7 @@ function renderGuideAdmin(){
     `)}
 
     ${guideSection('📎','Annexe — Financeurs (EDOF, OPCO, France Travail)',`
-      ${guidePara('Les sections détaillées EDOF, OPCO et France Travail restent valides. Points communs : convention avant démarrage, émargements, certificat ENR015, évaluation ENR016, conservation 3 à 5 ans selon le financeur.')}
+      ${guidePara('Les sections détaillées EDOF, OPCO et France Travail restent valides. Points communs : convention avant démarrage, émargements, certificat ENR015, évaluation ENR016, preuves de réalisation conservées 5 ans (CG Mon Compte Formation, art. 7.3).')}
       ${guideLi([
         '<strong>EDOF / CPF</strong> — dossier Mon Compte Formation avant début, résultats sous 60 jours, preuves 5 ans',
         '<strong>OPCO</strong> — convention tripartite possible, facturation après réalisation',
